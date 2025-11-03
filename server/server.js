@@ -19,7 +19,7 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 
 app.use(cors({
-  origin: 'https://atlas-beryl-three.vercel.app', 
+  origin: 'http://localhost:4200', 
   credentials: true
 }));
 
@@ -859,5 +859,5 @@ app.post('/api/caixa/fechar', async (req, res) => {
 const ip = '0.0.0.0'; // Permite conexões externas
 
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Servidor rodando em http://192.168.99.104:${port}`);
+  console.log(`Servidor rodando na porta ${port}`);
 });
