@@ -531,34 +531,115 @@ app.put('/api/mesas/:id/status', (req, res) => {
 
 
 
-// Rota POST para adicionar um novo pedido
-app.post('/api/pedidos', (req, res) => {
-  const { id_mesa, status, total, data, item, observacao,numero} = req.body;
-
-  // Insira o pedido na tabela 'pedidos' (ajuste o nome da tabela conforme necessário)
-  const query = `
-    INSERT INTO pedidos (id_mesa, status, total, data, item ,observacao,num_mesa)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `;
-  const values = [id_mesa, status, total, data, JSON.stringify(item), observacao,numero];
-
-   // Verificar a observação que chegou
-   console.log('Observação recebida:', observacao);
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error('Erro ao adicionar pedido:', err);
-      res.status(500).json({ error: 'Erro ao adicionar pedido' });
-    } else {
-      console.log('Pedido adicionado com sucesso:', result);
-      res.status(201).json({ message: 'Pedido adicionado com sucesso', id: result.insertId });
-    }
+// Rota de teste para verificar se o servidor está funcionando
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'Servidor funcionando', 
+    timestamp: new Date().toISOString(),
+    headers: req.headers 
   });
 });
 
+// Rota de teste para verificar conexão com banco
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const [rows] = await db.promise().query('SELECT 1 as test');
+    res.json({ message: 'Conexão com banco OK', result: rows });
+  } catch (err) {
+    console.error('Erro na conexão com banco:', err);
+    res.status(500).json({ error: 'Erro na conexão com banco', details: err.message });
+  }
+});
+
+// Rota POST para adicionar um novo pedido
+app.post('/api/pedidos', async (req, res) => {
+  console.log('=== INÍCIO PROCESSAMENTO PEDIDO ===');
+  console.log('Body recebido:', JSON.stringify(req.body, null, 2));
+  
+  const { id_mesa, status, total, data, item, observacao, numero } = req.body;
+
+  // Log básico para depuração
+  console.log('Campos extraídos:', { id_mesa, status, total, data, item, observacao, numero });
+
+  // Validações mínimas
+  if (!id_mesa || !item) {
+    console.log('ERRO: Campos obrigatórios ausentes');
+    return res.status(400).json({ error: 'Campos obrigatórios ausentes: id_mesa ou item' });
+  }
+
+  try {
+    // Processar string de itens "34|X-DOG EGG|1|25.00; 35|OUTRO ITEM|2|15.00"
+    const itens = item.split(';').map(itemStr => {
+      const [id_item, nome_item, quantidade, preco] = itemStr.split('|').map(s => s.trim());
+      return {
+        id_item: parseInt(id_item) || null,
+        nome_item: nome_item || '',
+        quantidade: parseInt(quantidade) || 1,
+        preco: parseFloat(preco) || 0
+      };
+    });
+
+    console.log('Itens processados:', itens);
+
+    const results = [];
+    
+    // Inserir cada item como um registro separado na tabela pedido
+    for (const itemData of itens) {
+      const query = `INSERT INTO pedido (id_mesa, id_empresa, id_item, nome_item, preco, quantidade, observacao, data_pedido) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+      
+      const values = [
+        id_mesa,
+        1, // id_empresa padrão - ajuste conforme necessário
+        itemData.id_item,
+        itemData.nome_item,
+        itemData.preco,
+        itemData.quantidade,
+        observacao || null,
+        data || new Date() // usar data fornecida ou atual
+      ];
+      
+      console.log('Inserindo item:', { query, values });
+      
+      const [result] = await db.promise().execute(query, values);
+      results.push({ 
+        id_pedido: result.insertId, 
+        item: itemData.nome_item,
+        quantidade: itemData.quantidade 
+      });
+    }
+
+    console.log('Todos os itens inseridos com sucesso:', results);
+    console.log('=== FIM PROCESSAMENTO PEDIDO (SUCESSO) ===');
+    
+    res.status(201).json({ 
+      message: 'Pedido adicionado com sucesso', 
+      itens_inseridos: results.length,
+      detalhes: results
+    });
+    
+  } catch (err) {
+    // Registrar erro detalhado
+    console.error('=== ERRO DETALHADO ===');
+    console.error('Tipo do erro:', err.constructor.name);
+    console.error('Código do erro:', err.code);
+    console.error('Número do erro:', err.errno);
+    console.error('Mensagem SQL:', err.sqlMessage);
+    console.error('Estado SQL:', err.sqlState);
+    console.error('Stack trace:', err.stack);
+    console.error('=== FIM ERRO DETALHADO ===');
+    
+    return res.status(500).json({ 
+      error: 'Erro ao adicionar pedido', 
+      details: err.sqlMessage || err.message,
+      code: err.code,
+      errno: err.errno
+    });
+  }
+});
 
 app.get('/api/pedidos', (req, res) => {
-  db.query('SELECT * FROM pedidos where  status != "Finalizado"', (err, results) => {
+  db.query('SELECT * FROM pedido ORDER BY data_pedido DESC', (err, results) => {
     if (err) {
       console.error('Erro ao consultar os pedidos:', err);
       res.status(500).json({ error: 'Erro ao obter pedidos', details: err });
@@ -573,7 +654,7 @@ app.get('/api/pedidos', (req, res) => {
 app.get('/api/mesas/:id/historico-pedidos', (req, res) => {
   const mesaId = req.params.id;
 
-  const query = `SELECT * FROM pedidos WHERE id_mesa = ? ORDER BY data DESC`;
+  const query = `SELECT * FROM pedido WHERE id_mesa = ? ORDER BY data_pedido DESC`;
 
   db.query(query, [mesaId], (err, results) => {
     if (err) {
@@ -581,27 +662,32 @@ app.get('/api/mesas/:id/historico-pedidos', (req, res) => {
       return res.status(500).json({ error: 'Erro ao buscar histórico de pedidos' });
     }
 
-    // Verificar e parsear o campo 'itens' corretamente
-    const pedidosComItens = results.map(pedido => {
-      try {
-        pedido.itens = JSON.parse(pedido.itens); // Parse o campo itens, que está em JSON
-      } catch (err) {
-        pedido.itens = []; // Caso o parse falhe, garanta que itens seja um array vazio
-      }
-      return pedido;
+    // Agrupar itens por pedido (se necessário) e formatar para o frontend
+    const pedidosFormatados = results.map(pedido => {
+      return {
+        id_pedido: pedido.id_pedido,
+        data: pedido.data_pedido,
+        status: pedido.impresso ? 'Impresso' : 'Pendente',
+        total: pedido.preco * pedido.quantidade,
+        observacao: pedido.observacao,
+        itens: [{
+          id: pedido.id_item,
+          nome: pedido.nome_item,
+          quantidade: pedido.quantidade,
+          preco: pedido.preco
+        }]
+      };
     });
 
-    res.json(pedidosComItens);
+    res.json(pedidosFormatados);
   });
 });
-
-
 
 
 // Rota GET para obter um pedido específico pelo ID
 app.get('/api/pedidos/:id', (req, res) => {
   const { id } = req.params;
-  db.query('SELECT * FROM pedidos WHERE id_pedido = ?', [id], (err, results) => {
+  db.query('SELECT * FROM pedido WHERE id_pedido = ?', [id], (err, results) => {
     if (err) {
       console.error('Erro ao consultar o pedido:', err);
       res.status(500).json({ error: 'Erro ao obter pedido', details: err });
@@ -617,14 +703,14 @@ app.get('/api/pedidos/:id', (req, res) => {
 // Rota PUT para atualizar um pedido
 app.put('/api/pedidos/:id', (req, res) => {
   const { id } = req.params;
-  const { id_mesa, status } = req.body;
+  const { impresso } = req.body;
 
   const query = `
-    UPDATE pedidos
-    SET id_mesa = ?, status = ?
+    UPDATE pedido
+    SET impresso = ?
     WHERE id_pedido = ?
   `;
-  const values = [id_mesa, status, id];
+  const values = [impresso ? 1 : 0, id];
 
   db.query(query, values, (err, result) => {
     if (err) {
@@ -643,7 +729,7 @@ app.put('/api/pedidos/:id', (req, res) => {
 // Rota DELETE para excluir um pedido
 app.delete('/api/pedidos/:id', (req, res) => {
   const { id } = req.params;
-  db.query('DELETE FROM pedidos WHERE id_pedido = ?', [id], (err, result) => {
+  db.query('DELETE FROM pedido WHERE id_pedido = ?', [id], (err, result) => {
     if (err) {
       console.error('Erro ao deletar pedido:', err);
       res.status(500).json({ error: 'Erro ao deletar pedido' });
