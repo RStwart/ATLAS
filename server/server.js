@@ -390,7 +390,7 @@ app.get('/api/funcionarios', (req, res) => {
 
 // Rota GET para obter todas as mesas
 app.get('/api/mesas', (req, res) => {
-  db.query('SELECT * FROM mesa where status != "finalizada" ORDER BY id_mesa DESC ', (err, results) => {
+  db.query('SELECT * FROM mesa where status != "finalizada" ', (err, results) => {
     if (err) {
       console.error('Erro ao consultar as mesas:', err);
       res.status(500).json({ error: 'Erro ao obter mesas', details: err });
