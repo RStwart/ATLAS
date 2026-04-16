@@ -22,7 +22,7 @@
         <div>
           <p class="text-muted mb-1" style="font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Total em Cartão</p>
           <h4 class="mb-0 fw-bold">R$ {{ totalCartao | number:'1.2-2' }}</h4>
-          <small class="text-muted">Créd: R$ {{ totalCartaoCredito | number:'1.2-2' }} &nbsp;|&nbsp; Déb: R$ {{ totalCartaoDebito | number:'1.2-2' }}</small>
+          <small class="text-muted">Créd : R$ {{ totalCartaoCredito | number:'1.2-2' }} &nbsp;|&nbsp; Déb: R$ {{ totalCartaoDebito | number:'1.2-2' }}</small>
         </div>
         <div style="background:#e7f1ff; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center;">
           <i class="feather icon-credit-card" style="color:#007bff; font-size:1.4rem;"></i>
@@ -127,7 +127,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let venda of vendas">
+          <tr *ngFor="let venda of vendasAgrupadas">
             <!-- Número da Mesa -->
             <td>
               <h6 class="mb-1">Mesa {{ venda.numero_mesa }}</h6>
@@ -138,22 +138,33 @@
             </td>
             <!-- Tipo de Pagamento -->
             <td>
-              <span class="badge rounded-pill"
-                [ngClass]="{
-                  'bg-success':   venda.tipo_pagamento === 'PIX',
-                  'bg-primary':   venda.tipo_pagamento === 'CARTAO',
-                  'bg-warning text-dark': venda.tipo_pagamento === 'DINHEIRO',
-                  'bg-secondary': venda.tipo_pagamento === 'NA'
-                }">
-                {{ venda.tipo_pagamento }}
-              </span>
+              <ng-container *ngIf="!venda.isDividido">
+                <span class="badge rounded-pill"
+                  [ngClass]="{
+                    'bg-success':   venda.tipo_pagamento === 'PIX',
+                    'bg-primary':   venda.tipo_pagamento === 'CARTAO',
+                    'bg-warning text-dark': venda.tipo_pagamento === 'DINHEIRO',
+                    'bg-secondary': venda.tipo_pagamento === 'NA'
+                  }">
+                  {{ venda.tipo_pagamento }}
+                </span>
+              </ng-container>
+              <ng-container *ngIf="venda.isDividido">
+                <span class="badge rounded-pill bg-dark"><i class="feather icon-layers me-1"></i>DIVIDIDO</span>
+                <div class="mt-1" *ngFor="let d of venda.divisoes">
+                  <small class="text-muted">{{ d.tipo_pagamento }}<span *ngIf="d.card_type && d.card_type !== 'NA'"> ({{ d.card_type }})</span>: R$ {{ d.total | number:'1.2-2' }}</small>
+                </div>
+              </ng-container>
             </td>
             <!-- Tipo do Cartão -->
             <td>
-              <span *ngIf="venda.card_type && venda.card_type !== 'NA'" class="badge bg-info text-dark rounded-pill">
-                {{ venda.card_type }}
-              </span>
-              <span *ngIf="!venda.card_type || venda.card_type === 'NA'" class="text-muted">—</span>
+              <ng-container *ngIf="!venda.isDividido">
+                <span *ngIf="venda.card_type && venda.card_type !== 'NA'" class="badge bg-info text-dark rounded-pill">
+                  {{ venda.card_type }}
+                </span>
+                <span *ngIf="!venda.card_type || venda.card_type === 'NA'" class="text-muted">—</span>
+              </ng-container>
+              <span *ngIf="venda.isDividido" class="text-muted">—</span>
             </td>
             <!-- Movimento -->
             <td>
@@ -185,10 +196,10 @@
             </td>
             <!-- Ações -->
             <td>
-              <a href="javascript:" class="label theme-bg text-white f-12 rounded-pill" (click)="abrirModalDetalhes(venda)" >Ajustar</a>
+              <a href="javascript:" class="label theme-bg text-white f-12 rounded-pill" (click)="abrirModalDetalhes(venda)">Ajustar</a>
             </td>
           </tr>
-          <tr *ngIf="vendas.length === 0">
+          <tr *ngIf="vendasAgrupadas.length === 0">
             <td colspan="10" class="text-center py-4 text-muted">
               <i class="feather icon-inbox" style="font-size:2rem; display:block; margin-bottom:8px;"></i>
               Nenhuma venda registrada no caixa atual.

@@ -15,6 +15,7 @@ import { ToastrService } from 'ngx-toastr';
 export default class DashboardComponent implements OnInit {
 
   vendas: Venda[] = []; // Array para armazenar as vendas
+  vendasAgrupadas: any[] = []; // Vendas agrupadas para exibição (sem duplicatas de divisão)
   totalGanhos: number = 0; // Total de ganhos
   totalAbertura: number = 0;
   mostrarModalVendas: boolean = false; // Controla a visibilidade do modal de vendas
@@ -53,9 +54,11 @@ export default class DashboardComponent implements OnInit {
 
   // Método para obter as vendas
   getVendas(): void {
+
     this.vendasService.getVendas().subscribe({
       next: (dados) => {
         this.vendas = dados;
+        this.agruparVendas();
         this.calcularTotalGanhos();
       },
       error: (err) => {
@@ -65,8 +68,34 @@ export default class DashboardComponent implements OnInit {
           this.toastr.error('Erro ao carregar vendas.', 'Erro');
         }
         this.vendas = [];
+        this.vendasAgrupadas = [];
         this.calcularTotalGanhos();
       }
+    });
+  }
+
+  // Agrupa subvendas da mesma operação em uma linha única
+  agruparVendas(): void {
+    // Exclui as vendas CANCELADAS (são as "mãe" das vendas divididas)
+    const vendasAtivas = this.vendas.filter(v => v.status_venda !== 'CANCELADA');
+
+    const grupos = new Map<string, Venda[]>();
+    vendasAtivas.forEach(v => {
+      // Chave: mesa + data + hora + movimento — identifica a mesma operação
+      const key = `${v.numero_mesa}_${v.data_venda}_${v.hora_venda}_${v.movimento ?? ''}`;
+      if (!grupos.has(key)) grupos.set(key, []);
+      grupos.get(key)!.push(v);
+    });
+
+    this.vendasAgrupadas = Array.from(grupos.values()).map(grupo => {
+      const totalGrupo = grupo.reduce((sum, v) => sum + (Number(v.total) || 0), 0);
+      return {
+        ...grupo[0],
+        total: totalGrupo,
+        divisoes: grupo,
+        isDividido: grupo.length > 1,
+        tipo_pagamento: grupo.length > 1 ? 'DIVIDIDO' : grupo[0].tipo_pagamento,
+      };
     });
   }
 
@@ -101,57 +130,59 @@ export default class DashboardComponent implements OnInit {
 
 
   calcularTotalGanhos(): void {
-    this.totalGanhos = this.vendas
+    // Exclui CANCELADAS para evitar contagem dupla de vendas divididas
+    const vendasValidas = this.vendas.filter(v => v.status_venda !== 'CANCELADA');
+
+    this.totalGanhos = vendasValidas
       .map(venda => Number(venda.total) || 0)
       .reduce((soma, total) => soma + total, 0);
-  
-    // Totalização por tipo de pagamento
-    this.totalDinheiro = this.vendas
+
+    this.totalDinheiro = vendasValidas
       .filter(venda => venda.tipo_pagamento === 'DINHEIRO')
       .reduce((soma, venda) => soma + (Number(venda.total) || 0), 0);
-  
-    this.totalPix = this.vendas
+
+    this.totalPix = vendasValidas
       .filter(venda => venda.tipo_pagamento === 'PIX')
       .reduce((soma, venda) => soma + (Number(venda.total) || 0), 0);
-  
-    // Separação de cartão em crédito e débito
-    this.totalCartaoCredito = this.vendas
+
+    this.totalCartaoCredito = vendasValidas
       .filter(venda => venda.tipo_pagamento === 'CARTAO' && venda.card_type === 'Credito')
       .reduce((soma, venda) => soma + (Number(venda.total) || 0), 0);
-  
-    this.totalCartaoDebito = this.vendas
+
+    this.totalCartaoDebito = vendasValidas
       .filter(venda => venda.tipo_pagamento === 'CARTAO' && venda.card_type === 'Debito')
       .reduce((soma, venda) => soma + (Number(venda.total) || 0), 0);
-  
-    // Soma total dos cartões (crédito + débito)
+
     this.totalCartao = this.totalCartaoCredito + this.totalCartaoDebito;
   }
   
 
   
   // Método para selecionar uma venda para exibir no modal
-  abrirModalDetalhes(venda: Venda): void {
+  abrirModalDetalhes(venda: any): void {
+    this.vendaSelecionada = { ...venda };
 
+    if (venda.isDividido && venda.divisoes?.length > 1) {
+      // Pré-popula as divisões com os dados já existentes
+      this.divisoesPagamento = venda.divisoes.map((d: Venda) => ({
+        valor: Number(d.total) || 0,
+        tipoPagamento: d.tipo_pagamento,
+        operacao: d.card_type && d.card_type !== 'NA' ? d.card_type : '',
+        nota: d.nota || ''
+      }));
+    } else {
+      // Venda simples: uma divisão por padrão
+      this.divisoesPagamento = [
+        {
+          valor: this.vendaSelecionada.total || 0,
+          tipoPagamento: venda.tipo_pagamento !== 'DIVIDIDO' ? venda.tipo_pagamento : '',
+          operacao: '',
+          nota: ''
+        }
+      ];
+    }
 
-    this.vendaSelecionada = { ...venda };  // Faz uma cópia da venda
-
-
-        // Se não houver divisões ainda, cria uma por padrão
-        this.divisoesPagamento = [
-          {
-            valor: this.vendaSelecionada.total || 0,
-            tipoPagamento: '',
-            operacao: '',
-            nota: ''
-          }
-        ];
-
-
-
-    console.log('Detalhes da Venda Selecionada:', this.vendaSelecionada);  // Exibe no console para verificação
-
-    this.mostrarModalVendas = true;  // Exibe o modal de detalhes
-    
+    this.mostrarModalVendas = true;
   }
 
   salvarVendaComDivisao() {
