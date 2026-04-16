@@ -8,7 +8,15 @@
 
             <!-- Imagem do produto -->
             <div class="product-card__img-wrap">
-              <img [src]="produto.imagemUrl" alt="{{ produto.nome }}" class="product-card__img" />
+              <ng-container *ngIf="produto.imagemUrl; else semImagem">
+                <img [src]="produto.imagemUrl" alt="{{ produto.nome }}" class="product-card__img" />
+              </ng-container>
+              <ng-template #semImagem>
+                <div class="product-card__no-img">
+                  <i class="feather icon-image"></i>
+                  <span>Sem imagem</span>
+                </div>
+              </ng-template>
               <div class="product-card__price-badge">{{ produto.preco | currency: 'BRL' }}</div>
             </div>
 
@@ -73,34 +81,65 @@
 
 
 <!-- Formulário de Edição -->
-<div *ngIf="produtoEmEdicao" class="row mt-3">
-  <div class="col-sm-12">
-    <app-card cardTitle="Editar Produto" [options]="false">
-      <div class="form-container">
-        <form (ngSubmit)="salvarEdicao()">
-          <div class="form-group">
-            <label for="edit-nome">Nome</label>
-            <input id="edit-nome" class="form-control" [(ngModel)]="produtoEmEdicao.nome" name="edit-nome" required />
+<div class="atlas-modal" *ngIf="produtoEmEdicao">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+    <div class="atlas-modal-content">
+
+      <!-- Header -->
+      <div class="modal-header-custom modal-header-custom--green">
+        <div class="d-flex align-items-center gap-3">
+          <div class="modal-header-icon">
+            <i class="feather icon-edit-2"></i>
           </div>
-          <div class="form-group">
-            <label for="edit-descricao">Descrição</label>
-            <textarea id="edit-descricao" class="form-control" [(ngModel)]="produtoEmEdicao.descricao" name="edit-descricao"></textarea>
+          <div>
+            <p class="mb-0 modal-header-label">Produtos</p>
+            <h5 class="mb-0 text-white fw-bold">Editar Produto</h5>
           </div>
-          <div class="form-group">
-            <label for="edit-preco">Preço</label>
-            <input id="edit-preco" type="number" class="form-control" [(ngModel)]="produtoEmEdicao.preco" name="edit-preco" required />
+        </div>
+        <button type="button" (click)="cancelarEdicao()" class="modal-close-btn">&times;</button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body-custom">
+        <form id="form-editar-produto" (ngSubmit)="salvarEdicao()">
+          <div class="row g-3">
+
+            <div class="col-12">
+              <label class="field-label">Nome</label>
+              <input id="edit-nome" type="text" class="field-input" [(ngModel)]="produtoEmEdicao.nome" name="edit-nome" required />
+            </div>
+
+            <div class="col-12">
+              <label class="field-label">Descrição</label>
+              <textarea id="edit-descricao" class="field-input" rows="3" [(ngModel)]="produtoEmEdicao.descricao" name="edit-descricao" style="resize:none;"></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Preço</label>
+              <input id="edit-preco" type="number" class="field-input" [(ngModel)]="produtoEmEdicao.preco" name="edit-preco" required />
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Quantidade em Estoque</label>
+              <input id="edit-quantidade" type="number" class="field-input" [(ngModel)]="produtoEmEdicao.quantidade_estoque" name="edit-quantidade" required />
+            </div>
+
           </div>
-          <div class="form-group">
-            <label for="edit-quantidade">Quantidade em Estoque</label>
-            <input id="edit-quantidade" type="number" class="form-control" [(ngModel)]="produtoEmEdicao.quantidade_estoque" name="edit-quantidade" required />
-          </div>
-          <button type="submit" class="btn btn-success me-2">Salvar</button>
-          <button type="button" class="btn btn-secondary" (click)="cancelarEdicao()">Cancelar</button>
         </form>
       </div>
-    </app-card>
+
+      <!-- Footer -->
+      <div class="modal-footer-custom">
+        <button type="button" (click)="cancelarEdicao()" class="btn-modal-cancel">Cancelar</button>
+        <button type="submit" form="form-editar-produto" class="btn-modal-primary btn-modal-primary--green">
+          <i class="feather icon-check me-1"></i>Salvar Alterações
+        </button>
+      </div>
+
+    </div>
   </div>
 </div>
+<div class="atlas-backdrop" *ngIf="produtoEmEdicao"></div>
 
 <!-- Paginação original -->
 <nav aria-label="Page navigation" class="mt-3">
