@@ -4,7 +4,8 @@ import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppRoutingModule } from './app-routing.module';
-import { HttpClientModule } from '@angular/common/http';  // Importação do HttpClientModule
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptor } from './interceptors/auth.interceptor';
 
 // project import
 import { AppComponent } from './app.component';
@@ -54,7 +55,10 @@ import { ToastrModule } from 'ngx-toastr'; // Módulo Toastr
     BrowserAnimationsModule,
     HttpClientModule  // Adicionado o HttpClientModule aqui
   ],
-  providers: [NavigationItem],
+  providers: [
+    NavigationItem,
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {}

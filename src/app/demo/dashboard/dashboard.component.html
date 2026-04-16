@@ -1,28 +1,49 @@
 <div class="row">
 
+  <!-- Card Dinheiro -->
   <div class="col-xl-4 col-md-6">
-    <app-card cardTitle="TOTAL EM DINHEIRO" cardClass="Recent-Users" blockClass="p-0">
-      <div class="card-header borderless">
-        <h5 class="text-black">     R$ {{ totalDinheiro | number:'1.2-2' }}</h5>
+    <div class="card" style="border-left: 4px solid #28a745;">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div>
+          <p class="text-muted mb-1" style="font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Total em Dinheiro</p>
+          <h4 class="mb-0 fw-bold">R$ {{ totalDinheiro | number:'1.2-2' }}</h4>
+        </div>
+        <div style="background:#e9f7ef; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center;">
+          <i class="feather icon-dollar-sign" style="color:#28a745; font-size:1.4rem;"></i>
+        </div>
       </div>
-    </app-card>
+    </div>
   </div>
 
+  <!-- Card Cartão -->
   <div class="col-xl-4 col-md-6">
-    <app-card cardTitle="TOTAL EM CARTÃO " cardClass="Recent-Users" blockClass="p-0">
-      <div class="card-header borderless">
-        <h5 class="text-black"> Total : R$ {{ totalCartao | number:'1.2-2' }}</h5>
+    <div class="card" style="border-left: 4px solid #007bff;">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div>
+          <p class="text-muted mb-1" style="font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Total em Cartão</p>
+          <h4 class="mb-0 fw-bold">R$ {{ totalCartao | number:'1.2-2' }}</h4>
+          <small class="text-muted">Créd: R$ {{ totalCartaoCredito | number:'1.2-2' }} &nbsp;|&nbsp; Déb: R$ {{ totalCartaoDebito | number:'1.2-2' }}</small>
+        </div>
+        <div style="background:#e7f1ff; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center;">
+          <i class="feather icon-credit-card" style="color:#007bff; font-size:1.4rem;"></i>
+        </div>
       </div>
-    </app-card>
+    </div>
   </div>
 
-
+  <!-- Card PIX -->
   <div class="col-xl-4 col-md-6">
-    <app-card cardTitle="TOTAL EM PIX" cardClass="Recent-Users" blockClass="p-0">
-      <div class="card-header borderless">
-        <h5 class="text-black">     R$ {{ totalPix | number:'1.2-2' }}</h5>
+    <div class="card" style="border-left: 4px solid #6f42c1;">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div>
+          <p class="text-muted mb-1" style="font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Total em PIX</p>
+          <h4 class="mb-0 fw-bold">R$ {{ totalPix | number:'1.2-2' }}</h4>
+        </div>
+        <div style="background:#f0ebff; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center;">
+          <i class="feather icon-zap" style="color:#6f42c1; font-size:1.4rem;"></i>
+        </div>
       </div>
-    </app-card>
+    </div>
   </div>
 
 <!-- Últimas Vendas -->
@@ -56,11 +77,22 @@
             </td>
             <!-- Tipo de Pagamento -->
             <td>
-              <p class="m-0">{{ venda.tipo_pagamento }}</p>
+              <span class="badge rounded-pill"
+                [ngClass]="{
+                  'bg-success':   venda.tipo_pagamento === 'PIX',
+                  'bg-primary':   venda.tipo_pagamento === 'CARTAO',
+                  'bg-warning text-dark': venda.tipo_pagamento === 'DINHEIRO',
+                  'bg-secondary': venda.tipo_pagamento === 'NA'
+                }">
+                {{ venda.tipo_pagamento }}
+              </span>
             </td>
             <!-- Tipo do Cartão -->
             <td>
-              <p class="m-0">{{ venda.card_type }}</p>
+              <span *ngIf="venda.card_type && venda.card_type !== 'NA'" class="badge bg-info text-dark rounded-pill">
+                {{ venda.card_type }}
+              </span>
+              <span *ngIf="!venda.card_type || venda.card_type === 'NA'" class="text-muted">—</span>
             </td>
             <!-- Movimento -->
             <td>
@@ -80,19 +112,25 @@
             </td>
             <!-- Status da Venda -->
             <td>
-              <h6 class="text-muted">
-                <i class="fas fa-circle" 
-                  [ngClass]="{
-                    'text-success': venda.status_venda == 'FINALIZADA',
-                    'text-warning': venda.status_venda == 'PENDENTE',
-                    'text-danger': venda.status_venda == 'CANCELADA'
-                  }">
-                </i> {{ venda.status_venda }}
-              </h6>
+              <span class="badge rounded-pill"
+                [ngClass]="{
+                  'bg-success':          venda.status_venda === 'FINALIZADA',
+                  'bg-warning text-dark': venda.status_venda === 'PENDENTE',
+                  'bg-danger':           venda.status_venda === 'CANCELADA',
+                  'bg-secondary':        venda.status_venda === 'PAGO'
+                }">
+                {{ venda.status_venda }}
+              </span>
             </td>
             <!-- Ações -->
             <td>
               <a href="javascript:" class="label theme-bg text-white f-12 rounded-pill" (click)="abrirModalDetalhes(venda)" >Ajustar</a>
+            </td>
+          </tr>
+          <tr *ngIf="vendas.length === 0">
+            <td colspan="10" class="text-center py-4 text-muted">
+              <i class="feather icon-inbox" style="font-size:2rem; display:block; margin-bottom:8px;"></i>
+              Nenhuma venda registrada no caixa atual.
             </td>
           </tr>
         </tbody>
@@ -106,10 +144,15 @@
   <div class="col-xl-4 col-md-6">
     <div class="card bg-c-blue">
       <div class="card-header borderless">
-        <h5 class="text-white">CAIXA DIARIO {{ caixaid }} {{ status }}</h5>
-        <p class="text-white mt-3"><strong>Data Abertura:</strong> {{ data_abertura | date:'dd/MM/yyyy' }}</p>
-        <p class="text-white "><strong>Hora Abertura:</strong> {{ hora_abertura }}</p>
-        <p class="text-white"><strong>Total de Abertura:</strong> R$ {{ total_abertura }}</p>
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h5 class="text-white mb-0">CAIXA DIÁRIO #{{ caixaid }}</h5>
+          <span class="badge rounded-pill px-3 py-1"
+            [ngStyle]="{'background-color': status === 'ABERTO' ? '#28a745' : '#dc3545', 'font-size':'0.8rem'}">
+            {{ status || 'FECHADO' }}
+          </span>
+        </div>
+        <p class="text-white mt-2 mb-1"><i class="feather icon-calendar" style="margin-right:6px;"></i><strong>Abertura:</strong> {{ data_abertura | date:'dd/MM/yyyy' }} às {{ hora_abertura }}</p>
+        <p class="text-white mb-0"><i class="feather icon-tag" style="margin-right:6px;"></i><strong>Fundo de Caixa:</strong> R$ {{ total_abertura | number:'1.2-2' }}</p>
       </div>
       <div class="card-block" style="padding: 0 25px">
         <div class="earning-text mb-0">

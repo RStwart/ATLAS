@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { VendasService } from '../../services/vendas.service';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { Venda } from '../../interfaces/vendas.interface';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [SharedModule],
-  providers: [VendasService],
+  providers: [VendasService, ToastrService],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -35,7 +36,7 @@ export default class DashboardComponent implements OnInit {
   divisoesPagamento: any[] = []; // Array de divisões
 
 
-  constructor(private vendasService: VendasService) {}
+  constructor(private vendasService: VendasService, private toastr: ToastrService) {}
 
   ngOnInit(): void {
     this.getVendas();
@@ -45,10 +46,20 @@ export default class DashboardComponent implements OnInit {
 
   // Método para obter as vendas
   getVendas(): void {
-    this.vendasService.getVendas().subscribe((dados) => {
-      this.vendas = dados; // Atribui as vendas obtidas ao array vendas
-      console.log('VENDAS', this.vendas);
-      this.calcularTotalGanhos(); // Calcula o total dos ganhos
+    this.vendasService.getVendas().subscribe({
+      next: (dados) => {
+        this.vendas = dados;
+        this.calcularTotalGanhos();
+      },
+      error: (err) => {
+        if (err.status === 400) {
+          this.toastr.warning('Nenhum caixa aberto. Abra o caixa para visualizar as vendas.', 'Caixa fechado', { timeOut: 5000 });
+        } else {
+          this.toastr.error('Erro ao carregar vendas.', 'Erro');
+        }
+        this.vendas = [];
+        this.calcularTotalGanhos();
+      }
     });
   }
 
@@ -166,7 +177,7 @@ export default class DashboardComponent implements OnInit {
   
         this.vendasService.addVenda(subvenda).subscribe({
           next: (res) => console.log('Subvenda criada:', res),
-          error: (err) => console.error('Erro ao criar subvenda:', err)
+          error: (err) => this.toastr.error('Erro ao registrar divisão de pagamento.', 'Erro')
         });
       });
   
@@ -179,10 +190,10 @@ export default class DashboardComponent implements OnInit {
   
       this.vendasService.updateVenda(vendaDividida).subscribe({
         next: (res) => {
-          console.log('Venda original atualizada como dividida:', res);
+          this.toastr.success('Venda dividida registrada com sucesso!', 'Sucesso');
           this.fecharModalVendas();
         },
-        error: (err) => console.error('Erro ao atualizar venda original:', err)
+        error: (err) => this.toastr.error('Erro ao atualizar venda original.', 'Erro')
       });
   
     } else {
@@ -202,10 +213,10 @@ export default class DashboardComponent implements OnInit {
   
       this.vendasService.updateVenda(vendaFinal).subscribe({
         next: (res) => {
-          console.log('Venda atualizada com sucesso:', res);
+          this.toastr.success('Venda atualizada com sucesso!', 'Sucesso');
           this.fecharModalVendas();
         },
-        error: (err) => console.error('Erro ao atualizar venda:', err)
+        error: (err) => this.toastr.error('Erro ao atualizar venda.', 'Erro')
       });
     }
   
@@ -248,7 +259,7 @@ export default class DashboardComponent implements OnInit {
 
   abrirCaixa(): void {
     if (this.totalAbertura <= 0) {
-      alert('O valor de abertura deve ser maior que zero.');
+      this.toastr.warning('O valor de abertura deve ser maior que zero.', 'Atenção');
       return;
     }
 
@@ -256,35 +267,40 @@ export default class DashboardComponent implements OnInit {
       total_abertura: this.totalAbertura
     };
 
-    this.vendasService.iniciarCaixa(dados).subscribe(
-      response => {
-        console.log('Caixa iniciado com sucesso:', response);
+    this.vendasService.iniciarCaixa(dados).subscribe({
+      next: (response) => {
+        this.toastr.success('Caixa aberto com sucesso!', 'Sucesso');
         this.fecharModalCaixa();
+        setTimeout(() => { window.location.reload(); }, 800);
       },
-      error => {
-        console.error('Erro ao iniciar caixa:', error);
+      error: (error) => {
+        const detalhe = error?.error?.detail || error?.error?.error || error?.message || 'Erro desconhecido';
+        console.error('ERRO COMPLETO AO ABRIR CAIXA:', error);
+        this.toastr.error(detalhe, 'Erro ao abrir o caixa', {
+          timeOut: 0,
+          closeButton: true,
+          tapToDismiss: false
+        });
       }
-    );
-
-    setTimeout(() => {
-      window.location.reload();
-    }, 800);
+    });
   }
 
   buscarCaixaAberto() {
     this.vendasService.getCaixaAberto().subscribe({
       next: (caixa) => {
         this.caixa = caixa;
-        console.log("Caixa aberto encontrado:", caixa);
         this.caixaid = caixa.id_caixa;
-        this.data_abertura = caixa.data_abertura
-        this.hora_abertura = caixa.hora_abertura
-        this.status = caixa.status
+        this.data_abertura = caixa.data_abertura;
+        this.hora_abertura = caixa.hora_abertura;
+        this.status = caixa.status;
         this.total_abertura = caixa.total_abertura;
-
       },
       error: (error) => {
-        console.error("Erro ao buscar caixa aberto:", error);
+        if (error.status === 404) {
+          this.toastr.info('Nenhum caixa aberto. Clique em "Abrir Caixa" para iniciar o dia.', 'Caixa não iniciado', { timeOut: 6000 });
+        } else {
+          this.toastr.error('Erro ao buscar informações do caixa.', 'Erro');
+        }
       }
     });
   }
@@ -292,7 +308,7 @@ export default class DashboardComponent implements OnInit {
 
   fecharCaixa() {
     const dadosFechamento = {
-      idCaixa: this.caixaid, // Esse é o ID que você já guardou antes
+      idCaixa: this.caixaid,
       totalFechamento: this.totalGanhos,
       totalPix: this.totalPix,
       totalDinheiro: this.totalDinheiro,
@@ -300,13 +316,14 @@ export default class DashboardComponent implements OnInit {
       totalDebito: this.totalCartaoDebito
     };
   
-    this.vendasService.fecharCaixa(dadosFechamento).subscribe(
-      (res) => {
-        console.log("Caixa fechado com sucesso:", res);
-        alert("Caixa fechado com sucesso!");
+    this.vendasService.fecharCaixa(dadosFechamento).subscribe({
+      next: (res) => {
+        this.toastr.success('Caixa fechado com sucesso!', 'Sucesso', { timeOut: 4000 });
       },
-      (error) => console.error("Erro ao fechar caixa:", error)
-    );
+      error: (error) => {
+        this.toastr.error('Erro ao fechar o caixa.', 'Erro');
+      }
+    });
 
     setTimeout(() => {
       window.location.reload();
