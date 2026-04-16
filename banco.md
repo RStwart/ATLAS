@@ -33,9 +33,25 @@ CREATE TABLE USUARIOS (
 
 ---
 
-## 3. Tabela `produto`
+## 3. Tabela `categoria`
 
-Catálogo de produtos disponíveis para venda.
+Categorias de produtos por empresa (multi-tenant). Criada antes da tabela `produto` pois `produto.categoria` armazena o `id_categoria`.
+
+```sql
+CREATE TABLE IF NOT EXISTS categoria (
+  id_categoria  INT          NOT NULL AUTO_INCREMENT,
+  nome          VARCHAR(100) NOT NULL,
+  cor           VARCHAR(20)  NOT NULL DEFAULT '#6c757d',
+  id_empresa    INT          NOT NULL,
+  PRIMARY KEY (id_categoria)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+---
+
+## 4. Tabela `produto`
+
+Catálogo de produtos disponíveis para venda. O campo `categoria` armazena o `id_categoria` (como string VARCHAR).
 
 ```sql
 CREATE TABLE produto (
@@ -45,7 +61,8 @@ CREATE TABLE produto (
   preco               DECIMAL(10, 2)   NOT NULL DEFAULT 0.00,
   quantidade_estoque  INT              NOT NULL DEFAULT 0,
   imagem              VARCHAR(255),                   -- caminho relativo: /uploads/arquivo.jpg
-  categoria           VARCHAR(100),
+  categoria           VARCHAR(100),                   -- armazena id_categoria como string
+  id_empresa          INT,
   PRIMARY KEY (id_produto)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```

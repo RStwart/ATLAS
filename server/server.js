@@ -335,11 +335,11 @@ app.get('/api/produtos/categoria/:id', autenticarTenant, (req, res) => {
 
 // Rota POST para adicionar produtos com upload de imagem
 app.post('/api/produtos', autenticarTenant, upload.single('imagem'), (req, res) => {
-  const { nome, descricao, preco, quantidade_estoque } = req.body;
+  const { nome, descricao, preco, quantidade_estoque, categoria } = req.body;
   const imagemUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
-  const query = 'INSERT INTO produto (nome, descricao, preco, quantidade_estoque, imagem, id_empresa) VALUES (?, ?, ?, ?, ?, ?)';
-  const values = [nome, descricao, preco, quantidade_estoque, imagemUrl, req.id_empresa];
+  const query = 'INSERT INTO produto (nome, descricao, preco, quantidade_estoque, imagem, categoria, id_empresa) VALUES (?, ?, ?, ?, ?, ?, ?)';
+  const values = [nome, descricao, preco, quantidade_estoque, imagemUrl, categoria || null, req.id_empresa];
 
   db.query(query, values, (err, result) => {
     if (err) {
@@ -374,16 +374,16 @@ app.delete('/api/produtos/:id', autenticarTenant, (req, res) => {
 // Rota PUT para atualizar um produto
 app.put('/api/produtos/:id', autenticarTenant, upload.single('imagem'), (req, res) => {
   const { id } = req.params;
-  const { nome, descricao, preco, quantidade_estoque } = req.body;
+  const { nome, descricao, preco, quantidade_estoque, categoria } = req.body;
   const imagemUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
   const query = `
     UPDATE produto
-    SET nome = ?, descricao = ?, preco = ?, quantidade_estoque = ?, imagem = ?
+    SET nome = ?, descricao = ?, preco = ?, quantidade_estoque = ?, imagem = COALESCE(?, imagem), categoria = ?
     WHERE id_produto = ? AND id_empresa = ?
   `;
 
-  db.query(query, [nome, descricao, preco, quantidade_estoque, imagemUrl, id, req.id_empresa], (err, result) => {
+  db.query(query, [nome, descricao, preco, quantidade_estoque, imagemUrl, categoria || null, id, req.id_empresa], (err, result) => {
     if (err) {
       console.error('Erro ao atualizar produto:', err);
       res.status(500).json({ error: 'Erro ao atualizar produto' });
@@ -395,6 +395,54 @@ app.put('/api/produtos/:id', autenticarTenant, upload.single('imagem'), (req, re
       res.json({ message: 'Produto atualizado com sucesso' });
     }
   });
+});
+
+// ===== ROTAS DE CATEGORIAS =====
+
+// GET todas as categorias da empresa
+app.get('/api/categorias', autenticarTenant, (req, res) => {
+  db.query(
+    'SELECT id_categoria, nome, cor FROM categoria WHERE id_empresa = ? ORDER BY nome',
+    [req.id_empresa],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: 'Erro ao buscar categorias' });
+      res.json(results);
+    }
+  );
+});
+
+// POST nova categoria
+app.post('/api/categorias', autenticarTenant, (req, res) => {
+  const { nome, cor } = req.body;
+  if (!nome || !nome.trim()) return res.status(400).json({ error: 'Nome é obrigatório' });
+  db.query(
+    'INSERT INTO categoria (nome, cor, id_empresa) VALUES (?, ?, ?)',
+    [nome.trim(), cor || '#6c757d', req.id_empresa],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: 'Erro ao criar categoria' });
+      res.json({ id_categoria: result.insertId, nome: nome.trim(), cor: cor || '#6c757d' });
+    }
+  );
+});
+
+// DELETE categoria (desvincula produtos antes de deletar)
+app.delete('/api/categorias/:id', autenticarTenant, (req, res) => {
+  const { id } = req.params;
+  db.query(
+    'UPDATE produto SET categoria = NULL WHERE categoria = ? AND id_empresa = ?',
+    [String(id), req.id_empresa],
+    (errUpdate) => {
+      if (errUpdate) return res.status(500).json({ error: 'Erro ao desvincular produtos' });
+      db.query(
+        'DELETE FROM categoria WHERE id_categoria = ? AND id_empresa = ?',
+        [id, req.id_empresa],
+        (errDel) => {
+          if (errDel) return res.status(500).json({ error: 'Erro ao excluir categoria' });
+          res.json({ message: 'Categoria excluída com sucesso' });
+        }
+      );
+    }
+  );
 });
 
 // Rota GET para obter todos os funcionários

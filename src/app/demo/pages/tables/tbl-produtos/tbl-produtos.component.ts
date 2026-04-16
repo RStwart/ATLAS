@@ -33,10 +33,22 @@ export class TblProdutosComponent implements OnInit {
 
   produtoEmEdicao: Produto | null = null;
 
+  // ===== CATEGORIAS =====
+  categorias: any[] = [];
+  categoriaAtiva: any = null;
+  mostrarModalCategoria = false;
+  novaCategoria = { nome: '', cor: '#1a73e8' };
+  coresPadrao = [
+    '#1a73e8', '#28a745', '#fd7e14', '#6f42c1',
+    '#0d9488', '#ef4444', '#e83e8c', '#17a2b8',
+    '#343a40', '#6c757d'
+  ];
+
   constructor(private ProdutoService: ProdutoService, private toastr: ToastrService) {}
 
   ngOnInit(): void {
     this.carregarProdutos();
+    this.carregarCategorias();
   }
 
   toggleFormulario(): void {
@@ -79,10 +91,18 @@ export class TblProdutosComponent implements OnInit {
     );
   }
 
+  get produtosFiltrados(): Produto[] {
+    if (!this.categoriaAtiva) return this.produtos;
+    return this.produtos.filter(
+      p => String(p.categoria) === String(this.categoriaAtiva.id_categoria)
+    );
+  }
+
   atualizarPaginacao(): void {
-    this.totalPages = Math.ceil(this.produtos.length / this.itemsPerPage);
+    const lista = this.produtosFiltrados;
+    this.totalPages = Math.ceil(lista.length / this.itemsPerPage);
     this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
-    this.produtosPaginados = this.produtos.slice(
+    this.produtosPaginados = lista.slice(
       (this.currentPage - 1) * this.itemsPerPage,
       this.currentPage * this.itemsPerPage
     );
@@ -100,6 +120,9 @@ export class TblProdutosComponent implements OnInit {
     formData.append('descricao', this.novoProduto.descricao);
     formData.append('preco', this.novoProduto.preco.toString());
     formData.append('quantidade_estoque', this.novoProduto.quantidade_estoque.toString());
+    if (this.novoProduto.categoria) {
+      formData.append('categoria', this.novoProduto.categoria);
+    }
 
     if (this.novoProduto.imagem) {
       formData.append('imagem', this.novoProduto.imagem, this.novoProduto.imagem.name);
@@ -166,5 +189,75 @@ export class TblProdutosComponent implements OnInit {
     if (file) {
       this.novoProduto.imagem = file;
     }
+  }
+
+  // ===== MÉTODOS DE CATEGORIA =====
+
+  carregarCategorias(): void {
+    this.ProdutoService.getCategorias().subscribe(
+      (data: any[]) => { this.categorias = data; },
+      () => { this.toastr.error('Erro ao carregar categorias', 'Erro'); }
+    );
+  }
+
+  selecionarCategoria(cat: any): void {
+    this.categoriaAtiva = cat;
+    this.currentPage = 1;
+    this.atualizarPaginacao();
+  }
+
+  contarPorCategoria(id: number): number {
+    return this.produtos.filter(p => String(p.categoria) === String(id)).length;
+  }
+
+  getNomeCategoria(id: string | undefined): string {
+    if (!id) return '';
+    const cat = this.categorias.find(c => String(c.id_categoria) === String(id));
+    return cat ? cat.nome : '';
+  }
+
+  getCorCategoria(id: string | undefined): string {
+    if (!id) return '#6c757d';
+    const cat = this.categorias.find(c => String(c.id_categoria) === String(id));
+    return cat ? cat.cor : '#6c757d';
+  }
+
+  abrirModalCategoria(): void {
+    this.novaCategoria = { nome: '', cor: '#1a73e8' };
+    this.mostrarModalCategoria = true;
+  }
+
+  fecharModalCategoria(): void {
+    this.mostrarModalCategoria = false;
+  }
+
+  adicionarCategoria(): void {
+    if (!this.novaCategoria.nome.trim()) return;
+    this.ProdutoService.addCategoria(this.novaCategoria).subscribe(
+      (nova: any) => {
+        this.categorias.push(nova);
+        this.fecharModalCategoria();
+        this.toastr.success('Categoria criada!', 'Sucesso');
+      },
+      () => { this.toastr.error('Erro ao criar categoria', 'Erro'); }
+    );
+  }
+
+  excluirCategoria(id: number): void {
+    if (!confirm('Excluir esta categoria? Os produtos não serão deletados.')) return;
+    this.ProdutoService.deleteCategoria(id).subscribe(
+      () => {
+        this.categorias = this.categorias.filter(c => c.id_categoria !== id);
+        if (this.categoriaAtiva?.id_categoria === id) {
+          this.categoriaAtiva = null;
+        }
+        this.produtos.forEach(p => {
+          if (String(p.categoria) === String(id)) p.categoria = '';
+        });
+        this.atualizarPaginacao();
+        this.toastr.success('Categoria excluída!', 'Sucesso');
+      },
+      () => { this.toastr.error('Erro ao excluir categoria', 'Erro'); }
+    );
   }
 }

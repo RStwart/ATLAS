@@ -2,6 +2,46 @@
   <div class="col-xl-12">
     <app-card cardTitle="Produtos" [options]="false" [buttonh]="true" buttonTitle="Adicionar produto" [buttonAction]="toggleFormulario.bind(this)">
 
+      <!-- Barra de Categorias -->
+      <div class="categorias-bar">
+        <!-- Todas -->
+        <div class="cat-folder" [class.cat-folder--active]="!categoriaAtiva" (click)="selecionarCategoria(null)">
+          <div class="cat-folder__icon" style="background:#e8f0fe; color:#1a73e8;">
+            <i class="feather icon-grid"></i>
+          </div>
+          <div class="cat-folder__info">
+            <span class="cat-folder__name">Todas</span>
+            <span class="cat-folder__count">{{ produtos.length }}</span>
+          </div>
+        </div>
+
+        <!-- Folder por categoria -->
+        <div *ngFor="let cat of categorias" class="cat-folder"
+             [class.cat-folder--active]="categoriaAtiva?.id_categoria === cat.id_categoria"
+             (click)="selecionarCategoria(cat)">
+          <div class="cat-folder__icon" [style.background]="cat.cor + '1a'" [style.color]="cat.cor">
+            <i class="feather icon-folder"></i>
+          </div>
+          <div class="cat-folder__info">
+            <span class="cat-folder__name">{{ cat.nome }}</span>
+            <span class="cat-folder__count">{{ contarPorCategoria(cat.id_categoria) }}</span>
+          </div>
+          <button class="cat-folder__del" (click)="$event.stopPropagation(); excluirCategoria(cat.id_categoria)" title="Excluir categoria">
+            <i class="feather icon-x"></i>
+          </button>
+        </div>
+
+        <!-- Botão Nova Categoria -->
+        <div class="cat-folder cat-folder--add" (click)="abrirModalCategoria()">
+          <div class="cat-folder__icon" style="background:#f1f3f5; color:#6c757d;">
+            <i class="feather icon-plus"></i>
+          </div>
+          <div class="cat-folder__info">
+            <span class="cat-folder__name">Nova categoria</span>
+          </div>
+        </div>
+      </div>
+
       <div class="row">
         <div *ngFor="let produto of produtosPaginados" class="col-md-4 mb-4">
           <div class="product-card">
@@ -22,7 +62,14 @@
 
             <!-- Corpo -->
             <div class="product-card__body">
-              <h5 class="product-card__title">{{ produto.nome }}</h5>
+              <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
+                <h5 class="product-card__title mb-0">{{ produto.nome }}</h5>
+                <span *ngIf="getNomeCategoria(produto.categoria)" class="product-card__cat-badge"
+                      [style.background]="getCorCategoria(produto.categoria) + '1a'"
+                      [style.color]="getCorCategoria(produto.categoria)">
+                  {{ getNomeCategoria(produto.categoria) }}
+                </span>
+              </div>
               <p class="product-card__description">{{ produto.descricao }}</p>
 
               <!-- Botões de ação -->
@@ -69,6 +116,14 @@
           <div class="form-group">
             <label for="imagem">Imagem do Produto</label>
             <input type="file" class="form-control" (change)="onFileSelected($event)" name="imagem" />
+          </div>
+          <!-- Categoria -->
+          <div class="form-group">
+            <label for="categoria-add">Categoria</label>
+            <select id="categoria-add" class="form-control" [(ngModel)]="novoProduto.categoria" name="categoria-add">
+              <option value="">Sem categoria</option>
+              <option *ngFor="let cat of categorias" [value]="cat.id_categoria">{{ cat.nome }}</option>
+            </select>
           </div>
           <button type="submit" class="btn btn-success">Salvar</button>
           <button type="button" class="btn btn-secondary" (click)="toggleFormulario()">Cancelar</button>
@@ -124,6 +179,14 @@
               <input id="edit-quantidade" type="number" class="field-input" [(ngModel)]="produtoEmEdicao.quantidade_estoque" name="edit-quantidade" required />
             </div>
 
+            <div class="col-12">
+              <label class="field-label">Categoria</label>
+              <select class="field-input" [(ngModel)]="produtoEmEdicao.categoria" name="edit-categoria">
+                <option value="">Sem categoria</option>
+                <option *ngFor="let cat of categorias" [value]="cat.id_categoria">{{ cat.nome }}</option>
+              </select>
+            </div>
+
           </div>
         </form>
       </div>
@@ -140,6 +203,60 @@
   </div>
 </div>
 <div class="atlas-backdrop" *ngIf="produtoEmEdicao"></div>
+
+<!-- ===== MODAL NOVA CATEGORIA ===== -->
+<div class="atlas-modal" *ngIf="mostrarModalCategoria">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+    <div class="atlas-modal-content">
+
+      <!-- Header -->
+      <div class="modal-header-custom" style="background: linear-gradient(135deg,#fd7e14,#e55a00);">
+        <div class="d-flex align-items-center gap-3">
+          <div class="modal-header-icon">
+            <i class="feather icon-folder-plus"></i>
+          </div>
+          <div>
+            <p class="mb-0 modal-header-label">Produtos</p>
+            <h5 class="mb-0 text-white fw-bold">Nova Categoria</h5>
+          </div>
+        </div>
+        <button type="button" (click)="fecharModalCategoria()" class="modal-close-btn">&times;</button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body-custom">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="field-label">Nome da Categoria</label>
+            <input type="text" class="field-input" [(ngModel)]="novaCategoria.nome"
+                   placeholder="Ex: Lanches, Bebidas..." name="cat-nome" />
+          </div>
+          <div class="col-12">
+            <label class="field-label">Cor</label>
+            <div class="d-flex gap-2 flex-wrap mt-1">
+              <div *ngFor="let cor of coresPadrao" class="cor-option"
+                   [style.background]="cor"
+                   [class.cor-option--selected]="novaCategoria.cor === cor"
+                   (click)="novaCategoria.cor = cor">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer-custom">
+        <button type="button" (click)="fecharModalCategoria()" class="btn-modal-cancel">Cancelar</button>
+        <button type="button" [disabled]="!novaCategoria.nome.trim()" (click)="adicionarCategoria()"
+                style="background:linear-gradient(135deg,#fd7e14,#e55a00);" class="btn-modal-primary">
+          <i class="feather icon-check me-1"></i>Criar Categoria
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="atlas-backdrop" *ngIf="mostrarModalCategoria"></div>
 
 <!-- Paginação original -->
 <nav aria-label="Page navigation" class="mt-3">

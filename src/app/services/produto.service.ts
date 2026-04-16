@@ -54,4 +54,16 @@ export class ProdutoService {
   getUsuarios(): Observable<any> {
     return this.http.get(`${this.apiUrl}/usuarios`);
   }
+
+  getCategorias(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/categorias`);
+  }
+
+  addCategoria(categoria: { nome: string; cor: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/categorias`, categoria);
+  }
+
+  deleteCategoria(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/categorias/${id}`);
+  }
 }
