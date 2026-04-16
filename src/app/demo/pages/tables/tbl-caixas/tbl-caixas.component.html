@@ -158,184 +158,243 @@
 </nav>
 
 <!-- ================= MODAL VER ================= -->
-<div class="modal d-block" tabindex="-1" *ngIf="mostrarModalVer">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
+<div class="modal d-block" tabindex="-1" *ngIf="mostrarModalVer" style="z-index:1055;">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border:none; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
 
-      <div class="modal-header">
-        <h5 class="modal-title">Detalhes do Caixa #{{ caixaVendo?.id_caixa }}</h5>
-        <button type="button" class="btn-close" (click)="fecharVer()"></button>
-      </div>
-
-      <div class="modal-body" *ngIf="caixaVendo">
-        <div class="row g-3">
-
-          <div class="col-md-6">
-            <label class="form-label text-muted small">Operador</label>
-            <p class="fw-semibold mb-0">{{ caixaVendo.nome_usuario || '—' }}</p>
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); padding: 20px 24px; display:flex; align-items:center; justify-content:space-between;">
+        <div class="d-flex align-items-center gap-3">
+          <div style="background:rgba(255,255,255,0.2); border-radius:10px; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
+            <i class="feather icon-eye" style="color:#fff; font-size:18px;"></i>
           </div>
-
-          <div class="col-md-6">
-            <label class="form-label text-muted small">Status</label>
-            <p class="mb-0">
-              <span class="badge rounded-pill"
-                [ngClass]="caixaVendo.status === 'ABERTO' ? 'bg-success' : 'bg-secondary'">
-                {{ caixaVendo.status }}
-              </span>
-            </p>
+          <div>
+            <p class="mb-0" style="font-size:0.65rem; color:rgba(255,255,255,0.7); letter-spacing:1px; text-transform:uppercase;">Visualização</p>
+            <h5 class="mb-0 text-white fw-bold">Caixa #{{ caixaVendo?.id_caixa }}</h5>
           </div>
-
-          <div class="col-md-6">
-            <label class="form-label text-muted small">Abertura</label>
-            <p class="fw-semibold mb-0">{{ caixaVendo.data_abertura | date:'dd/MM/yyyy' }} às {{ caixaVendo.hora_abertura }}</p>
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label text-muted small">Fechamento</label>
-            <p class="fw-semibold mb-0">
-              <ng-container *ngIf="caixaVendo.data_fechamento">{{ caixaVendo.data_fechamento | date:'dd/MM/yyyy' }} às {{ caixaVendo.hora_fechamento }}</ng-container>
-              <span *ngIf="!caixaVendo.data_fechamento" class="text-muted">—</span>
-            </p>
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label text-muted small">Fundo de Caixa</label>
-            <p class="fw-semibold mb-0">R$ {{ caixaVendo.total_abertura | number:'1.2-2' }}</p>
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label text-muted small">Total Fechamento</label>
-            <p class="fw-semibold mb-0">
-              <span *ngIf="caixaVendo.total_fechamento != null">R$ {{ caixaVendo.total_fechamento | number:'1.2-2' }}</span>
-              <span *ngIf="caixaVendo.total_fechamento == null" class="text-muted">—</span>
-            </p>
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label text-muted small">Lucro</label>
-            <p class="fw-semibold mb-0"
-              [ngClass]="calcularLucro(caixaVendo) >= 0 ? 'text-success' : 'text-danger'">
-              <span *ngIf="caixaVendo.total_fechamento != null">R$ {{ calcularLucro(caixaVendo) | number:'1.2-2' }}</span>
-              <span *ngIf="caixaVendo.total_fechamento == null" class="text-muted">—</span>
-            </p>
-          </div>
-
-          <div class="col-12"><hr class="my-1"></div>
-
-          <div class="col-md-3">
-            <label class="form-label text-muted small">Dinheiro</label>
-            <p class="fw-semibold mb-0">
-              <span *ngIf="caixaVendo.total_dinheiro != null">R$ {{ caixaVendo.total_dinheiro | number:'1.2-2' }}</span>
-              <span *ngIf="caixaVendo.total_dinheiro == null" class="text-muted">—</span>
-            </p>
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label text-muted small">PIX</label>
-            <p class="fw-semibold mb-0">
-              <span *ngIf="caixaVendo.total_pix != null">R$ {{ caixaVendo.total_pix | number:'1.2-2' }}</span>
-              <span *ngIf="caixaVendo.total_pix == null" class="text-muted">—</span>
-            </p>
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label text-muted small">Crédito</label>
-            <p class="fw-semibold mb-0">
-              <span *ngIf="caixaVendo.total_credito != null">R$ {{ caixaVendo.total_credito | number:'1.2-2' }}</span>
-              <span *ngIf="caixaVendo.total_credito == null" class="text-muted">—</span>
-            </p>
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label text-muted small">Débito</label>
-            <p class="fw-semibold mb-0">
-              <span *ngIf="caixaVendo.total_debito != null">R$ {{ caixaVendo.total_debito | number:'1.2-2' }}</span>
-              <span *ngIf="caixaVendo.total_debito == null" class="text-muted">—</span>
-            </p>
-          </div>
-
         </div>
+        <button type="button" (click)="fecharVer()" style="background:rgba(255,255,255,0.15); border:none; border-radius:8px; width:32px; height:32px; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">&times;</button>
       </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="fecharVer()">Fechar</button>
+      <!-- Body -->
+      <div style="padding:24px; background:#fff;" *ngIf="caixaVendo">
+
+        <!-- Row 1: Operador + Status -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-8">
+            <div style="background:#f8f9fc; border-radius:10px; padding:14px 16px;">
+              <p style="font-size:0.65rem; color:#6c757d; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;"><i class="feather icon-user me-1"></i>Operador</p>
+              <p style="font-size:1rem; font-weight:600; color:#343a40; margin:0;">{{ caixaVendo.nome_usuario || '—' }}</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="background:#f8f9fc; border-radius:10px; padding:14px 16px;">
+              <p style="font-size:0.65rem; color:#6c757d; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px;">Status</p>
+              <span class="badge rounded-pill px-3 py-2"
+                [ngClass]="caixaVendo.status === 'ABERTO' ? 'bg-success' : 'bg-secondary'"
+                style="font-size:0.78rem;">{{ caixaVendo.status }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2: Abertura + Fechamento -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div style="background:#f8f9fc; border-radius:10px; padding:14px 16px;">
+              <p style="font-size:0.65rem; color:#6c757d; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;"><i class="feather icon-log-in me-1"></i>Abertura</p>
+              <p style="font-size:0.95rem; font-weight:600; color:#343a40; margin:0;">{{ caixaVendo.data_abertura | date:'dd/MM/yyyy' }} · {{ caixaVendo.hora_abertura }}</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div style="background:#f8f9fc; border-radius:10px; padding:14px 16px;">
+              <p style="font-size:0.65rem; color:#6c757d; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;"><i class="feather icon-log-out me-1"></i>Fechamento</p>
+              <p style="font-size:0.95rem; font-weight:600; color:#343a40; margin:0;">
+                <ng-container *ngIf="caixaVendo.data_fechamento">{{ caixaVendo.data_fechamento | date:'dd/MM/yyyy' }} · {{ caixaVendo.hora_fechamento }}</ng-container>
+                <span *ngIf="!caixaVendo.data_fechamento" class="text-muted">—</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: Fundo + Total + Lucro -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <div style="background:#f0f7ff; border-radius:10px; padding:14px 16px; border:1px solid #cce0ff;">
+              <p style="font-size:0.65rem; color:#1a73e8; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;">Fundo de Caixa</p>
+              <p style="font-size:1rem; font-weight:700; color:#0d47a1; margin:0;">R$ {{ caixaVendo.total_abertura | number:'1.2-2' }}</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="background:#f8f9fc; border-radius:10px; padding:14px 16px;">
+              <p style="font-size:0.65rem; color:#6c757d; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;">Total Fechamento</p>
+              <p style="font-size:1rem; font-weight:700; color:#343a40; margin:0;">
+                <span *ngIf="caixaVendo.total_fechamento != null">R$ {{ caixaVendo.total_fechamento | number:'1.2-2' }}</span>
+                <span *ngIf="caixaVendo.total_fechamento == null" class="text-muted">—</span>
+              </p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div style="border-radius:10px; padding:14px 16px;"
+              [ngStyle]="{'background': calcularLucro(caixaVendo) >= 0 ? '#f0fff4' : '#fff5f5', 'border': calcularLucro(caixaVendo) >= 0 ? '1px solid #b7f5c8' : '1px solid #ffc9c9'}">
+              <p style="font-size:0.65rem; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;"
+                [ngStyle]="{'color': calcularLucro(caixaVendo) >= 0 ? '#28a745' : '#dc3545'}">Lucro</p>
+              <p style="font-size:1rem; font-weight:700; margin:0;"
+                [ngClass]="calcularLucro(caixaVendo) >= 0 ? 'text-success' : 'text-danger'">
+                <span *ngIf="caixaVendo.total_fechamento != null">R$ {{ calcularLucro(caixaVendo) | number:'1.2-2' }}</span>
+                <span *ngIf="caixaVendo.total_fechamento == null" class="text-muted">—</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div style="border-top:1px solid #e9ecef; padding-top:16px; margin-bottom:12px;">
+          <p style="font-size:0.65rem; color:#6c757d; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; font-weight:600;">Totais por Forma de Pagamento</p>
+          <div class="row g-3">
+            <div class="col-md-3">
+              <div style="background:#fffbf0; border-radius:10px; padding:12px 14px; border:1px solid #ffe69c; text-align:center;">
+                <p style="font-size:0.65rem; color:#997404; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;"><i class="feather icon-dollar-sign"></i> Dinheiro</p>
+                <p style="font-size:0.95rem; font-weight:700; color:#664d03; margin:0;">
+                  <span *ngIf="caixaVendo.total_dinheiro != null">R$ {{ caixaVendo.total_dinheiro | number:'1.2-2' }}</span>
+                  <span *ngIf="caixaVendo.total_dinheiro == null" class="text-muted">—</span>
+                </p>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div style="background:#f0fff4; border-radius:10px; padding:12px 14px; border:1px solid #b7f5c8; text-align:center;">
+                <p style="font-size:0.65rem; color:#28a745; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;"><i class="feather icon-zap"></i> PIX</p>
+                <p style="font-size:0.95rem; font-weight:700; color:#1a7a32; margin:0;">
+                  <span *ngIf="caixaVendo.total_pix != null">R$ {{ caixaVendo.total_pix | number:'1.2-2' }}</span>
+                  <span *ngIf="caixaVendo.total_pix == null" class="text-muted">—</span>
+                </p>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div style="background:#f0f7ff; border-radius:10px; padding:12px 14px; border:1px solid #cce0ff; text-align:center;">
+                <p style="font-size:0.65rem; color:#1a73e8; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;"><i class="feather icon-credit-card"></i> Crédito</p>
+                <p style="font-size:0.95rem; font-weight:700; color:#0d47a1; margin:0;">
+                  <span *ngIf="caixaVendo.total_credito != null">R$ {{ caixaVendo.total_credito | number:'1.2-2' }}</span>
+                  <span *ngIf="caixaVendo.total_credito == null" class="text-muted">—</span>
+                </p>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div style="background:#fdf0ff; border-radius:10px; padding:12px 14px; border:1px solid #e9b8ff; text-align:center;">
+                <p style="font-size:0.65rem; color:#9c27b0; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;"><i class="feather icon-credit-card"></i> Débito</p>
+                <p style="font-size:0.95rem; font-weight:700; color:#6a1480; margin:0;">
+                  <span *ngIf="caixaVendo.total_debito != null">R$ {{ caixaVendo.total_debito | number:'1.2-2' }}</span>
+                  <span *ngIf="caixaVendo.total_debito == null" class="text-muted">—</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div style="background:#f8f9fc; padding:16px 24px; border-top:1px solid #e9ecef; display:flex; justify-content:flex-end;">
+        <button type="button" (click)="fecharVer()" style="background:#fff; border:1px solid #dee2e6; color:#6c757d; border-radius:8px; padding:9px 24px; font-size:0.85rem; font-weight:600; cursor:pointer;">Fechar</button>
       </div>
 
     </div>
   </div>
 </div>
-<div class="modal-backdrop fade show" *ngIf="mostrarModalVer"></div>
+<div class="modal-backdrop fade show" *ngIf="mostrarModalVer" style="z-index:1054;"></div>
 
 
 <!-- ================= MODAL AJUSTAR ================= -->
-<div class="modal d-block" tabindex="-1" *ngIf="mostrarModalAjustar">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
+<div class="modal d-block" tabindex="-1" *ngIf="mostrarModalAjustar" style="z-index:1055;">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border:none; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
 
-      <div class="modal-header">
-        <h5 class="modal-title">Ajustar Caixa #{{ caixaEditando?.id_caixa }}</h5>
-        <button type="button" class="btn-close" (click)="fecharAjustar()"></button>
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #fd7e14 0%, #c85a00 100%); padding: 20px 24px; display:flex; align-items:center; justify-content:space-between;">
+        <div class="d-flex align-items-center gap-3">
+          <div style="background:rgba(255,255,255,0.2); border-radius:10px; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
+            <i class="feather icon-edit-2" style="color:#fff; font-size:18px;"></i>
+          </div>
+          <div>
+            <p class="mb-0" style="font-size:0.65rem; color:rgba(255,255,255,0.7); letter-spacing:1px; text-transform:uppercase;">Edição</p>
+            <h5 class="mb-0 text-white fw-bold">Ajustar Caixa #{{ caixaEditando?.id_caixa }}</h5>
+          </div>
+        </div>
+        <button type="button" (click)="fecharAjustar()" style="background:rgba(255,255,255,0.15); border:none; border-radius:8px; width:32px; height:32px; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">&times;</button>
       </div>
 
-      <div class="modal-body" *ngIf="caixaEditando">
-        <div class="row g-3">
+      <!-- Body -->
+      <div style="padding:24px; background:#fff;" *ngIf="caixaEditando">
 
-          <div class="col-md-6">
-            <label class="form-label">Operador</label>
-            <input type="text" class="form-control" [(ngModel)]="caixaEditando.nome_usuario" />
+        <!-- Operador + Status -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-8">
+            <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;"><i class="feather icon-user me-1"></i>Operador</label>
+            <input type="text" class="form-control" [(ngModel)]="caixaEditando.nome_usuario"
+              style="border-radius:8px; border:1.5px solid #dee2e6; padding:9px 14px; font-size:0.9rem;" />
           </div>
-
-          <div class="col-md-6">
-            <label class="form-label">Status</label>
-            <select class="form-control" [(ngModel)]="caixaEditando.status">
+          <div class="col-md-4">
+            <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Status</label>
+            <select class="form-control" [(ngModel)]="caixaEditando.status"
+              style="border-radius:8px; border:1.5px solid #dee2e6; padding:9px 14px; font-size:0.9rem;">
               <option value="ABERTO">ABERTO</option>
               <option value="FECHADO">FECHADO</option>
             </select>
           </div>
-
-          <div class="col-md-6">
-            <label class="form-label">Fundo de Caixa (Abertura)</label>
-            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_abertura" min="0" step="0.01" />
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">Total Fechamento</label>
-            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_fechamento" min="0" step="0.01" />
-          </div>
-
-          <div class="col-12"><hr class="my-1"><p class="text-muted small mb-0">Totais por forma de pagamento</p></div>
-
-          <div class="col-md-3">
-            <label class="form-label">Dinheiro</label>
-            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_dinheiro" min="0" step="0.01" />
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label">PIX</label>
-            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_pix" min="0" step="0.01" />
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label">Crédito</label>
-            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_credito" min="0" step="0.01" />
-          </div>
-
-          <div class="col-md-3">
-            <label class="form-label">Débito</label>
-            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_debito" min="0" step="0.01" />
-          </div>
-
         </div>
+
+        <!-- Fundo + Total -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;"><i class="feather icon-package me-1"></i>Fundo de Caixa (R$)</label>
+            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_abertura" min="0" step="0.01"
+              style="border-radius:8px; border:1.5px solid #dee2e6; padding:9px 14px; font-size:0.9rem;" />
+          </div>
+          <div class="col-md-6">
+            <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;"><i class="feather icon-log-out me-1"></i>Total Fechamento (R$)</label>
+            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_fechamento" min="0" step="0.01"
+              style="border-radius:8px; border:1.5px solid #dee2e6; padding:9px 14px; font-size:0.9rem;" />
+          </div>
+        </div>
+
+        <!-- Payment breakdown -->
+        <div style="border-top:1px solid #e9ecef; padding-top:16px;">
+          <p style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:14px;">Totais por Forma de Pagamento</p>
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label style="font-size:0.7rem; color:#997404; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;"><i class="feather icon-dollar-sign me-1"></i>Dinheiro</label>
+              <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_dinheiro" min="0" step="0.01"
+                style="border-radius:8px; border:1.5px solid #ffe69c; background:#fffbf0; padding:9px 14px; font-size:0.9rem;" />
+            </div>
+            <div class="col-md-3">
+              <label style="font-size:0.7rem; color:#28a745; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;"><i class="feather icon-zap me-1"></i>PIX</label>
+              <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_pix" min="0" step="0.01"
+                style="border-radius:8px; border:1.5px solid #b7f5c8; background:#f0fff4; padding:9px 14px; font-size:0.9rem;" />
+            </div>
+            <div class="col-md-3">
+              <label style="font-size:0.7rem; color:#1a73e8; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;"><i class="feather icon-credit-card me-1"></i>Crédito</label>
+              <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_credito" min="0" step="0.01"
+                style="border-radius:8px; border:1.5px solid #cce0ff; background:#f0f7ff; padding:9px 14px; font-size:0.9rem;" />
+            </div>
+            <div class="col-md-3">
+              <label style="font-size:0.7rem; color:#9c27b0; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;"><i class="feather icon-credit-card me-1"></i>Débito</label>
+              <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_debito" min="0" step="0.01"
+                style="border-radius:8px; border:1.5px solid #e9b8ff; background:#fdf0ff; padding:9px 14px; font-size:0.9rem;" />
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" (click)="salvarCaixa()" [disabled]="salvando">
-          {{ salvando ? 'Salvando...' : 'Salvar' }}
+      <!-- Footer -->
+      <div style="background:#f8f9fc; padding:16px 24px; border-top:1px solid #e9ecef; display:flex; gap:10px; justify-content:flex-end;">
+        <button type="button" (click)="fecharAjustar()" style="background:#fff; border:1px solid #dee2e6; color:#6c757d; border-radius:8px; padding:9px 20px; font-size:0.85rem; font-weight:600; cursor:pointer;">Cancelar</button>
+        <button type="button" (click)="salvarCaixa()" [disabled]="salvando"
+          style="background: linear-gradient(135deg, #fd7e14, #c85a00); border:none; color:#fff; border-radius:8px; padding:9px 20px; font-size:0.85rem; font-weight:600; cursor:pointer; opacity: salvando ? 0.7 : 1;">
+          <i class="feather icon-save me-1"></i>{{ salvando ? 'Salvando...' : 'Salvar' }}
         </button>
-        <button type="button" class="btn btn-secondary" (click)="fecharAjustar()">Cancelar</button>
       </div>
 
     </div>
   </div>
 </div>
-<div class="modal-backdrop fade show" *ngIf="mostrarModalAjustar"></div>
+<div class="modal-backdrop fade show" *ngIf="mostrarModalAjustar" style="z-index:1054;"></div>
