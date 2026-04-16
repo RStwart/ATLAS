@@ -203,90 +203,80 @@
   
   <!-- Caixa Diário Card -->
   <div class="col-xl-4 col-md-6">
-    <div class="card" style="background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); border:none; border-radius:16px; overflow:hidden;">
+    <div class="card caixa-card">
 
       <!-- Header -->
-      <div class="card-header borderless" style="background:transparent; padding: 20px 24px 12px;">
+      <div class="card-header borderless caixa-card__header">
         <div class="d-flex align-items-center justify-content-between">
           <div class="d-flex align-items-center gap-2">
-            <div style="background:rgba(255,255,255,0.2); border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center;">
-              <i class="feather icon-box" style="color:#fff; font-size:16px;"></i>
+            <div class="caixa-card__icon">
+              <i class="feather icon-box"></i>
             </div>
             <div>
-              <p class="mb-0 text-white" style="font-size:0.7rem; letter-spacing:1px; opacity:0.75; text-transform:uppercase;">Caixa Diário</p>
-              <h6 class="mb-0 text-white fw-bold">#{{ caixaid }}<span *ngIf="nome_usuario" style="font-weight:400; opacity:0.8; font-size:0.8rem;"> · {{ nome_usuario }}</span></h6>
+              <p class="mb-0 text-white caixa-card__label">Caixa Diário</p>
+              <h6 class="mb-0 text-white fw-bold">#{{ caixaid }}<span *ngIf="nome_usuario" class="caixa-card__operator"> · {{ nome_usuario }}</span></h6>
             </div>
           </div>
           <span class="badge rounded-pill px-3 py-2"
-            [ngStyle]="{'background-color': status === 'ABERTO' ? 'rgba(40,167,69,0.9)' : 'rgba(220,53,69,0.9)', 'font-size':'0.72rem', 'letter-spacing':'0.5px'}">
+            [ngStyle]="{'background-color': status === 'ABERTO' ? 'rgba(40,167,69,0.9)' : 'rgba(220,53,69,0.9)'}">
             {{ status || 'FECHADO' }}
           </span>
         </div>
 
         <!-- Info Row -->
-        <div class="d-flex gap-3 mt-3" style="font-size:0.78rem; color:rgba(255,255,255,0.8);">
+        <div class="d-flex gap-3 mt-3 caixa-card__meta">
           <span><i class="feather icon-calendar me-1"></i>{{ data_abertura | date:'dd/MM/yyyy' }} {{ hora_abertura }}</span>
           <span><i class="feather icon-package me-1"></i>Fundo: <strong class="text-white">R$ {{ total_abertura | number:'1.2-2' }}</strong></span>
         </div>
       </div>
 
       <!-- Total -->
-      <div style="padding: 16px 24px; background:rgba(0,0,0,0.12);">
-        <p class="mb-1 text-uppercase" style="font-size:0.65rem; letter-spacing:1.5px; color:rgba(255,255,255,0.65);">Total Recebido</p>
+      <div class="caixa-card__total-section">
+        <p class="mb-1 text-uppercase caixa-card__total-label">Total Recebido</p>
         <div class="d-flex align-items-center gap-2">
-          <h2 class="mb-0 text-white fw-bold" style="font-size:1.9rem;">R$ {{ totalGanhos | number:'1.2-2' }}</h2>
-          <span style="background:rgba(255,255,255,0.15); border-radius:20px; padding:2px 8px; font-size:0.72rem; color:#fff;">
+          <h2 class="mb-0 text-white fw-bold caixa-card__total-amount">R$ {{ totalGanhos | number:'1.2-2' }}</h2>
+          <span class="caixa-card__trend-badge">
             <i class="feather icon-trending-up"></i>
           </span>
         </div>
       </div>
 
       <!-- Payment Breakdown -->
-      <div style="padding: 16px 24px;">
+      <div class="caixa-card__payments">
         <div class="row g-2">
           <div class="col-6">
-            <div style="background:rgba(255,255,255,0.12); border-radius:10px; padding:10px 14px;">
-              <p class="mb-1" style="font-size:0.65rem; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:0.8px;">
-                <i class="feather icon-credit-card me-1"></i>Crédito
-              </p>
-              <p class="mb-0 text-white fw-semibold" style="font-size:0.9rem;">R$ {{ totalCartaoCredito | number:'1.2-2' }}</p>
+            <div class="caixa-pay-tile">
+              <p class="mb-1 caixa-pay-tile__label"><i class="feather icon-credit-card me-1"></i>Crédito</p>
+              <p class="mb-0 text-white fw-semibold caixa-pay-tile__value">R$ {{ totalCartaoCredito | number:'1.2-2' }}</p>
             </div>
           </div>
           <div class="col-6">
-            <div style="background:rgba(255,255,255,0.12); border-radius:10px; padding:10px 14px;">
-              <p class="mb-1" style="font-size:0.65rem; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:0.8px;">
-                <i class="feather icon-credit-card me-1"></i>Débito
-              </p>
-              <p class="mb-0 text-white fw-semibold" style="font-size:0.9rem;">R$ {{ totalCartaoDebito | number:'1.2-2' }}</p>
+            <div class="caixa-pay-tile">
+              <p class="mb-1 caixa-pay-tile__label"><i class="feather icon-credit-card me-1"></i>Débito</p>
+              <p class="mb-0 text-white fw-semibold caixa-pay-tile__value">R$ {{ totalCartaoDebito | number:'1.2-2' }}</p>
             </div>
           </div>
           <div class="col-6">
-            <div style="background:rgba(255,255,255,0.12); border-radius:10px; padding:10px 14px;">
-              <p class="mb-1" style="font-size:0.65rem; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:0.8px;">
-                <i class="feather icon-dollar-sign me-1"></i>Dinheiro
-              </p>
-              <p class="mb-0 text-white fw-semibold" style="font-size:0.9rem;">R$ {{ totalDinheiro | number:'1.2-2' }}</p>
+            <div class="caixa-pay-tile">
+              <p class="mb-1 caixa-pay-tile__label"><i class="feather icon-dollar-sign me-1"></i>Dinheiro</p>
+              <p class="mb-0 text-white fw-semibold caixa-pay-tile__value">R$ {{ totalDinheiro | number:'1.2-2' }}</p>
             </div>
           </div>
           <div class="col-6">
-            <div style="background:rgba(255,255,255,0.12); border-radius:10px; padding:10px 14px;">
-              <p class="mb-1" style="font-size:0.65rem; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:0.8px;">
-                <i class="feather icon-zap me-1"></i>PIX
-              </p>
-              <p class="mb-0 text-white fw-semibold" style="font-size:0.9rem;">R$ {{ totalPix | number:'1.2-2' }}</p>
+            <div class="caixa-pay-tile">
+              <p class="mb-1 caixa-pay-tile__label"><i class="feather icon-zap me-1"></i>PIX</p>
+              <p class="mb-0 text-white fw-semibold caixa-pay-tile__value">R$ {{ totalPix | number:'1.2-2' }}</p>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Actions -->
-      <div style="padding: 0 24px 20px; display:flex; gap:10px;">
-        <button class="btn fw-semibold flex-fill" (click)="abrirModalCaixa()"
-          style="background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:10px; font-size:0.82rem; padding:9px 0; backdrop-filter:blur(4px);">
+      <div class="caixa-card__actions">
+        <button class="btn fw-semibold flex-fill btn-caixa-open" (click)="abrirModalCaixa()">
           <i class="feather icon-unlock me-1"></i>Abrir Caixa
         </button>
-        <button class="btn fw-semibold flex-fill" (click)="fecharCaixa()"
-          style="background:rgba(220,53,69,0.75); color:#fff; border:1px solid rgba(220,53,69,0.5); border-radius:10px; font-size:0.82rem; padding:9px 0;">
+        <button class="btn fw-semibold flex-fill btn-caixa-close" (click)="fecharCaixa()">
           <i class="feather icon-lock me-1"></i>Fechar Caixa
         </button>
       </div>
@@ -300,100 +290,98 @@
 
 
 <!-- ===== MODAL DETALHES DA VENDA ===== -->
-<div class="modal d-block" tabindex="-1" *ngIf="mostrarModalVendas" style="z-index:1055;">
+<div class="modal d-block atlas-modal" tabindex="-1" *ngIf="mostrarModalVendas">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content" style="border:none; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div class="modal-content atlas-modal-content">
 
       <!-- Header -->
-      <div style="background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); padding: 20px 24px; display:flex; align-items:center; justify-content:space-between;">
+      <div class="modal-header-custom modal-header-custom--blue">
         <div class="d-flex align-items-center gap-3">
-          <div style="background:rgba(255,255,255,0.2); border-radius:10px; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
-            <i class="feather icon-file-text" style="color:#fff; font-size:18px;"></i>
+          <div class="modal-header-icon">
+            <i class="feather icon-file-text"></i>
           </div>
           <div>
-            <p class="mb-0" style="font-size:0.65rem; color:rgba(255,255,255,0.7); letter-spacing:1px; text-transform:uppercase;">Ajuste</p>
+            <p class="modal-header-label">Ajuste</p>
             <h5 class="mb-0 text-white fw-bold">Detalhes da Venda</h5>
           </div>
         </div>
-        <button type="button" (click)="fecharModalVendas()" style="background:rgba(255,255,255,0.15); border:none; border-radius:8px; width:32px; height:32px; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">&times;</button>
+        <button type="button" class="modal-close-btn" (click)="fecharModalVendas()">&times;</button>
       </div>
 
       <!-- Info Row -->
-      <div style="background:#f8f9fc; padding: 16px 24px; border-bottom:1px solid #e9ecef;">
+      <div class="modal-info-strip">
         <div class="row g-3">
           <div class="col-md-3">
-            <p class="mb-0" style="font-size:0.65rem; color:#6c757d; letter-spacing:0.8px; text-transform:uppercase;">ID da Venda</p>
-            <p class="mb-0 fw-bold" style="color:#343a40;">#{{ vendaSelecionada.id_venda }}</p>
+            <p class="modal-info-label">ID da Venda</p>
+            <p class="mb-0 fw-bold">#{{ vendaSelecionada.id_venda }}</p>
           </div>
           <div class="col-md-3">
-            <p class="mb-0" style="font-size:0.65rem; color:#6c757d; letter-spacing:0.8px; text-transform:uppercase;">Mesa</p>
-            <p class="mb-0 fw-bold" style="color:#343a40;">{{ vendaSelecionada.numero_mesa }}</p>
+            <p class="modal-info-label">Mesa</p>
+            <p class="mb-0 fw-bold">{{ vendaSelecionada.numero_mesa }}</p>
           </div>
           <div class="col-md-3">
-            <p class="mb-0" style="font-size:0.65rem; color:#6c757d; letter-spacing:0.8px; text-transform:uppercase;">Data</p>
-            <p class="mb-0 fw-bold" style="color:#343a40;">{{ vendaSelecionada.data_venda | date:'dd/MM/yyyy' }} · {{ vendaSelecionada.hora_venda }}</p>
+            <p class="modal-info-label">Data</p>
+            <p class="mb-0 fw-bold">{{ vendaSelecionada.data_venda | date:'dd/MM/yyyy' }} · {{ vendaSelecionada.hora_venda }}</p>
           </div>
           <div class="col-md-3">
-            <p class="mb-0" style="font-size:0.65rem; color:#6c757d; letter-spacing:0.8px; text-transform:uppercase;">Total</p>
-            <p class="mb-0 fw-bold" style="color:#1a73e8; font-size:1.05rem;">R$ {{ vendaSelecionada.total }}</p>
+            <p class="modal-info-label">Total</p>
+            <p class="mb-0 fw-bold modal-info-value--primary">R$ {{ vendaSelecionada.total }}</p>
           </div>
         </div>
       </div>
 
       <!-- Body -->
-      <div class="modal-body" style="padding: 24px; background:#fff;">
-        <p class="mb-3" style="font-size:0.75rem; color:#6c757d; letter-spacing:1px; text-transform:uppercase; font-weight:600;">Formas de Pagamento</p>
+      <div class="modal-body-custom">
+        <p class="modal-section-label mb-3">Formas de Pagamento</p>
 
-        <div *ngFor="let divisao of divisoesPagamento; let i = index"
-             style="background:#f8f9fc; border:1px solid #e9ecef; border-radius:12px; padding:16px; margin-bottom:12px;">
+        <div class="payment-row" *ngFor="let divisao of divisoesPagamento; let i = index">
           <div class="row g-3 align-items-end">
-            <div class="col-auto" style="min-width:32px;">
-              <span style="background:#1a73e8; color:#fff; border-radius:50%; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; font-size:0.72rem; font-weight:700;">{{ i + 1 }}</span>
+            <div class="col-auto">
+              <span class="payment-index">{{ i + 1 }}</span>
             </div>
             <div class="col-md-3">
-              <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Valor (R$)</label>
-              <input type="number" class="form-control" [(ngModel)]="divisao.valor" style="border-radius:8px; border:1px solid #dee2e6; font-size:0.9rem; padding:8px 12px;" />
+              <label class="field-label">Valor (R$)</label>
+              <input type="number" class="form-control field-input" [(ngModel)]="divisao.valor" />
             </div>
             <div class="col-md-3">
-              <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Tipo</label>
-              <select class="form-control" [(ngModel)]="divisao.tipoPagamento" style="border-radius:8px; border:1px solid #dee2e6; font-size:0.9rem; padding:8px 12px;">
+              <label class="field-label">Tipo</label>
+              <select class="form-control field-input" [(ngModel)]="divisao.tipoPagamento">
                 <option value="CARTAO">Cartão</option>
                 <option value="DINHEIRO">Dinheiro</option>
                 <option value="PIX">PIX</option>
               </select>
             </div>
             <div class="col-md-3" *ngIf="divisao.tipoPagamento === 'CARTAO'">
-              <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Operação</label>
-              <select class="form-control" [(ngModel)]="divisao.operacao" style="border-radius:8px; border:1px solid #dee2e6; font-size:0.9rem; padding:8px 12px;">
+              <label class="field-label">Operação</label>
+              <select class="form-control field-input" [(ngModel)]="divisao.operacao">
                 <option value="Credito">Crédito</option>
                 <option value="Debito">Débito</option>
               </select>
             </div>
-            <div class="col-auto d-flex align-items-end" style="padding-bottom:2px;">
-              <button (click)="removerDivisao(i)" style="background:#fff0f0; border:1px solid #f5c6cb; color:#dc3545; border-radius:8px; padding:8px 12px; cursor:pointer; font-size:0.85rem;">
+            <div class="col-auto d-flex align-items-end">
+              <button class="btn-delete-row" (click)="removerDivisao(i)">
                 <i class="feather icon-trash-2"></i>
               </button>
             </div>
           </div>
         </div>
 
-        <button (click)="adicionarDivisao()"
-          style="width:100%; background:#f0f7ff; border:2px dashed #1a73e8; color:#1a73e8; border-radius:10px; padding:10px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+        <button class="btn-add-payment" (click)="adicionarDivisao()">
           <i class="feather icon-plus me-1"></i> Adicionar Forma de Pagamento
         </button>
       </div>
 
       <!-- Footer -->
-      <div style="background:#f8f9fc; padding:16px 24px; border-top:1px solid #e9ecef; display:flex; align-items:center; justify-content:space-between;">
-        <div style="font-size:0.88rem; color:#495057;">
-          Dividido: <strong style="color: totalConfere ? '#28a745' : '#dc3545';">R$ {{ totalDividido.toFixed(2) }}</strong>
+      <div class="modal-footer-custom modal-footer-custom--space-between">
+        <div class="modal-footer-summary">
+          Dividido: <strong>R$ {{ totalDividido.toFixed(2) }}</strong>
           / <strong>R$ {{ vendaSelecionada.total }}</strong>
-          <span *ngIf="totalConfere" style="margin-left:6px; color:#28a745;"><i class="feather icon-check-circle"></i></span>
-          <span *ngIf="!totalConfere" style="margin-left:6px; color:#dc3545;"><i class="feather icon-alert-circle"></i></span>
+          <span *ngIf="totalConfere" class="total-check-ok"><i class="feather icon-check-circle"></i></span>
+          <span *ngIf="!totalConfere" class="total-check-fail"><i class="feather icon-alert-circle"></i></span>
         </div>
         <div class="d-flex gap-2">
-          <button type="button" (click)="fecharModalVendas()" style="background:#fff; border:1px solid #dee2e6; color:#6c757d; border-radius:8px; padding:8px 20px; font-size:0.85rem; font-weight:600; cursor:pointer;">Cancelar</button>
-          <button type="button" (click)="salvarVendaComDivisao()" style="background: linear-gradient(135deg, #1a73e8, #0d47a1); border:none; color:#fff; border-radius:8px; padding:8px 20px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+          <button type="button" class="btn-modal-cancel" (click)="fecharModalVendas()">Cancelar</button>
+          <button type="button" class="btn-modal-primary btn-modal-primary--blue" (click)="salvarVendaComDivisao()">
             <i class="feather icon-save me-1"></i>Salvar
           </button>
         </div>
@@ -402,7 +390,7 @@
     </div>
   </div>
 </div>
-<div class="modal-backdrop fade show" *ngIf="mostrarModalVendas" style="z-index:1054;"></div>
+<div class="modal-backdrop fade show atlas-backdrop" *ngIf="mostrarModalVendas"></div>
 
 
 
@@ -411,37 +399,36 @@
 
 
 <!-- ===== MODAL ABRIR CAIXA ===== -->
-<div class="modal d-block" tabindex="-1" *ngIf="mostrarModalCaixa" style="z-index:1055;">
-  <div class="modal-dialog modal-dialog-centered" style="max-width:440px;">
-    <div class="modal-content" style="border:none; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+<div class="modal d-block atlas-modal" tabindex="-1" *ngIf="mostrarModalCaixa">
+  <div class="modal-dialog modal-dialog-centered modal-caixa">
+    <div class="modal-content atlas-modal-content">
 
       <!-- Header -->
-      <div style="background: linear-gradient(135deg, #28a745 0%, #1a7a32 100%); padding: 20px 24px; display:flex; align-items:center; justify-content:space-between;">
+      <div class="modal-header-custom modal-header-custom--green">
         <div class="d-flex align-items-center gap-3">
-          <div style="background:rgba(255,255,255,0.2); border-radius:10px; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
-            <i class="feather icon-unlock" style="color:#fff; font-size:18px;"></i>
+          <div class="modal-header-icon">
+            <i class="feather icon-unlock"></i>
           </div>
           <div>
-            <p class="mb-0" style="font-size:0.65rem; color:rgba(255,255,255,0.7); letter-spacing:1px; text-transform:uppercase;">Caixa</p>
+            <p class="modal-header-label">Caixa</p>
             <h5 class="mb-0 text-white fw-bold">Abrir Caixa</h5>
           </div>
         </div>
-        <button type="button" (click)="fecharModalCaixa()" style="background:rgba(255,255,255,0.15); border:none; border-radius:8px; width:32px; height:32px; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">&times;</button>
+        <button type="button" class="modal-close-btn" (click)="fecharModalCaixa()">&times;</button>
       </div>
 
       <!-- Body -->
-      <div style="padding: 28px 24px; background:#fff;">
-        <label style="font-size:0.75rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; display:block; margin-bottom:8px;">Fundo de Caixa (R$)</label>
-        <input id="totalAbertura" type="number" class="form-control" [(ngModel)]="totalAbertura" name="totalAbertura"
-          placeholder="0,00"
-          style="border-radius:10px; border:1.5px solid #dee2e6; font-size:1.1rem; padding:12px 16px; font-weight:600; color:#343a40;" />
-        <p style="font-size:0.78rem; color:#6c757d; margin-top:8px; margin-bottom:0;"><i class="feather icon-info me-1"></i>Informe o valor em dinheiro disponível no caixa.</p>
+      <div class="modal-body-custom">
+        <label class="field-label">Fundo de Caixa (R$)</label>
+        <input id="totalAbertura" type="number" class="form-control field-input field-input--large"
+          [(ngModel)]="totalAbertura" name="totalAbertura" placeholder="0,00" />
+        <p class="field-hint"><i class="feather icon-info me-1"></i>Informe o valor em dinheiro disponível no caixa.</p>
       </div>
 
       <!-- Footer -->
-      <div style="background:#f8f9fc; padding:16px 24px; border-top:1px solid #e9ecef; display:flex; gap:10px; justify-content:flex-end;">
-        <button type="button" (click)="fecharModalCaixa()" style="background:#fff; border:1px solid #dee2e6; color:#6c757d; border-radius:8px; padding:9px 20px; font-size:0.85rem; font-weight:600; cursor:pointer;">Cancelar</button>
-        <button type="button" (click)="abrirCaixa()" style="background: linear-gradient(135deg, #28a745, #1a7a32); border:none; color:#fff; border-radius:8px; padding:9px 20px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+      <div class="modal-footer-custom">
+        <button type="button" class="btn-modal-cancel" (click)="fecharModalCaixa()">Cancelar</button>
+        <button type="button" class="btn-modal-primary btn-modal-primary--green" (click)="abrirCaixa()">
           <i class="feather icon-unlock me-1"></i>Abrir Caixa
         </button>
       </div>
@@ -449,5 +436,5 @@
     </div>
   </div>
 </div>
-<div class="modal-backdrop fade show" *ngIf="mostrarModalCaixa" style="z-index:1054;"></div>
+<div class="modal-backdrop fade show atlas-backdrop" *ngIf="mostrarModalCaixa"></div>
 

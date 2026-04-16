@@ -1,3 +1,200 @@
+// ── Radio-pill: Tipo de Ordem ──────────────────────────────────────────────
+.tipo-btn {
+  flex: 1;
+  border-radius: 8px;
+  padding: 9px 0;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #dee2e6;
+  background: #f8f9fc;
+  color: #6c757d;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &--active {
+    background: #1a73e8;
+    color: #fff;
+    border-color: #1a73e8;
+  }
+}
+
+// ── Catálogo / Pedido scrollable containers ─────────────────────────────────
+.product-list-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+}
+
+.order-list-scroll {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+// ── Product / Order list rows ───────────────────────────────────────────────
+.list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f3f4f5;
+
+  &__name {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #343a40;
+  }
+
+  &__price {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #28a745;
+    font-weight: 600;
+  }
+}
+
+.btn-add-product {
+  background: linear-gradient(135deg, #6f42c1, #4a148c);
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+// ── Qty counter ─────────────────────────────────────────────────────────────
+.qty-btn {
+  background: #f8f9fc;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qty-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #343a40;
+  min-width: 24px;
+  text-align: center;
+}
+
+.btn-remove-item {
+  background: #fff0f0;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  color: #dc3545;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+}
+
+// ── Empty state ──────────────────────────────────────────────────────────────
+.empty-state {
+  border: 2px dashed #dee2e6;
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  color: #adb5bd;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+
+  &__icon {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 6px;
+  }
+}
+
+.empty-state-full {
+  text-align: center;
+  padding: 40px 0;
+  color: #adb5bd;
+
+  &__icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  p {
+    font-size: 0.9rem;
+    margin: 0;
+  }
+}
+
+// ── Pedido history card ──────────────────────────────────────────────────────
+.pedido-card {
+  background: #f8f9fc;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #e9ecef;
+
+  &__date {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #6c757d;
+  }
+
+  &__total {
+    margin: 4px 0 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0d9488;
+  }
+}
+
+.pedido-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 0.86rem;
+  color: #495057;
+  border-top: 1px solid #e9ecef;
+
+  &__qty {
+    color: #6c757d;
+  }
+}
+
+// ── Modal teal footer summary ─────────────────────────────────────────────────
+.modal-teal-total {
+  p:first-child {
+    margin: 0;
+    font-size: 0.65rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  p:last-child {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0d9488;
+  }
+}
+
+// ── Mesa card ────────────────────────────────────────────────────────────────
 /* Estilo do card de mesa */
 .mesa-card {
   border: 1px solid #ddd; /* Borda fina */
@@ -68,113 +265,6 @@
 
 .page-item .page-link {
   color: #333; /* Cor normal do texto da página */
-}
-
-/* Estilo do modal */
-.modal {
-  background: rgba(0, 0, 0, 0.5); /* Fundo escuro para o modal */
-}
-
-.modal-content {
-  border-radius: 10px;
-}
-
-.modal-body {
-  max-height: 800px; /* Limita a altura do conteúdo */
-  overflow-y: auto;  /* Adiciona rolagem caso tenha muitos produtos */
-}
-
-.modal-header .close {
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-
-.modal-backdrop {
-  background-color: rgba(0, 0, 0, 0.5); /* Fundo escuro do modal */
-}
-
-/* Estilo para os botões de aumentar e diminuir */
-.btn-outline-secondary {
-  background-color: #f8f9fa;
-  border: 1px solid #ddd;
-  color: #007bff;
-}
-
-.btn-outline-secondary:hover {
-  background-color: #007bff;
-  color: white;
-}
-
-/* Estilo para o campo de entrada (input) do contador */
-input[type="number"] {
-  text-align: center;
-  font-size: 16px;
-  padding: 5px;
-  width: 50px;
-  height: 35px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-}
-
-/* Ajustando a distância entre o input e os botões "+" e "-" */
-.d-flex {
-  display: flex;
-  align-items: center;
-}
-
-/* Ajuste de estilo nos itens da lista de produtos */
-.list-group-item {
-  padding: 10px 15px;
-}
-
-/* Estilo para os botões de adicionar/remover no modal */
-.btn-success, .btn-danger {
-  font-size: 14px;
-  padding: 5px 10px;
-}
-
-
-
-/* Estilo do modal */
-.modal {
-  background: rgba(0, 0, 0, 0.5); /* Fundo escuro para o modal */
-}
-
-.modal-content {
-  border-radius: 10px;
-}
-
-.modal-body {
-  max-height: 800px; /* Limita a altura do conteúdo */
-  overflow-y: auto;  /* Adiciona rolagem caso tenha muitos produtos */
-}
-
-.modal-header .close {
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-
-.modal-backdrop {
-  background-color: rgba(0, 0, 0, 0.5); /* Fundo escuro do modal */
-}
-
-/* Tamanho maior para o modal */
-.modal-dialog.modal-lg { 
-  max-width: 90%; /* Ajustei a largura para ocupar 90% da tela */
-  width: 90%;
-}
-
-.modal-header {
-  background-color: #28a745;
-  color: white;
-}
-
-.modal-footer {
-  text-align: right;
-}
-
-.modal-body {
-  padding: 15px;
 }
 
 .btn-cancelar {

@@ -1,53 +1,146 @@
-/* Estilo do modal */
-.modal {
-  display: block; /* Garantir que esteja visível */
-  background: rgba(0, 0, 0, 0.5); /* Fundo escuro */
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 1050; /* Garantir que esteja acima do backdrop */
+// ── Modal base ────────────────────────────────────────────────
+// Classes compartilhadas estão em src/scss/_modais.scss
+
+// ── Card Caixa Diário ─────────────────────────────────────────
+
+.caixa-card {
+  background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.caixa-card__header {
+  background: transparent;
+  padding: 20px 24px 12px;
+}
+
+.caixa-card__icon {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+
+  i {
+    color: #fff;
+    font-size: 16px;
+  }
 }
 
-.modal-content {
+.caixa-card__label {
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  opacity: 0.75;
+  text-transform: uppercase;
+}
+
+.caixa-card__operator {
+  font-weight: 400;
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+.caixa-card__meta {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.caixa-card__total-section {
+  padding: 16px 24px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.caixa-card__total-label {
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.caixa-card__total-amount {
+  font-size: 1.9rem;
+}
+
+.caixa-card__trend-badge {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  color: #fff;
+}
+
+.caixa-card__payments {
+  padding: 16px 24px;
+}
+
+.caixa-pay-tile {
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 10px;
-  max-height: 80vh;
-  overflow-y: auto;
+  padding: 10px 14px;
+
+  &__label {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.65);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+  }
+
+  &__value {
+    font-size: 0.9rem;
+  }
 }
 
-.modal-header .close {
-  font-size: 1.5rem;
-  cursor: pointer;
+.caixa-card__actions {
+  padding: 0 24px 20px;
+  display: flex;
+  gap: 10px;
 }
 
-.modal-backdrop {
-  background-color: rgba(0, 0, 0, 0.5); /* Fundo escuro */
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 1040; /* Abaixo do modal */
+.btn-caixa-open {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  padding: 9px 0;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s;
+
+  &:hover { background: rgba(255, 255, 255, 0.3); }
 }
 
-.modal-dialog.modal-lg {
-  max-width: 90%;
-  width: 90%;
+.btn-caixa-close {
+  background: rgba(220, 53, 69, 0.75);
+  color: #fff;
+  border: 1px solid rgba(220, 53, 69, 0.5);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  padding: 9px 0;
+  transition: background 0.15s;
+
+  &:hover { background: rgba(220, 53, 69, 0.9); }
 }
 
-.modal-header {
-  background-color: #28a745;
-  color: white;
+// ── Modal Detalhes da Venda ───────────────────────────────────
+
+.modal-caixa {
+  max-width: 440px;
 }
 
-.modal-footer {
-  text-align: right;
+// ── Hint abaixo do input de abertura ─────────────────────────
+
+.field-hint {
+  font-size: 0.78rem;
+  color: #6c757d;
+  margin-top: 8px;
+  margin-bottom: 0;
 }
 
-.modal-body {
-  padding: 25px;
-}
+// ── Confirmação de total dividido ─────────────────────────────
+
+.total-check-ok   { margin-left: 6px; color: #28a745; }
+.total-check-fail { margin-left: 6px; color: #dc3545; }
+

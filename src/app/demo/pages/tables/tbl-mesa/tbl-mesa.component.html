@@ -80,64 +80,57 @@
 
 
 <!-- ===== MODAL ADICIONAR MESA ===== -->
-<div class="modal fade show d-block" *ngIf="mostrarModalMesa" style="z-index:1055;">
+<div class="atlas-modal" *ngIf="mostrarModalMesa">
   <div class="modal-dialog modal-dialog-centered" style="max-width:480px;">
-    <div class="modal-content" style="border:none; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div class="atlas-modal-content">
 
       <!-- Header -->
-      <div style="background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); padding: 20px 24px; display:flex; align-items:center; justify-content:space-between;">
+      <div class="modal-header-custom modal-header-custom--blue">
         <div class="d-flex align-items-center gap-3">
-          <div style="background:rgba(255,255,255,0.2); border-radius:10px; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
-            <i class="feather icon-grid" style="color:#fff; font-size:18px;"></i>
+          <div class="modal-header-icon">
+            <i class="feather icon-grid"></i>
           </div>
           <div>
-            <p class="mb-0" style="font-size:0.65rem; color:rgba(255,255,255,0.7); letter-spacing:1px; text-transform:uppercase;">Cadastro</p>
+            <p class="mb-0 modal-header-label">Cadastro</p>
             <h5 class="mb-0 text-white fw-bold">Adicionar Mesa</h5>
           </div>
         </div>
-        <button type="button" (click)="fecharModals()" style="background:rgba(255,255,255,0.15); border:none; border-radius:8px; width:32px; height:32px; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">&times;</button>
+        <button type="button" (click)="fecharModals()" class="modal-close-btn">&times;</button>
       </div>
 
       <!-- Body -->
-      <div style="padding:24px; background:#fff;">
+      <div class="modal-body-custom">
         <form>
           <div class="row g-3">
 
             <div class="col-md-4">
-              <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Número</label>
-              <input id="numero" type="number" [(ngModel)]="novaMesa.numero" name="numero" required
-                style="width:100%; border-radius:8px; border:1.5px solid #dee2e6; padding:9px 14px; font-size:0.9rem; font-weight:700; color:#343a40;" />
+              <label class="field-label">Número</label>
+              <input id="numero" type="number" [(ngModel)]="novaMesa.numero" name="numero" required class="field-input" />
             </div>
 
             <div class="col-md-8">
-              <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Nome da Mesa</label>
-              <input id="nome" type="text" [(ngModel)]="novaMesa.nome" name="nome" required
-                style="width:100%; border-radius:8px; border:1.5px solid #dee2e6; padding:9px 14px; font-size:0.9rem; color:#343a40;" />
+              <label class="field-label">Nome da Mesa</label>
+              <input id="nome" type="text" [(ngModel)]="novaMesa.nome" name="nome" required class="field-input" />
             </div>
 
             <div class="col-12">
-              <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Tipo de Ordem</label>
+              <label class="field-label">Tipo de Ordem</label>
               <div class="d-flex gap-2">
                 <label *ngFor="let tipo of ['Pedido','Retirada','Entrega']" style="flex:1; cursor:pointer;">
                   <input type="radio" [(ngModel)]="novaMesa.ordem_type" name="ordem_type" [value]="tipo" style="display:none;" />
-                  <div [ngStyle]="{'background': novaMesa.ordem_type === tipo ? '#1a73e8' : '#f8f9fc', 'color': novaMesa.ordem_type === tipo ? '#fff' : '#6c757d', 'border': novaMesa.ordem_type === tipo ? '1.5px solid #1a73e8' : '1.5px solid #dee2e6'}"
-                    style="border-radius:8px; padding:9px 0; text-align:center; font-size:0.82rem; font-weight:600; transition:all 0.15s;">
-                    {{ tipo }}
-                  </div>
+                  <div class="tipo-btn" [class.tipo-btn--active]="novaMesa.ordem_type === tipo">{{ tipo }}</div>
                 </label>
               </div>
             </div>
 
             <div class="col-12" *ngIf="novaMesa.ordem_type === 'Entrega'">
-              <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;"><i class="feather icon-map-pin me-1"></i>Endereço</label>
-              <input id="endereco" type="text" [(ngModel)]="novaMesa.endereco" name="endereco" required
-                style="width:100%; border-radius:8px; border:1.5px solid #dee2e6; padding:9px 14px; font-size:0.9rem; color:#343a40;" />
+              <label class="field-label"><i class="feather icon-map-pin me-1"></i>Endereço</label>
+              <input id="endereco" type="text" [(ngModel)]="novaMesa.endereco" name="endereco" required class="field-input" />
             </div>
 
             <div class="col-12">
-              <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Status</label>
-              <select id="status" [(ngModel)]="novaMesa.status" name="status" required
-                style="width:100%; border-radius:8px; border:1.5px solid #dee2e6; padding:9px 14px; font-size:0.9rem; color:#343a40;">
+              <label class="field-label">Status</label>
+              <select id="status" [(ngModel)]="novaMesa.status" name="status" required class="field-input">
                 <option value="Aberta">Aberta</option>
                 <option value="Finalizada">Finalizada</option>
               </select>
@@ -148,10 +141,9 @@
       </div>
 
       <!-- Footer -->
-      <div style="background:#f8f9fc; padding:16px 24px; border-top:1px solid #e9ecef; display:flex; gap:10px; justify-content:flex-end;">
-        <button (click)="fecharModals()" style="background:#fff; border:1px solid #dee2e6; color:#6c757d; border-radius:8px; padding:9px 20px; font-size:0.85rem; font-weight:600; cursor:pointer;">Cancelar</button>
-        <button [disabled]="!novaMesa.numero" (click)="adicionarMesa()"
-          style="background: linear-gradient(135deg, #1a73e8, #0d47a1); border:none; color:#fff; border-radius:8px; padding:9px 20px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+      <div class="modal-footer-custom">
+        <button (click)="fecharModals()" class="btn-modal-cancel">Cancelar</button>
+        <button [disabled]="!novaMesa.numero" (click)="adicionarMesa()" class="btn-modal-primary btn-modal-primary--blue">
           <i class="feather icon-check me-1"></i>Salvar Mesa
         </button>
       </div>
@@ -159,50 +151,48 @@
     </div>
   </div>
 </div>
-<div class="modal-backdrop fade show" *ngIf="mostrarModalMesa" style="z-index:1054;"></div>
+<div class="atlas-backdrop" *ngIf="mostrarModalMesa"></div>
 
 <!-- ===== MODAL ADICIONAR PEDIDO ===== -->
-<div class="modal fade show d-block" *ngIf="mostrarModal" style="z-index:1055;">
+<div class="atlas-modal" *ngIf="mostrarModal">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content" style="border:none; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div class="atlas-modal-content">
 
       <!-- Header -->
-      <div style="background: linear-gradient(135deg, #6f42c1 0%, #4a148c 100%); padding: 20px 24px; display:flex; align-items:center; justify-content:space-between;">
+      <div class="modal-header-custom modal-header-custom--purple">
         <div class="d-flex align-items-center gap-3">
-          <div style="background:rgba(255,255,255,0.2); border-radius:10px; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
-            <i class="feather icon-shopping-cart" style="color:#fff; font-size:18px;"></i>
+          <div class="modal-header-icon">
+            <i class="feather icon-shopping-cart"></i>
           </div>
           <div>
-            <p class="mb-0" style="font-size:0.65rem; color:rgba(255,255,255,0.7); letter-spacing:1px; text-transform:uppercase;">Novo Pedido</p>
+            <p class="mb-0 modal-header-label">Novo Pedido</p>
             <h5 class="mb-0 text-white fw-bold">Mesa {{ mesaSelecionada?.numero }}</h5>
           </div>
         </div>
-        <button type="button" (click)="fecharModal()" style="background:rgba(255,255,255,0.15); border:none; border-radius:8px; width:32px; height:32px; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">&times;</button>
+        <button type="button" (click)="fecharModal()" class="modal-close-btn">&times;</button>
       </div>
 
       <!-- Body -->
-      <div class="modal-body" style="padding:20px 24px; background:#fff;">
+      <div class="modal-body-custom">
         <div class="row g-4">
 
           <!-- Lista de Produtos -->
           <div class="col-md-6">
-            <p style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;"><i class="feather icon-package me-1"></i>Catálogo</p>
+            <p class="modal-section-label"><i class="feather icon-package me-1"></i>Catálogo</p>
             <input type="text" [(ngModel)]="filtroProduto" placeholder="Pesquisar produto..."
-              style="width:100%; border-radius:8px; border:1.5px solid #dee2e6; padding:8px 14px; font-size:0.88rem; margin-bottom:12px; color:#343a40;">
+              class="field-input" style="margin-bottom:12px;">
 
-            <div style="max-height:300px; overflow-y:auto; border:1px solid #e9ecef; border-radius:10px;">
-              <div *ngFor="let produto of produtosFiltrados.slice(0, limiteProdutos)"
-                style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid #f3f4f5;">
+            <div class="product-list-scroll">
+              <div *ngFor="let produto of produtosFiltrados.slice(0, limiteProdutos)" class="list-row">
                 <div>
-                  <p style="margin:0; font-size:0.88rem; font-weight:600; color:#343a40;">{{ produto.nome }}</p>
-                  <p style="margin:0; font-size:0.78rem; color:#28a745; font-weight:600;">{{ produto.preco | currency }}</p>
+                  <p class="list-row__name">{{ produto.nome }}</p>
+                  <p class="list-row__price">{{ produto.preco | currency }}</p>
                 </div>
-                <button (click)="adicionarProdutoAPedido(produto)"
-                  style="background: linear-gradient(135deg, #6f42c1, #4a148c); border:none; color:#fff; border-radius:8px; padding:6px 12px; font-size:0.78rem; font-weight:600; cursor:pointer;">
+                <button (click)="adicionarProdutoAPedido(produto)" class="btn-add-product">
                   <i class="feather icon-plus"></i>
                 </button>
               </div>
-              <div *ngIf="produtosFiltrados.length === 0" style="padding:24px; text-align:center; color:#adb5bd; font-size:0.85rem;">
+              <div *ngIf="produtosFiltrados.length === 0" class="empty-state" style="border:none; margin:0;">
                 Nenhum produto encontrado
               </div>
             </div>
@@ -210,52 +200,46 @@
 
           <!-- Pedido Atual -->
           <div class="col-md-6">
-            <p style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;"><i class="feather icon-clipboard me-1"></i>Pedido Atual</p>
+            <p class="modal-section-label"><i class="feather icon-clipboard me-1"></i>Pedido Atual</p>
 
-            <div style="max-height:220px; overflow-y:auto; border:1px solid #e9ecef; border-radius:10px; margin-bottom:12px;"
-              *ngIf="mesaSelecionada?.pedidos && mesaSelecionada.pedidos.length > 0">
-              <div *ngFor="let pedido of mesaSelecionada.pedidos; let i = index"
-                style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid #f3f4f5;">
+            <div class="order-list-scroll" *ngIf="mesaSelecionada?.pedidos && mesaSelecionada.pedidos.length > 0">
+              <div *ngFor="let pedido of mesaSelecionada.pedidos; let i = index" class="list-row">
                 <div style="flex:1;">
-                  <p style="margin:0; font-size:0.88rem; font-weight:600; color:#343a40;">{{ pedido.nome }}</p>
-                  <p style="margin:0; font-size:0.78rem; color:#28a745; font-weight:600;">{{ pedido.preco | currency }}</p>
+                  <p class="list-row__name">{{ pedido.nome }}</p>
+                  <p class="list-row__price">{{ pedido.preco | currency }}</p>
                 </div>
                 <div class="d-flex align-items-center gap-1">
-                  <button (click)="decrementarQuantidade(pedido.id_produto)"
-                    style="background:#f8f9fc; border:1px solid #dee2e6; border-radius:6px; width:28px; height:28px; font-size:0.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">-</button>
-                  <span style="font-size:0.9rem; font-weight:700; color:#343a40; min-width:24px; text-align:center;">{{ pedido.quantidade }}</span>
-                  <button (click)="incrementarQuantidade(pedido.id_produto)"
-                    style="background:#f8f9fc; border:1px solid #dee2e6; border-radius:6px; width:28px; height:28px; font-size:0.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
-                  <button (click)="removerProdutoDoPedido(i)"
-                    style="background:#fff0f0; border:1px solid #f5c6cb; border-radius:6px; width:28px; height:28px; color:#dc3545; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-left:4px;">
+                  <button (click)="decrementarQuantidade(pedido.id_produto)" class="qty-btn">-</button>
+                  <span class="qty-value">{{ pedido.quantidade }}</span>
+                  <button (click)="incrementarQuantidade(pedido.id_produto)" class="qty-btn">+</button>
+                  <button (click)="removerProdutoDoPedido(i)" class="btn-remove-item">
                     <i class="feather icon-x"></i>
                   </button>
                 </div>
               </div>
             </div>
 
-            <div *ngIf="!mesaSelecionada?.pedidos || mesaSelecionada.pedidos.length === 0"
-              style="border:2px dashed #dee2e6; border-radius:10px; padding:24px; text-align:center; color:#adb5bd; margin-bottom:12px; font-size:0.85rem;">
-              <i class="feather icon-shopping-cart" style="font-size:1.5rem; display:block; margin-bottom:6px;"></i>
+            <div *ngIf="!mesaSelecionada?.pedidos || mesaSelecionada.pedidos.length === 0" class="empty-state">
+              <i class="feather icon-shopping-cart empty-state__icon"></i>
               Nenhum item adicionado
             </div>
 
-            <label style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;"><i class="feather icon-message-square me-1"></i>Observação</label>
+            <label class="field-label"><i class="feather icon-message-square me-1"></i>Observação</label>
             <textarea [(ngModel)]="observacao" rows="3" placeholder="Ex: sem cebola, bem passado..."
-              style="width:100%; border-radius:8px; border:1.5px solid #dee2e6; padding:9px 14px; font-size:0.88rem; color:#343a40; resize:none;"></textarea>
+              class="field-input" style="resize:none;"></textarea>
           </div>
 
         </div>
       </div>
 
       <!-- Footer -->
-      <div style="background:#f8f9fc; padding:16px 24px; border-top:1px solid #e9ecef; display:flex; align-items:center; justify-content:space-between;">
-        <div style="font-size:0.85rem; color:#495057;">
+      <div class="modal-footer-custom modal-footer-custom--space-between">
+        <div class="modal-footer-summary">
           Total: <strong style="font-size:1.1rem; color:#6f42c1;">{{ calcularTotalPedido() | currency: 'BRL' }}</strong>
         </div>
         <div class="d-flex gap-2">
-          <button (click)="fecharModal()" style="background:#fff; border:1px solid #dee2e6; color:#6c757d; border-radius:8px; padding:9px 20px; font-size:0.85rem; font-weight:600; cursor:pointer;">Fechar</button>
-          <button (click)="finalizarPedido()" style="background: linear-gradient(135deg, #6f42c1, #4a148c); border:none; color:#fff; border-radius:8px; padding:9px 20px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+          <button (click)="fecharModal()" class="btn-modal-cancel">Fechar</button>
+          <button (click)="finalizarPedido()" class="btn-modal-primary btn-modal-primary--purple">
             <i class="feather icon-send me-1"></i>Solicitar Pedido
           </button>
         </div>
@@ -264,40 +248,39 @@
     </div>
   </div>
 </div>
-<div class="modal-backdrop fade show" *ngIf="mostrarModal" style="z-index:1054;"></div>
+<div class="atlas-backdrop" *ngIf="mostrarModal"></div>
 
 <!-- ===== MODAL DETALHES DA MESA ===== -->
-<div class="modal fade show d-block" *ngIf="mostrarModalDetalhes" style="z-index:1055;">
+<div class="atlas-modal" *ngIf="mostrarModalDetalhes">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content" style="border:none; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div class="atlas-modal-content">
 
       <!-- Header -->
-      <div style="background: linear-gradient(135deg, #0d9488 0%, #065f46 100%); padding: 20px 24px; display:flex; align-items:center; justify-content:space-between;">
+      <div class="modal-header-custom modal-header-custom--teal">
         <div class="d-flex align-items-center gap-3">
-          <div style="background:rgba(255,255,255,0.2); border-radius:10px; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
-            <i class="feather icon-list" style="color:#fff; font-size:18px;"></i>
+          <div class="modal-header-icon">
+            <i class="feather icon-list"></i>
           </div>
           <div>
-            <p class="mb-0" style="font-size:0.65rem; color:rgba(255,255,255,0.7); letter-spacing:1px; text-transform:uppercase;">Histórico</p>
+            <p class="mb-0 modal-header-label">Histórico</p>
             <h5 class="mb-0 text-white fw-bold">Mesa {{ mesaSelecionada?.numero }}</h5>
           </div>
         </div>
-        <button type="button" (click)="fecharModals()" style="background:rgba(255,255,255,0.15); border:none; border-radius:8px; width:32px; height:32px; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">&times;</button>
+        <button type="button" (click)="fecharModals()" class="modal-close-btn">&times;</button>
       </div>
 
       <!-- Body -->
-      <div class="modal-body" style="padding:24px; background:#fff; max-height:60vh; overflow-y:auto;">
+      <div class="modal-body-custom" style="max-height:60vh; overflow-y:auto;">
 
         <div *ngIf="mesaSelecionada?.pedidos && mesaSelecionada.pedidos.length > 0">
-          <p style="font-size:0.72rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:14px;">Histórico de Pedidos</p>
+          <p class="modal-section-label">Histórico de Pedidos</p>
 
-          <div *ngFor="let pedido of mesaSelecionada.pedidos; let i = index"
-               style="background:#f8f9fc; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid #e9ecef;">
+          <div *ngFor="let pedido of mesaSelecionada.pedidos; let i = index" class="pedido-card">
 
             <div class="d-flex align-items-start justify-content-between mb-2">
               <div>
-                <p style="margin:0; font-size:0.78rem; color:#6c757d;"><i class="feather icon-clock me-1"></i>{{ pedido.data | date: 'dd/MM/yyyy HH:mm' }}</p>
-                <p style="margin:4px 0 0; font-size:1rem; font-weight:700; color:#0d9488;">R$ {{ pedido.total | currency: 'BRL' }}</p>
+                <p class="pedido-card__date"><i class="feather icon-clock me-1"></i>{{ pedido.data | date: 'dd/MM/yyyy HH:mm' }}</p>
+                <p class="pedido-card__total">R$ {{ pedido.total | currency: 'BRL' }}</p>
               </div>
               <span class="badge rounded-pill"
                 [ngClass]="{
@@ -308,11 +291,10 @@
                 style="font-size:0.72rem;">{{ pedido.status }}</span>
             </div>
 
-            <div *ngIf="pedido.itens?.length > 0" style="border-top:1px solid #e9ecef; padding-top:10px;">
-              <div *ngFor="let item of pedido.itens"
-                   style="display:flex; align-items:center; justify-content:space-between; padding:5px 0; font-size:0.86rem; color:#495057;">
+            <div *ngIf="pedido.itens?.length > 0">
+              <div *ngFor="let item of pedido.itens" class="pedido-item-row">
                 <span><i class="feather icon-circle" style="font-size:0.5rem; margin-right:8px; vertical-align:middle;"></i>{{ item.nome }}</span>
-                <span style="color:#6c757d;">{{ item.quantidade }}x · <strong style="color:#343a40;">{{ item.preco | currency: 'BRL' }}</strong></span>
+                <span class="pedido-item-row__qty">{{ item.quantidade }}x · <strong style="color:#343a40;">{{ item.preco | currency: 'BRL' }}</strong></span>
               </div>
             </div>
 
@@ -322,32 +304,31 @@
           </div>
         </div>
 
-        <div *ngIf="!mesaSelecionada?.pedidos || mesaSelecionada.pedidos.length === 0"
-          style="text-align:center; padding:40px 0; color:#adb5bd;">
-          <i class="feather icon-inbox" style="font-size:2.5rem; display:block; margin-bottom:8px;"></i>
-          <p style="font-size:0.9rem; margin:0;">Nenhum pedido registrado para esta mesa.</p>
+        <div *ngIf="!mesaSelecionada?.pedidos || mesaSelecionada.pedidos.length === 0" class="empty-state-full">
+          <i class="feather icon-inbox empty-state-full__icon"></i>
+          <p>Nenhum pedido registrado para esta mesa.</p>
         </div>
 
       </div>
 
       <!-- Footer -->
-      <div style="background:#f8f9fc; padding:16px 24px; border-top:1px solid #e9ecef; display:flex; align-items:center; justify-content:space-between;">
-        <div>
-          <p style="margin:0; font-size:0.65rem; color:#6c757d; text-transform:uppercase; letter-spacing:0.8px;">Total da Mesa</p>
-          <p style="margin:0; font-size:1.2rem; font-weight:700; color:#0d9488;">{{ mesaSelecionada?.totalConsumo | currency: 'BRL' }}</p>
+      <div class="modal-footer-custom modal-footer-custom--space-between">
+        <div class="modal-teal-total">
+          <p>Total da Mesa</p>
+          <p>{{ mesaSelecionada?.totalConsumo | currency: 'BRL' }}</p>
         </div>
         <div class="d-flex gap-2">
-          <button (click)="imprimirHistoricoMesa()" style="background:#fff; border:1px solid #0d9488; color:#0d9488; border-radius:8px; padding:9px 16px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+          <button (click)="imprimirHistoricoMesa()" class="btn-modal-outline btn-modal-outline--teal">
             <i class="feather icon-printer me-1"></i>Imprimir
           </button>
-          <button (click)="fecharModals()" style="background:#fff; border:1px solid #dee2e6; color:#6c757d; border-radius:8px; padding:9px 20px; font-size:0.85rem; font-weight:600; cursor:pointer;">Fechar</button>
+          <button (click)="fecharModals()" class="btn-modal-cancel">Fechar</button>
         </div>
       </div>
 
     </div>
   </div>
 </div>
-<div class="modal-backdrop fade show" *ngIf="mostrarModalDetalhes" style="z-index:1054;"></div>
+<div class="atlas-backdrop" *ngIf="mostrarModalDetalhes"></div>
 
 <!-- Paginação original -->
 <nav aria-label="Page navigation" class="mt-3">

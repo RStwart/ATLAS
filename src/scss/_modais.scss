@@ -1,0 +1,452 @@
+// =============================================================
+// Estilos de Modal — Sistema ATLAS
+// Compartilhados entre todos os componentes
+// =============================================================
+
+// z-index padrão
+$z-modal:     1055;
+$z-backdrop:  1054;
+
+// ── Estrutura Base ────────────────────────────────────────────
+
+.atlas-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $z-modal;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.atlas-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: $z-backdrop;
+}
+
+.atlas-modal-content {
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  pointer-events: auto; // Bootstrap define pointer-events:none no .modal-dialog; isto reseta
+}
+
+// ── Header ────────────────────────────────────────────────────
+
+.modal-header-custom {
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  // Variantes de cor (uma por modal)
+  &--blue    { background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); }
+  &--green   { background: linear-gradient(135deg, #28a745 0%, #1a7a32 100%); }
+  &--orange  { background: linear-gradient(135deg, #fd7e14 0%, #c85a00 100%); }
+  &--purple  { background: linear-gradient(135deg, #6f42c1 0%, #4a148c 100%); }
+  &--teal    { background: linear-gradient(135deg, #0d9488 0%, #065f46 100%); }
+}
+
+.modal-header-icon {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    color: #fff;
+    font-size: 18px;
+  }
+}
+
+.modal-header-label {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 0;
+}
+
+.modal-close-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.28);
+  }
+}
+
+// ── Info Strip (faixa de metadados abaixo do header) ──────────
+
+.modal-info-strip {
+  background: #f8f9fc;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modal-info-label {
+  font-size: 0.65rem;
+  color: #6c757d;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.modal-info-value {
+  font-weight: 700;
+  color: #343a40;
+  margin-bottom: 0;
+
+  &--primary { color: #1a73e8; font-size: 1.05rem; }
+}
+
+// ── Body ──────────────────────────────────────────────────────
+
+.modal-body-custom {
+  padding: 24px;
+  background: #fff;
+}
+
+.modal-section-label {
+  font-size: 0.72rem;
+  color: #6c757d;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+
+// ── Field Label genérico ──────────────────────────────────────
+
+.field-label {
+  font-size: 0.72rem;
+  color: #6c757d;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+// ── Input / Select padrão ─────────────────────────────────────
+
+.field-input {
+  width: 100%;
+  border-radius: 8px;
+  border: 1.5px solid #dee2e6;
+  padding: 9px 14px;
+  font-size: 0.9rem;
+  color: #343a40;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: #1a73e8;
+  }
+
+  &--large {
+    font-size: 1.1rem;
+    padding: 12px 16px;
+    font-weight: 600;
+    border-radius: 10px;
+  }
+}
+
+// ── Info Card (tile de dado somente-leitura) ──────────────────
+
+.info-tile {
+  background: #f8f9fc;
+  border-radius: 10px;
+  padding: 14px 16px;
+
+  .info-tile__label {
+    font-size: 0.65rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+  }
+
+  .info-tile__value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #343a40;
+    margin: 0;
+  }
+
+  // Variantes coloridas
+  &--blue {
+    background: #f0f7ff;
+    border: 1px solid #cce0ff;
+
+    .info-tile__label { color: #1a73e8; }
+    .info-tile__value { font-size: 1rem; font-weight: 700; color: #0d47a1; }
+  }
+
+  &--neutral {
+    .info-tile__value { font-size: 1rem; font-weight: 700; color: #343a40; }
+  }
+
+  &--success {
+    background: #f0fff4;
+    border: 1px solid #b7f5c8;
+
+    .info-tile__label { color: #28a745; }
+    .info-tile__value { font-size: 1rem; font-weight: 700; color: #1a7a32; }
+  }
+
+  &--danger {
+    background: #fff5f5;
+    border: 1px solid #ffc9c9;
+
+    .info-tile__label { color: #dc3545; }
+    .info-tile__value { font-size: 1rem; font-weight: 700; color: #b91c1c; }
+  }
+}
+
+// ── Payment Tile (mini-card de forma de pagamento) ────────────
+
+.pay-tile {
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: center;
+
+  .pay-tile__label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+  }
+
+  .pay-tile__value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &--yellow {
+    background: #fffbf0;
+    border: 1px solid #ffe69c;
+    .pay-tile__label { color: #997404; }
+    .pay-tile__value { color: #664d03; }
+  }
+
+  &--green {
+    background: #f0fff4;
+    border: 1px solid #b7f5c8;
+    .pay-tile__label { color: #28a745; }
+    .pay-tile__value { color: #1a7a32; }
+  }
+
+  &--blue {
+    background: #f0f7ff;
+    border: 1px solid #cce0ff;
+    .pay-tile__label { color: #1a73e8; }
+    .pay-tile__value { color: #0d47a1; }
+  }
+
+  &--purple {
+    background: #fdf0ff;
+    border: 1px solid #e9b8ff;
+    .pay-tile__label { color: #9c27b0; }
+    .pay-tile__value { color: #6a1480; }
+  }
+}
+
+// ── Pay Input (input colorido por forma de pagamento) ─────────
+
+.pay-input {
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 0.9rem;
+  width: 100%;
+  outline: none;
+
+  &--yellow { border: 1.5px solid #ffe69c; background: #fffbf0; }
+  &--green  { border: 1.5px solid #b7f5c8; background: #f0fff4; }
+  &--blue   { border: 1.5px solid #cce0ff; background: #f0f7ff; }
+  &--purple { border: 1.5px solid #e9b8ff; background: #fdf0ff; }
+}
+
+// ── Pay Label (label colorido)  ───────────────────────────────
+
+.pay-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 6px;
+
+  &--yellow { color: #997404; }
+  &--green  { color: #28a745; }
+  &--blue   { color: #1a73e8; }
+  &--purple { color: #9c27b0; }
+}
+
+// ── Divisão de pagamento (linha no modal de venda) ────────────
+
+.payment-row {
+  background: #f8f9fc;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.payment-index {
+  background: #1a73e8;
+  color: #fff;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.btn-delete-row {
+  background: #fff0f0;
+  border: 1px solid #f5c6cb;
+  color: #dc3545;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+
+  &:hover { background: #ffe0e3; }
+}
+
+.btn-add-payment {
+  width: 100%;
+  background: #f0f7ff;
+  border: 2px dashed #1a73e8;
+  color: #1a73e8;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: #ddeeff; }
+}
+
+// ── Footer ────────────────────────────────────────────────────
+
+.modal-footer-custom {
+  background: #f8f9fc;
+  padding: 16px 24px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  &--space-between { justify-content: space-between; }
+}
+
+.modal-footer-total {
+  font-size: 0.65rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+
+  strong {
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: block;
+    line-height: 1.2;
+  }
+}
+
+.modal-footer-summary {
+  font-size: 0.88rem;
+  color: #495057;
+}
+
+// ── Botões ───────────────────────────────────────────────────
+
+.btn-modal-cancel {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  color: #6c757d;
+  border-radius: 8px;
+  padding: 9px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: #f8f9fc; }
+}
+
+.btn-modal-primary {
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  padding: 9px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:disabled { opacity: 0.65; cursor: not-allowed; }
+
+  &--blue   { background: linear-gradient(135deg, #1a73e8, #0d47a1); }
+  &--green  { background: linear-gradient(135deg, #28a745, #1a7a32); }
+  &--orange { background: linear-gradient(135deg, #fd7e14, #c85a00); }
+  &--purple { background: linear-gradient(135deg, #6f42c1, #4a148c); }
+  &--teal   { background: linear-gradient(135deg, #0d9488, #065f46); }
+}
+
+.btn-modal-outline {
+  background: #fff;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &--teal {
+    color: #0d9488;
+    &:hover { background: #f0fffe; }
+  }
+}
+
+// ── Divider de seção ──────────────────────────────────────────
+
+.modal-section-divider {
+  border-top: 1px solid #e9ecef;
+  padding-top: 16px;
+  margin-bottom: 12px;
+}
