@@ -4,26 +4,30 @@
 
       <div class="row">
         <div *ngFor="let produto of produtosPaginados" class="col-md-4 mb-4">
-          <div class="card product-card">
+          <div class="product-card">
+
             <!-- Imagem do produto -->
-            <img [src]="produto.imagemUrl" alt="{{ produto.nome }}" class="card-img-top product-image" />
-            
-            <!-- Corpo do card com título, preço e descrição -->
-            <div class="card-body">
-              <h5 class="card-title product-title">{{ produto.nome }}</h5>
-              <p class="card-text product-price">{{ produto.preco | currency: 'BRL' }}</p>
-              <p class="card-text product-description">{{ produto.descricao }}</p>
-              
+            <div class="product-card__img-wrap">
+              <img [src]="produto.imagemUrl" alt="{{ produto.nome }}" class="product-card__img" />
+              <div class="product-card__price-badge">{{ produto.preco | currency: 'BRL' }}</div>
+            </div>
+
+            <!-- Corpo -->
+            <div class="product-card__body">
+              <h5 class="product-card__title">{{ produto.nome }}</h5>
+              <p class="product-card__description">{{ produto.descricao }}</p>
+
               <!-- Botões de ação -->
-              <div class="d-flex justify-content-between">
-                <button class="btn btn-danger btn-lg" (click)="deletarProduto(produto.id_produto)">
-                  Excluir
+              <div class="product-card__actions">
+                <button class="prod-action-btn prod-action-btn--green" (click)="editarProduto(produto)">
+                  <i class="feather icon-edit-2 me-1"></i>Editar
                 </button>
-                <button class="btn btn-success btn-lg" (click)="editarProduto(produto)">
-                  Editar
+                <button class="prod-action-btn prod-action-btn--red" (click)="deletarProduto(produto.id_produto)">
+                  <i class="feather icon-trash-2 me-1"></i>Excluir
                 </button>
               </div>
             </div>
+
           </div>
         </div>
       </div>
@@ -67,6 +71,36 @@
 </div>
 
 
+
+<!-- Formulário de Edição -->
+<div *ngIf="produtoEmEdicao" class="row mt-3">
+  <div class="col-sm-12">
+    <app-card cardTitle="Editar Produto" [options]="false">
+      <div class="form-container">
+        <form (ngSubmit)="salvarEdicao()">
+          <div class="form-group">
+            <label for="edit-nome">Nome</label>
+            <input id="edit-nome" class="form-control" [(ngModel)]="produtoEmEdicao.nome" name="edit-nome" required />
+          </div>
+          <div class="form-group">
+            <label for="edit-descricao">Descrição</label>
+            <textarea id="edit-descricao" class="form-control" [(ngModel)]="produtoEmEdicao.descricao" name="edit-descricao"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="edit-preco">Preço</label>
+            <input id="edit-preco" type="number" class="form-control" [(ngModel)]="produtoEmEdicao.preco" name="edit-preco" required />
+          </div>
+          <div class="form-group">
+            <label for="edit-quantidade">Quantidade em Estoque</label>
+            <input id="edit-quantidade" type="number" class="form-control" [(ngModel)]="produtoEmEdicao.quantidade_estoque" name="edit-quantidade" required />
+          </div>
+          <button type="submit" class="btn btn-success me-2">Salvar</button>
+          <button type="button" class="btn btn-secondary" (click)="cancelarEdicao()">Cancelar</button>
+        </form>
+      </div>
+    </app-card>
+  </div>
+</div>
 
 <!-- Paginação original -->
 <nav aria-label="Page navigation" class="mt-3">

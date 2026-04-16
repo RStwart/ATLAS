@@ -3,21 +3,47 @@
     <app-card cardTitle="Mesas" [options]="false" [buttonh]="true" buttonTitle="Adicionar mesa" [buttonAction]="abrirModalAdicionarMesa.bind(this)">
       <div class="row">
         <div *ngFor="let mesa of mesasPaginadas" class="col-md-4 mb-4">
-          <div class="card mesa-card" >
-            <button class="btn btn-danger btn-cancelar" (click)="excluirMesa(mesa.id_mesa)">❌</button>
-            <div class="card-body">
-              <h5 class="card-title mesa-title">Mesa {{ mesa.numero }}</h5>
-              <h5 class="card-title ">Nome {{ mesa.nome }}</h5>
-              <p class="card-text "><strong>Ordem:</strong> {{ mesa.ordem_type }} </p>
-              <p class="card-text mesa-status"><strong>Consumo total:</strong> {{ mesa.totalConsumo | currency: 'BRL' }}</p>
+          <div class="mesa-card">
 
-              <div class="d-flex justify-content-between">
-                <button class="btn btn-primary btn-lg" (click)="abrirModalAdicionarPedido(mesa)">Adicionar Pedido</button>
-                <button class="btn btn-primary btn-lg" (click)="finalizarMesa(mesa.id_mesa.toString())">Finalizar Mesa</button>
-                <button class="btn btn-primary btn-lg" (click)="abrirModalDetalhes(mesa)">Ver Detalhes</button>
+            <!-- Cabeçalho colorido -->
+            <div class="mesa-card__header">
+              <div class="mesa-card__number">
+                <i class="feather icon-grid me-2"></i>Mesa {{ mesa.numero }}
+              </div>
+              <button class="mesa-card__delete" (click)="excluirMesa(mesa.id_mesa)" title="Excluir mesa">
+                <i class="feather icon-trash-2"></i>
+              </button>
+            </div>
+
+            <!-- Corpo -->
+            <div class="mesa-card__body">
+              <div class="mesa-card__info-row">
+                <span class="mesa-card__name"><i class="feather icon-user me-1"></i>{{ mesa.nome }}</span>
+                <span class="mesa-card__order-badge">{{ mesa.ordem_type }}</span>
               </div>
 
+              <div class="mesa-card__total-box">
+                <span class="mesa-card__total-label">Consumo total</span>
+                <span class="mesa-card__total-value">{{ mesa.totalConsumo | currency: 'BRL' }}</span>
+              </div>
+
+              <!-- Ações -->
+              <div class="mesa-card__actions">
+                <button class="mesa-action-btn mesa-action-btn--purple" (click)="abrirModalAdicionarPedido(mesa)">
+                  <i class="feather icon-plus-circle"></i>
+                  <span>Pedido</span>
+                </button>
+                <button class="mesa-action-btn mesa-action-btn--red" (click)="finalizarMesa(mesa.id_mesa.toString())">
+                  <i class="feather icon-check-circle"></i>
+                  <span>Finalizar</span>
+                </button>
+                <button class="mesa-action-btn mesa-action-btn--teal" (click)="abrirModalDetalhes(mesa)">
+                  <i class="feather icon-eye"></i>
+                  <span>Detalhes</span>
+                </button>
+              </div>
             </div>
+
           </div>
         </div>
       </div>

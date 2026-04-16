@@ -1,61 +1,110 @@
-/* Estilo do card de produto */
+// ── Product card ─────────────────────────────────────────────────────────────
 .product-card {
-  border: 1px solid #ddd; /* Borda fina */
-  border-radius: 10px; /* Bordas arredondadas */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Efeito de transição */
-  overflow: hidden; /* Impede que a imagem ultrapasse os limites */
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+  background: #fff;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+  }
+
+  &__img-wrap {
+    position: relative;
+    overflow: hidden;
+    height: 220px;
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease;
+
+    .product-card:hover & {
+      transform: scale(1.05);
+    }
+  }
+
+  &__price-badge {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: linear-gradient(135deg, #28a745, #1a7a32);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  }
+
+  &__body {
+    padding: 16px 18px 18px;
+  }
+
+  &__title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__description {
+    font-size: 0.82rem;
+    color: #6c757d;
+    margin-bottom: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+    min-height: 2.4em;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+  }
 }
 
-/* Efeito de hover para aumentar o card e adicionar sombra */
-.product-card:hover {
-  transform: translateY(-5px); /* Levanta o card */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Aumenta a sombra */
-}
+.prod-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.15s, transform 0.15s;
 
-/* Imagem com bordas arredondadas */
-.product-image {
-  border-radius: 10px; /* Arredonda as bordas da imagem */
-  width: 100%; /* A imagem ocupa toda a largura do card */
-  height: 400px; /* Altura fixa para a imagem */
-  object-fit: cover; /* Garante que a imagem preenche sem distorcer */
-}
+  &:hover {
+    opacity: 0.88;
+    transform: translateY(-2px);
+  }
 
-/* Estilo do título do produto */
-.product-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #333; /* Cor do título */
-}
+  &--red {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: #fff;
+  }
 
-/* Preço do produto */
-.product-price {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #28a745; /* Verde para preço */
-  margin-bottom: 10px;
-}
-
-/* Descrição do produto */
-.product-description {
-  font-size: 0.9rem;
-  color: #666; /* Texto mais suave */
-  margin-bottom: 15px;
-  height: 60px; /* Limita a altura da descrição */
-  overflow: hidden; /* Esconde o texto que ultrapassar */
-}
-
-/* Botões de ação */
-.product-btn {
-  padding: 5px 10px;
-  font-size: 0.9rem;
-  border-radius: 5px; /* Arredonda os botões */
-}
-
-/* Ajustes para os botões */
-.product-btn:hover {
-  opacity: 0.8; /* Efeito de hover para os botões */
+  &--green {
+    background: linear-gradient(135deg, #28a745, #1a7a32);
+    color: #fff;
+  }
 }
 
 /* Paginação */

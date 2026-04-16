@@ -34,14 +34,112 @@ pre code {
   margin-left: -80px !important;
 }
 
+// ── Override global dos botões Bootstrap ──────────────────────────────────────
+// Remove o visual padrão do Bootstrap e aplica o design ATLAS
+
+.btn {
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  padding: 9px 20px;
+  border: none;
+  transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+  line-height: 1.4;
+  letter-spacing: 0.2px;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+  color: #fff !important;
+  border: none;
+
+  &:focus, &:active, &:not(:disabled):not(.disabled):active {
+    background: linear-gradient(135deg, #1565c0 0%, #0a3880 100%);
+    color: #fff;
+    box-shadow: none;
+  }
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #1a7a32 100%);
+  color: #fff !important;
+  border: none;
+
+  &:focus, &:active, &:not(:disabled):not(.disabled):active {
+    background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
+    color: #fff;
+    box-shadow: none;
+  }
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: #fff !important;
+  border: none;
+
+  &:focus, &:active, &:not(:disabled):not(.disabled):active {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    color: #fff;
+    box-shadow: none;
+  }
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #fd7e14 0%, #c85a00 100%);
+  color: #fff !important;
+  border: none;
+
+  &:focus, &:active, &:not(:disabled):not(.disabled):active {
+    background: linear-gradient(135deg, #e06c00 0%, #b34c00 100%);
+    color: #fff;
+    box-shadow: none;
+  }
+}
+
+.btn-secondary {
+  background: #f1f3f5;
+  color: #495057 !important;
+  border: 1px solid #dee2e6;
+
+  &:hover:not(:disabled) {
+    background: #e2e6ea;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  &:focus, &:active, &:not(:disabled):not(.disabled):active {
+    background: #dde0e4;
+    color: #495057;
+    box-shadow: none;
+  }
+}
+
+// Tamanhos
 .btn.btn-sm {
-  padding: 3px 12px;
-  border-radius: 0.15rem;
+  padding: 5px 14px;
+  border-radius: 7px;
+  font-size: 0.78rem;
 }
 
 .btn.btn-lg {
-  padding: 12px 25px;
-  border-radius: 0.35rem;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-size: 0.95rem;
 }
 
 .fixed-button {

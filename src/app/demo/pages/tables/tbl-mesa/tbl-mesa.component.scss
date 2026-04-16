@@ -195,55 +195,160 @@
 }
 
 // ── Mesa card ────────────────────────────────────────────────────────────────
-/* Estilo do card de mesa */
 .mesa-card {
-  border: 1px solid #ddd; /* Borda fina */
-  border-radius: 10px; /* Bordas arredondadas */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Efeito de transição */
-  overflow: hidden; /* Impede que a imagem ultrapasse os limites */
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+  background: #fff;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+  }
+
+  &__header {
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__number {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+  }
+
+  &__delete {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    transition: background 0.15s;
+    flex-shrink: 0;
+
+    &:hover {
+      background: rgba(220, 53, 69, 0.6);
+    }
+
+    i { font-size: 14px; }
+  }
+
+  &__body {
+    padding: 16px 20px 20px;
+  }
+
+  &__info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 8px;
+  }
+
+  &__name {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #343a40;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__order-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: #e8f0fe;
+    color: #1a73e8;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  &__total-box {
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fc;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    border: 1px solid #e9ecef;
+  }
+
+  &__total-label {
+    font-size: 0.62rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 2px;
+  }
+
+  &__total-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0d9488;
+    line-height: 1;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+  }
 }
 
-/* Efeito de hover para aumentar o card e adicionar sombra */
-.mesa-card:hover {
-  transform: translateY(-5px); /* Levanta o card */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Aumenta a sombra */
-}
+.mesa-action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
 
-/* Estilo do título da mesa */
-.mesa-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #333; /* Cor do título */
-}
+  &:hover {
+    opacity: 0.88;
+    transform: translateY(-2px);
+  }
 
-/* Status da mesa */
-.mesa-status {
-  font-size: 1rem;
-  font-weight: bold;
-  color: #28a745; /* Verde para mesas disponíveis */
-  margin-bottom: 10px;
-}
+  i { font-size: 1.1rem; }
 
-/* Capacidade da mesa */
-.mesa-capacidade {
-  font-size: 1rem;
-  font-weight: normal;
-  color: #666; /* Cor suave para a capacidade */
-  margin-bottom: 15px;
-}
+  &--purple {
+    background: linear-gradient(135deg, #6f42c1, #4a148c);
+    color: #fff;
+  }
 
-/* Botões de ação */
-.mesa-btn {
-  padding: 5px 10px;
-  font-size: 0.9rem;
-  border-radius: 5px; /* Arredonda os botões */
-}
+  &--red {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: #fff;
+  }
 
-/* Ajustes para os botões */
-.mesa-btn:hover {
-  opacity: 0.8; /* Efeito de hover para os botões */
+  &--teal {
+    background: linear-gradient(135deg, #0d9488, #065f46);
+    color: #fff;
+  }
 }
 
 /* Paginação */
@@ -258,24 +363,11 @@
 }
 
 .page-item.active .page-link {
-  background-color: #28a745; /* Cor ativa na página */
+  background-color: #28a745;
   color: white;
   border-color: #28a745;
 }
 
 .page-item .page-link {
-  color: #333; /* Cor normal do texto da página */
-}
-
-.btn-cancelar {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 1.2rem;
-  border: none;
-  background: transparent;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s ease-in-out;
+  color: #333;
 }
