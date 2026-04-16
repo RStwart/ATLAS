@@ -137,7 +137,7 @@ app.post('/api/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: usuario.ID_USUARIO, role: usuario.ROLE, id_empresa: usuario.id_empresa },
+      { id: usuario.ID_USUARIO, nome: usuario.NOME, role: usuario.ROLE, id_empresa: usuario.id_empresa },
       process.env.JWT_SECRET,
       { expiresIn: '8h' }
     );
@@ -607,8 +607,8 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
     
     // Inserir cada item como um registro separado na tabela pedido
     for (const itemData of itens) {
-      const query = `INSERT INTO pedido (id_mesa, id_empresa, id_item, nome_item, preco, quantidade, observacao, data_pedido) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+      const query = `INSERT INTO pedido (id_mesa, id_empresa, id_item, nome_item, preco, quantidade, observacao, data_pedido, id_usuario, nome_usuario) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
       
       const values = [
         id_mesa,
@@ -618,7 +618,9 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
         itemData.preco,
         itemData.quantidade,
         observacao || null,
-        data || new Date() // usar data fornecida ou atual
+        data || new Date(), // usar data fornecida ou atual
+        req.user.id,
+        req.user.nome || null
       ];
       
       console.log('Inserindo item:', { query, values });
@@ -895,11 +897,11 @@ app.post('/api/caixa', autenticarTenant, (req, res) => {
   console.log('hora_abertura:', hora_abertura);
 
   const query = `
-    INSERT INTO CAIXA (DATA_ABERTURA, HORA_ABERTURA, TOTAL_ABERTURA, STATUS, id_empresa) 
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO CAIXA (DATA_ABERTURA, HORA_ABERTURA, TOTAL_ABERTURA, STATUS, id_empresa, id_usuario, nome_usuario) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
-  const values = [data_abertura, hora_abertura, total_abertura, 'ABERTO', req.id_empresa];
+  const values = [data_abertura, hora_abertura, total_abertura, 'ABERTO', req.id_empresa, req.user.id, req.user.nome || null];
   console.log('Values para INSERT:', values);
 
   db.query(query, values, (err, result) => {
@@ -926,7 +928,9 @@ app.get('/api/caixa/aberto', autenticarTenant, (req, res) => {
       DATA_ABERTURA   AS data_abertura,
       HORA_ABERTURA   AS hora_abertura,
       TOTAL_ABERTURA  AS total_abertura,
-      STATUS          AS status
+      STATUS          AS status,
+      id_usuario      AS id_usuario,
+      nome_usuario    AS nome_usuario
     FROM CAIXA 
     WHERE STATUS = 'ABERTO' AND id_empresa = ? 
     ORDER BY ID_CAIXA DESC
@@ -944,6 +948,84 @@ app.get('/api/caixa/aberto', autenticarTenant, (req, res) => {
       } else {
           res.status(404).json({ message: "Nenhum caixa aberto encontrado" });
       }
+  });
+});
+
+// Rota PUT para atualizar um caixa pelo ID
+app.put('/api/caixa/:id', autenticarTenant, async (req, res) => {
+  const { id } = req.params;
+  const {
+    total_abertura,
+    total_fechamento,
+    total_pix,
+    total_dinheiro,
+    total_credito,
+    total_debito,
+    status,
+    nome_usuario
+  } = req.body;
+
+  const sql = `
+    UPDATE CAIXA SET
+      TOTAL_ABERTURA   = ?,
+      TOTAL_FECHAMENTO = ?,
+      TOTAL_PIX        = ?,
+      TOTAL_DINHEIRO   = ?,
+      TOTAL_CREDITO    = ?,
+      TOTAL_DEBITO     = ?,
+      STATUS           = ?,
+      nome_usuario     = ?
+    WHERE ID_CAIXA = ? AND id_empresa = ?
+  `;
+
+  try {
+    await db.promise().execute(sql, [
+      total_abertura,
+      total_fechamento,
+      total_pix,
+      total_dinheiro,
+      total_credito,
+      total_debito,
+      status,
+      nome_usuario,
+      id,
+      req.id_empresa
+    ]);
+    res.json({ message: 'Caixa atualizado com sucesso.' });
+  } catch (err) {
+    console.error('Erro ao atualizar caixa:', err);
+    res.status(500).json({ error: 'Erro ao atualizar caixa.' });
+  }
+});
+
+// Rota GET para listar todos os caixas da empresa
+app.get('/api/caixas', autenticarTenant, (req, res) => {
+  const query = `
+    SELECT 
+      ID_CAIXA         AS id_caixa,
+      DATA_ABERTURA    AS data_abertura,
+      HORA_ABERTURA    AS hora_abertura,
+      TOTAL_ABERTURA   AS total_abertura,
+      STATUS           AS status,
+      DATA_FECHAMENTO  AS data_fechamento,
+      HORA_FECHAMENTO  AS hora_fechamento,
+      TOTAL_FECHAMENTO AS total_fechamento,
+      TOTAL_PIX        AS total_pix,
+      TOTAL_DINHEIRO   AS total_dinheiro,
+      TOTAL_CREDITO    AS total_credito,
+      TOTAL_DEBITO     AS total_debito,
+      id_usuario       AS id_usuario,
+      nome_usuario     AS nome_usuario
+    FROM CAIXA
+    WHERE id_empresa = ?
+    ORDER BY ID_CAIXA DESC
+  `;
+  db.query(query, [req.id_empresa], (err, results) => {
+    if (err) {
+      console.error('Erro ao listar caixas:', err);
+      return res.status(500).json({ error: 'Erro ao listar caixas' });
+    }
+    res.json(results);
   });
 });
 

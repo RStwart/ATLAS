@@ -168,6 +168,14 @@ const NavigationItems = [
         url: '/tables/pedidos',
         classes: 'nav-item',
         icon: 'feather icon-server'
+      },
+      {
+        id: 'Caixas',
+        title: 'Caixas',
+        type: 'item',
+        url: '/tables/caixas',
+        classes: 'nav-item',
+        icon: 'feather icon-briefcase'
       }
     ]
   },

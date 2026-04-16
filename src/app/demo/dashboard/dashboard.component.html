@@ -145,7 +145,7 @@
     <div class="card bg-c-blue">
       <div class="card-header borderless">
         <div class="d-flex align-items-center justify-content-between mb-2">
-          <h5 class="text-white mb-0">CAIXA DIÁRIO #{{ caixaid }}</h5>
+          <h5 class="text-white mb-0">CAIXA DIÁRIO #{{ caixaid }}<span *ngIf="nome_usuario" class="ms-2" style="font-size:0.75rem; font-weight:400; opacity:0.85;">— {{ nome_usuario }}</span></h5>
           <span class="badge rounded-pill px-3 py-1"
             [ngStyle]="{'background-color': status === 'ABERTO' ? '#28a745' : '#dc3545', 'font-size':'0.8rem'}">
             {{ status || 'FECHADO' }}

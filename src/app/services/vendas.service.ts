@@ -41,5 +41,13 @@ export class VendasService {
   fecharCaixa(dados: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/caixa/fechar`, dados);
   }
-  
+
+  getCaixas(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/caixas`);
+  }
+
+  atualizarCaixa(id: number, dados: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/caixa/${id}`, dados);
+  }
+
 }

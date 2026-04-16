@@ -91,6 +91,8 @@ CREATE TABLE pedido (
   observacao   TEXT,
   data_pedido  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   impresso     TINYINT(1)     NOT NULL DEFAULT 0,      -- 0 = não impresso, 1 = impresso
+  id_usuario   INT            DEFAULT NULL,            -- usuário que registrou o pedido
+  nome_usuario VARCHAR(100)   DEFAULT NULL,            -- nome denormalizado para histórico
   PRIMARY KEY (id_pedido),
   CONSTRAINT fk_pedido_mesa FOREIGN KEY (id_mesa) REFERENCES mesa (id_mesa) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -118,6 +120,8 @@ CREATE TABLE CAIXA (
   TOTAL_DINHEIRO   DECIMAL(10, 2),
   TOTAL_CREDITO    DECIMAL(10, 2),
   TOTAL_DEBITO     DECIMAL(10, 2),
+  id_usuario       INT            DEFAULT NULL,            -- usuário que abriu o caixa
+  nome_usuario     VARCHAR(100)   DEFAULT NULL,            -- nome denormalizado para histórico
   PRIMARY KEY (ID_CAIXA)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
@@ -348,7 +352,27 @@ VALUES (
 
 ---
 
-## 12. Como gerar um hash de senha para novos usuários
+## 12. Migração — vincular caixa e pedidos ao usuário (v2.2.0)
+
+Execute no banco para adicionar as colunas sem perder dados existentes:
+
+```sql
+-- Pedido: quem anotou o pedido
+ALTER TABLE pedido
+  ADD COLUMN id_usuario   INT          DEFAULT NULL AFTER impresso,
+  ADD COLUMN nome_usuario VARCHAR(100) DEFAULT NULL AFTER id_usuario;
+
+-- Caixa: quem abriu o caixa
+ALTER TABLE CAIXA
+  ADD COLUMN id_usuario   INT          DEFAULT NULL AFTER TOTAL_DEBITO,
+  ADD COLUMN nome_usuario VARCHAR(100) DEFAULT NULL AFTER id_usuario;
+```
+
+> **Nota:** registros anteriores terão `id_usuario` e `nome_usuario` como `NULL`. Apenas novos registros gerados após este deploy terão o usuário preenchido.
+
+---
+
+## 13. Como gerar um hash de senha para novos usuários
 
 Crie o arquivo `gerar-hash.js` dentro da pasta `server/` e execute-o uma vez:
 

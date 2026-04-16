@@ -32,6 +32,7 @@ export default class DashboardComponent implements OnInit {
   hora_abertura;
   status;
   total_abertura;
+  nome_usuario: string = '';
 
   divisoesPagamento: any[] = []; // Array de divisões
 
@@ -294,6 +295,7 @@ export default class DashboardComponent implements OnInit {
         this.hora_abertura = caixa.hora_abertura;
         this.status = caixa.status;
         this.total_abertura = caixa.total_abertura;
+        this.nome_usuario = caixa.nome_usuario || '';
       },
       error: (error) => {
         if (error.status === 404) {

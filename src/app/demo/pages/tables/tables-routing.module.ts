@@ -20,9 +20,12 @@ const routes: Routes = [
       {
         path: 'pedidos',
         loadComponent: () => import('./tbl-pedidos/tbl-pedidos.component').then(m => m.TblPedidosComponent)
+      },
+      {
+        path: 'caixas',
+        loadComponent: () => import('./tbl-caixas/tbl-caixas.component').then(m => m.TblCaixasComponent)
       }
-    ],
-    
+    ]
   }
 ];
 
@@ -31,6 +34,3 @@ const routes: Routes = [
   exports: [RouterModule]
 })
 export class TablesRoutingModule {}
-
-
- 

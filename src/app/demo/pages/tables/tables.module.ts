@@ -7,6 +7,7 @@ import { CardComponent } from 'src/app/theme/shared/components/card/card.compone
 import { TblFuncionariosComponent } from './tbl-funcionarios/tbl-funcionarios.component';
 import { TblMesasComponent } from './tbl-mesa/tbl-mesa.component';
 import { TblPedidosComponent } from './tbl-pedidos/tbl-pedidos.component';
+import { TblCaixasComponent } from './tbl-caixas/tbl-caixas.component';
 
 
 @NgModule({
@@ -14,7 +15,8 @@ import { TblPedidosComponent } from './tbl-pedidos/tbl-pedidos.component';
     TblProdutosComponent,     // Declare o componente TblProdutosComponent
     TblFuncionariosComponent, // Declare o componente TblFuncionariosComponent
     TblMesasComponent,        // Declare o componente TblMesasComponent
-    TblPedidosComponent       // Declare o componente TblPedidosComponent
+    TblPedidosComponent,      // Declare o componente TblPedidosComponent
+    TblCaixasComponent        // Declare o componente TblCaixasComponent
   ],
   imports: [
     CommonModule,           // Necessário para usar pipes como currency

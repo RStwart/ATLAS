@@ -1,0 +1,341 @@
+<div class="row">
+  <div class="col-xl-12">
+    <app-card cardTitle="Movimentos de Caixa" cardClass="Recent-Users" blockClass="p-0">
+
+      <!-- Carregando -->
+      <div *ngIf="carregando" class="text-center py-5 text-muted">
+        <i class="feather icon-loader" style="font-size:2rem; display:block; margin-bottom:8px;"></i>
+        Carregando caixas...
+      </div>
+
+      <div class="table-responsive" *ngIf="!carregando">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Operador</th>
+              <th>Abertura</th>
+              <th>Fechamento</th>
+              <th>Fundo de Caixa</th>
+              <th>Total Fechamento</th>
+              <th>Dinheiro</th>
+              <th>PIX</th>
+              <th>Crédito</th>
+              <th>Débito</th>
+              <th>Lucro</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let caixa of caixasPaginados">
+
+              <!-- ID -->
+              <td>
+                <h6 class="mb-0">#{{ caixa.id_caixa }}</h6>
+              </td>
+
+              <!-- Operador -->
+              <td>
+                <span *ngIf="caixa.nome_usuario">{{ caixa.nome_usuario }}</span>
+                <span *ngIf="!caixa.nome_usuario" class="text-muted">—</span>
+              </td>
+
+              <!-- Abertura -->
+              <td>
+                <p class="m-0">{{ caixa.data_abertura | date:'dd/MM/yyyy' }}</p>
+                <small class="text-muted">{{ caixa.hora_abertura }}</small>
+              </td>
+
+              <!-- Fechamento -->
+              <td>
+                <ng-container *ngIf="caixa.data_fechamento">
+                  <p class="m-0">{{ caixa.data_fechamento | date:'dd/MM/yyyy' }}</p>
+                  <small class="text-muted">{{ caixa.hora_fechamento }}</small>
+                </ng-container>
+                <span *ngIf="!caixa.data_fechamento" class="text-muted">—</span>
+              </td>
+
+              <!-- Fundo de Caixa -->
+              <td>
+                <p class="m-0">R$ {{ caixa.total_abertura | number:'1.2-2' }}</p>
+              </td>
+
+              <!-- Total Fechamento -->
+              <td>
+                <p class="m-0">
+                  <span *ngIf="caixa.total_fechamento != null">R$ {{ caixa.total_fechamento | number:'1.2-2' }}</span>
+                  <span *ngIf="caixa.total_fechamento == null" class="text-muted">—</span>
+                </p>
+              </td>
+
+              <!-- Dinheiro -->
+              <td>
+                <p class="m-0">
+                  <span *ngIf="caixa.total_dinheiro != null">R$ {{ caixa.total_dinheiro | number:'1.2-2' }}</span>
+                  <span *ngIf="caixa.total_dinheiro == null" class="text-muted">—</span>
+                </p>
+              </td>
+
+              <!-- PIX -->
+              <td>
+                <p class="m-0">
+                  <span *ngIf="caixa.total_pix != null">R$ {{ caixa.total_pix | number:'1.2-2' }}</span>
+                  <span *ngIf="caixa.total_pix == null" class="text-muted">—</span>
+                </p>
+              </td>
+
+              <!-- Crédito -->
+              <td>
+                <p class="m-0">
+                  <span *ngIf="caixa.total_credito != null">R$ {{ caixa.total_credito | number:'1.2-2' }}</span>
+                  <span *ngIf="caixa.total_credito == null" class="text-muted">—</span>
+                </p>
+              </td>
+
+              <!-- Débito -->
+              <td>
+                <p class="m-0">
+                  <span *ngIf="caixa.total_debito != null">R$ {{ caixa.total_debito | number:'1.2-2' }}</span>
+                  <span *ngIf="caixa.total_debito == null" class="text-muted">—</span>
+                </p>
+              </td>
+
+              <!-- Lucro -->
+              <td>
+                <span *ngIf="caixa.total_fechamento != null"
+                  [ngClass]="calcularLucro(caixa) >= 0 ? 'text-success' : 'text-danger'"
+                  style="font-weight:600;">
+                  R$ {{ calcularLucro(caixa) | number:'1.2-2' }}
+                </span>
+                <span *ngIf="caixa.total_fechamento == null" class="text-muted">—</span>
+              </td>
+
+              <!-- Status -->
+              <td>
+                <span class="badge rounded-pill"
+                  [ngClass]="caixa.status === 'ABERTO' ? 'bg-success' : 'bg-secondary'">
+                  {{ caixa.status }}
+                </span>
+              </td>
+
+              <!-- Ações -->
+              <td>
+                <a href="javascript:" class="label theme-bg2 text-white f-12 rounded-pill me-1" (click)="abrirVer(caixa)">Ver</a>
+                <a href="javascript:" class="label theme-bg text-white f-12 rounded-pill" (click)="abrirAjustar(caixa)">Ajustar</a>
+              </td>
+
+            </tr>
+
+            <!-- Vazio -->
+            <tr *ngIf="caixas.length === 0">
+              <td colspan="13" class="text-center py-4 text-muted">
+                <i class="feather icon-inbox" style="font-size:2rem; display:block; margin-bottom:8px;"></i>
+                Nenhum caixa registrado ainda.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </app-card>
+  </div>
+</div>
+
+<!-- Paginação -->
+<nav aria-label="Navegação de páginas" class="mt-3" *ngIf="totalPages > 1">
+  <ul class="pagination justify-content-center">
+    <li class="page-item" [class.disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
+      <span class="page-link">Anterior</span>
+    </li>
+    <li class="page-item" *ngFor="let page of pages" [class.active]="page === currentPage" (click)="changePage(page)">
+      <span class="page-link">{{ page }}</span>
+    </li>
+    <li class="page-item" [class.disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">
+      <span class="page-link">Próximo</span>
+    </li>
+  </ul>
+</nav>
+
+<!-- ================= MODAL VER ================= -->
+<div class="modal d-block" tabindex="-1" *ngIf="mostrarModalVer">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Detalhes do Caixa #{{ caixaVendo?.id_caixa }}</h5>
+        <button type="button" class="btn-close" (click)="fecharVer()"></button>
+      </div>
+
+      <div class="modal-body" *ngIf="caixaVendo">
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label text-muted small">Operador</label>
+            <p class="fw-semibold mb-0">{{ caixaVendo.nome_usuario || '—' }}</p>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label text-muted small">Status</label>
+            <p class="mb-0">
+              <span class="badge rounded-pill"
+                [ngClass]="caixaVendo.status === 'ABERTO' ? 'bg-success' : 'bg-secondary'">
+                {{ caixaVendo.status }}
+              </span>
+            </p>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label text-muted small">Abertura</label>
+            <p class="fw-semibold mb-0">{{ caixaVendo.data_abertura | date:'dd/MM/yyyy' }} às {{ caixaVendo.hora_abertura }}</p>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label text-muted small">Fechamento</label>
+            <p class="fw-semibold mb-0">
+              <ng-container *ngIf="caixaVendo.data_fechamento">{{ caixaVendo.data_fechamento | date:'dd/MM/yyyy' }} às {{ caixaVendo.hora_fechamento }}</ng-container>
+              <span *ngIf="!caixaVendo.data_fechamento" class="text-muted">—</span>
+            </p>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label text-muted small">Fundo de Caixa</label>
+            <p class="fw-semibold mb-0">R$ {{ caixaVendo.total_abertura | number:'1.2-2' }}</p>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label text-muted small">Total Fechamento</label>
+            <p class="fw-semibold mb-0">
+              <span *ngIf="caixaVendo.total_fechamento != null">R$ {{ caixaVendo.total_fechamento | number:'1.2-2' }}</span>
+              <span *ngIf="caixaVendo.total_fechamento == null" class="text-muted">—</span>
+            </p>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label text-muted small">Lucro</label>
+            <p class="fw-semibold mb-0"
+              [ngClass]="calcularLucro(caixaVendo) >= 0 ? 'text-success' : 'text-danger'">
+              <span *ngIf="caixaVendo.total_fechamento != null">R$ {{ calcularLucro(caixaVendo) | number:'1.2-2' }}</span>
+              <span *ngIf="caixaVendo.total_fechamento == null" class="text-muted">—</span>
+            </p>
+          </div>
+
+          <div class="col-12"><hr class="my-1"></div>
+
+          <div class="col-md-3">
+            <label class="form-label text-muted small">Dinheiro</label>
+            <p class="fw-semibold mb-0">
+              <span *ngIf="caixaVendo.total_dinheiro != null">R$ {{ caixaVendo.total_dinheiro | number:'1.2-2' }}</span>
+              <span *ngIf="caixaVendo.total_dinheiro == null" class="text-muted">—</span>
+            </p>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label text-muted small">PIX</label>
+            <p class="fw-semibold mb-0">
+              <span *ngIf="caixaVendo.total_pix != null">R$ {{ caixaVendo.total_pix | number:'1.2-2' }}</span>
+              <span *ngIf="caixaVendo.total_pix == null" class="text-muted">—</span>
+            </p>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label text-muted small">Crédito</label>
+            <p class="fw-semibold mb-0">
+              <span *ngIf="caixaVendo.total_credito != null">R$ {{ caixaVendo.total_credito | number:'1.2-2' }}</span>
+              <span *ngIf="caixaVendo.total_credito == null" class="text-muted">—</span>
+            </p>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label text-muted small">Débito</label>
+            <p class="fw-semibold mb-0">
+              <span *ngIf="caixaVendo.total_debito != null">R$ {{ caixaVendo.total_debito | number:'1.2-2' }}</span>
+              <span *ngIf="caixaVendo.total_debito == null" class="text-muted">—</span>
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="fecharVer()">Fechar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="mostrarModalVer"></div>
+
+
+<!-- ================= MODAL AJUSTAR ================= -->
+<div class="modal d-block" tabindex="-1" *ngIf="mostrarModalAjustar">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Ajustar Caixa #{{ caixaEditando?.id_caixa }}</h5>
+        <button type="button" class="btn-close" (click)="fecharAjustar()"></button>
+      </div>
+
+      <div class="modal-body" *ngIf="caixaEditando">
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label">Operador</label>
+            <input type="text" class="form-control" [(ngModel)]="caixaEditando.nome_usuario" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Status</label>
+            <select class="form-control" [(ngModel)]="caixaEditando.status">
+              <option value="ABERTO">ABERTO</option>
+              <option value="FECHADO">FECHADO</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Fundo de Caixa (Abertura)</label>
+            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_abertura" min="0" step="0.01" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Total Fechamento</label>
+            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_fechamento" min="0" step="0.01" />
+          </div>
+
+          <div class="col-12"><hr class="my-1"><p class="text-muted small mb-0">Totais por forma de pagamento</p></div>
+
+          <div class="col-md-3">
+            <label class="form-label">Dinheiro</label>
+            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_dinheiro" min="0" step="0.01" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">PIX</label>
+            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_pix" min="0" step="0.01" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Crédito</label>
+            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_credito" min="0" step="0.01" />
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Débito</label>
+            <input type="number" class="form-control" [(ngModel)]="caixaEditando.total_debito" min="0" step="0.01" />
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="salvarCaixa()" [disabled]="salvando">
+          {{ salvando ? 'Salvando...' : 'Salvar' }}
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="fecharAjustar()">Cancelar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="mostrarModalAjustar"></div>
