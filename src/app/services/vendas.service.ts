@@ -50,4 +50,8 @@ export class VendasService {
     return this.http.put(`${this.apiUrl}/caixa/${id}`, dados);
   }
 
+  getDashboardStats(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/dashboard/stats`);
+  }
+
 }

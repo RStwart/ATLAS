@@ -46,6 +46,67 @@
     </div>
   </div>
 
+  <!-- Card Item Mais Vendido -->
+  <div class="col-xl-4 col-md-6">
+    <div class="card" style="border-left: 4px solid #fd7e14;">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div style="min-width:0;">
+          <p class="text-muted mb-1" style="font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Item Mais Vendido Hoje</p>
+          <h5 class="mb-0 fw-bold text-truncate" *ngIf="itemMaisVendido">{{ itemMaisVendido.nome_item }}</h5>
+          <small class="text-muted" *ngIf="itemMaisVendido">{{ itemMaisVendido.total_vendido }} unidade(s)</small>
+          <h5 class="mb-0 text-muted" *ngIf="!itemMaisVendido">—</h5>
+        </div>
+        <div style="background:#fff3e0; border-radius:50%; width:52px; height:52px; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+          <i class="feather icon-award" style="color:#fd7e14; font-size:1.4rem;"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Pedidos do Dia -->
+  <div class="col-xl-4 col-md-6">
+    <div class="card" style="border-left: 4px solid #17a2b8;">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div>
+          <p class="text-muted mb-1" style="font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Pedidos Realizados Hoje</p>
+          <h4 class="mb-0 fw-bold">{{ totalPedidosHoje }}</h4>
+          <small class="text-muted">itens registrados</small>
+        </div>
+        <div style="background:#e0f7fa; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center;">
+          <i class="feather icon-shopping-cart" style="color:#17a2b8; font-size:1.4rem;"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Tipos de Ordem -->
+  <div class="col-xl-4 col-md-6">
+    <div class="card" style="border-left: 4px solid #e83e8c;">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div>
+          <p class="text-muted mb-1" style="font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Ordens de Hoje</p>
+          <div class="d-flex gap-3 mt-1">
+            <div class="text-center">
+              <h5 class="mb-0 fw-bold">{{ tiposOrdem.Pedido }}</h5>
+              <small class="text-muted">Pedido</small>
+            </div>
+            <div class="text-center">
+              <h5 class="mb-0 fw-bold">{{ tiposOrdem.Entrega }}</h5>
+              <small class="text-muted">Entrega</small>
+            </div>
+            <div class="text-center">
+              <h5 class="mb-0 fw-bold">{{ tiposOrdem.Retirada }}</h5>
+              <small class="text-muted">Retirada</small>
+            </div>
+          </div>
+        </div>
+        <div style="background:#fce4ec; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center;">
+          <i class="feather icon-layers" style="color:#e83e8c; font-size:1.4rem;"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <!-- Últimas Vendas -->
 <div class="col-xl-8 col-md-6">
   <app-card cardTitle="Últimas Vendas" cardClass="Recent-Users" blockClass="p-0">
@@ -140,41 +201,96 @@
 </div>
 
   
-  <!-- Total de Ganhos -->
+  <!-- Caixa Diário Card -->
   <div class="col-xl-4 col-md-6">
-    <div class="card bg-c-blue">
-      <div class="card-header borderless">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <h5 class="text-white mb-0">CAIXA DIÁRIO #{{ caixaid }}<span *ngIf="nome_usuario" class="ms-2" style="font-size:0.75rem; font-weight:400; opacity:0.85;">— {{ nome_usuario }}</span></h5>
-          <span class="badge rounded-pill px-3 py-1"
-            [ngStyle]="{'background-color': status === 'ABERTO' ? '#28a745' : '#dc3545', 'font-size':'0.8rem'}">
+    <div class="card" style="background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); border:none; border-radius:16px; overflow:hidden;">
+
+      <!-- Header -->
+      <div class="card-header borderless" style="background:transparent; padding: 20px 24px 12px;">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <div style="background:rgba(255,255,255,0.2); border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center;">
+              <i class="feather icon-box" style="color:#fff; font-size:16px;"></i>
+            </div>
+            <div>
+              <p class="mb-0 text-white" style="font-size:0.7rem; letter-spacing:1px; opacity:0.75; text-transform:uppercase;">Caixa Diário</p>
+              <h6 class="mb-0 text-white fw-bold">#{{ caixaid }}<span *ngIf="nome_usuario" style="font-weight:400; opacity:0.8; font-size:0.8rem;"> · {{ nome_usuario }}</span></h6>
+            </div>
+          </div>
+          <span class="badge rounded-pill px-3 py-2"
+            [ngStyle]="{'background-color': status === 'ABERTO' ? 'rgba(40,167,69,0.9)' : 'rgba(220,53,69,0.9)', 'font-size':'0.72rem', 'letter-spacing':'0.5px'}">
             {{ status || 'FECHADO' }}
           </span>
         </div>
-        <p class="text-white mt-2 mb-1"><i class="feather icon-calendar" style="margin-right:6px;"></i><strong>Abertura:</strong> {{ data_abertura | date:'dd/MM/yyyy' }} às {{ hora_abertura }}</p>
-        <p class="text-white mb-0"><i class="feather icon-tag" style="margin-right:6px;"></i><strong>Fundo de Caixa:</strong> R$ {{ total_abertura | number:'1.2-2' }}</p>
-      </div>
-      <div class="card-block" style="padding: 0 25px">
-        <div class="earning-text mb-0">
-          <span class="text-uppercase text-white d-block">TOTAL GANHOS</span>
-          <h3 class="mb-2 text-white f-w-300">
-            R$ {{ totalGanhos | number:'1.2-2' }}
-            <i class="feather icon-arrow-up teal accent-3"></i>
-          </h3>
-          <BR>
-          <h5 class="text-uppercase text-white d-block"> Credito : R$ {{ totalCartaoCredito | number:'1.2-2' }}</h5>
-          <h5 class="text-uppercase text-white d-block"> Debito : R$ {{ totalCartaoDebito | number:'1.2-2' }}</h5>
-          <h5 class="text-uppercase text-white d-block"> Dinheiro : R$ {{ totalDinheiro | number:'1.2-2' }}</h5>
-          <h5 class="text-uppercase text-white d-block"> PIX : R$ {{ totalPix | number:'1.2-2' }}</h5>
-        </div>
 
-        <div id="widget-line-chart" class="WidgetlineChart2 ChartShadow" style="height: 180px">    
-          <button class="btn btn-success btn-lg" (click)="abrirModalCaixa()" >Abrir Caixa</button>
-          <!-- <button class="btn btn-secondary btn-lg" >Imprimir Caixa</button> -->
-          <button class="btn btn-danger btn-lg" (click)="fecharCaixa()" >Fechar Caixa</button> 
+        <!-- Info Row -->
+        <div class="d-flex gap-3 mt-3" style="font-size:0.78rem; color:rgba(255,255,255,0.8);">
+          <span><i class="feather icon-calendar me-1"></i>{{ data_abertura | date:'dd/MM/yyyy' }} {{ hora_abertura }}</span>
+          <span><i class="feather icon-package me-1"></i>Fundo: <strong class="text-white">R$ {{ total_abertura | number:'1.2-2' }}</strong></span>
         </div>
-
       </div>
+
+      <!-- Total -->
+      <div style="padding: 16px 24px; background:rgba(0,0,0,0.12);">
+        <p class="mb-1 text-uppercase" style="font-size:0.65rem; letter-spacing:1.5px; color:rgba(255,255,255,0.65);">Total Recebido</p>
+        <div class="d-flex align-items-center gap-2">
+          <h2 class="mb-0 text-white fw-bold" style="font-size:1.9rem;">R$ {{ totalGanhos | number:'1.2-2' }}</h2>
+          <span style="background:rgba(255,255,255,0.15); border-radius:20px; padding:2px 8px; font-size:0.72rem; color:#fff;">
+            <i class="feather icon-trending-up"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- Payment Breakdown -->
+      <div style="padding: 16px 24px;">
+        <div class="row g-2">
+          <div class="col-6">
+            <div style="background:rgba(255,255,255,0.12); border-radius:10px; padding:10px 14px;">
+              <p class="mb-1" style="font-size:0.65rem; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:0.8px;">
+                <i class="feather icon-credit-card me-1"></i>Crédito
+              </p>
+              <p class="mb-0 text-white fw-semibold" style="font-size:0.9rem;">R$ {{ totalCartaoCredito | number:'1.2-2' }}</p>
+            </div>
+          </div>
+          <div class="col-6">
+            <div style="background:rgba(255,255,255,0.12); border-radius:10px; padding:10px 14px;">
+              <p class="mb-1" style="font-size:0.65rem; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:0.8px;">
+                <i class="feather icon-credit-card me-1"></i>Débito
+              </p>
+              <p class="mb-0 text-white fw-semibold" style="font-size:0.9rem;">R$ {{ totalCartaoDebito | number:'1.2-2' }}</p>
+            </div>
+          </div>
+          <div class="col-6">
+            <div style="background:rgba(255,255,255,0.12); border-radius:10px; padding:10px 14px;">
+              <p class="mb-1" style="font-size:0.65rem; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:0.8px;">
+                <i class="feather icon-dollar-sign me-1"></i>Dinheiro
+              </p>
+              <p class="mb-0 text-white fw-semibold" style="font-size:0.9rem;">R$ {{ totalDinheiro | number:'1.2-2' }}</p>
+            </div>
+          </div>
+          <div class="col-6">
+            <div style="background:rgba(255,255,255,0.12); border-radius:10px; padding:10px 14px;">
+              <p class="mb-1" style="font-size:0.65rem; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:0.8px;">
+                <i class="feather icon-zap me-1"></i>PIX
+              </p>
+              <p class="mb-0 text-white fw-semibold" style="font-size:0.9rem;">R$ {{ totalPix | number:'1.2-2' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="padding: 0 24px 20px; display:flex; gap:10px;">
+        <button class="btn fw-semibold flex-fill" (click)="abrirModalCaixa()"
+          style="background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:10px; font-size:0.82rem; padding:9px 0; backdrop-filter:blur(4px);">
+          <i class="feather icon-unlock me-1"></i>Abrir Caixa
+        </button>
+        <button class="btn fw-semibold flex-fill" (click)="fecharCaixa()"
+          style="background:rgba(220,53,69,0.75); color:#fff; border:1px solid rgba(220,53,69,0.5); border-radius:10px; font-size:0.82rem; padding:9px 0;">
+          <i class="feather icon-lock me-1"></i>Fechar Caixa
+        </button>
+      </div>
+
     </div>
   </div>
 

@@ -674,6 +674,56 @@ app.get('/api/pedidos', autenticarTenant, (req, res) => {
   });
 });
 
+// Rota GET para estatísticas do dashboard (itens mais vendidos, pedidos do dia, tipos de ordem)
+app.get('/api/dashboard/stats', autenticarTenant, async (req, res) => {
+  const hoje = new Date().toISOString().split('T')[0];
+  try {
+    // Item mais vendido do dia (pelo nome_item, somando quantidade)
+    const [itensMaisVendidos] = await db.promise().query(
+      `SELECT nome_item, SUM(quantidade) AS total_vendido
+       FROM pedido
+       WHERE id_empresa = ? AND DATE(data_pedido) = ?
+       GROUP BY nome_item
+       ORDER BY total_vendido DESC
+       LIMIT 1`,
+      [req.id_empresa, hoje]
+    );
+
+    // Total de pedidos (linhas) do dia
+    const [[{ total_pedidos }]] = await db.promise().query(
+      `SELECT COUNT(*) AS total_pedidos
+       FROM pedido
+       WHERE id_empresa = ? AND DATE(data_pedido) = ?`,
+      [req.id_empresa, hoje]
+    );
+
+    // Contagem de ordens do dia por tipo (mesa.ordem_type): Pedido, Retirada, Entrega
+    const [tiposOrdem] = await db.promise().query(
+      `SELECT ordem_type, COUNT(*) AS total
+       FROM mesa
+       WHERE id_empresa = ? AND DATE(horaAbertura) = ?
+       GROUP BY ordem_type`,
+      [req.id_empresa, hoje]
+    );
+
+    const tipos = { Pedido: 0, Retirada: 0, Entrega: 0 };
+    tiposOrdem.forEach((t) => {
+      if (tipos.hasOwnProperty(t.ordem_type)) {
+        tipos[t.ordem_type] = Number(t.total);
+      }
+    });
+
+    res.json({
+      item_mais_vendido: itensMaisVendidos[0] || null,
+      total_pedidos_hoje: Number(total_pedidos),
+      tipos_ordem: tipos
+    });
+  } catch (err) {
+    console.error('Erro ao buscar stats do dashboard:', err);
+    res.status(500).json({ error: 'Erro ao buscar estatísticas.' });
+  }
+});
+
 
 app.get('/api/mesas/:id/historico-pedidos', autenticarTenant, (req, res) => {
   const mesaId = req.params.id;

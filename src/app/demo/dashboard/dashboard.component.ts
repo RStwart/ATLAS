@@ -36,12 +36,18 @@ export default class DashboardComponent implements OnInit {
 
   divisoesPagamento: any[] = []; // Array de divisões
 
+  // Stats do dia
+  itemMaisVendido: { nome_item: string; total_vendido: number } | null = null;
+  totalPedidosHoje: number = 0;
+  tiposOrdem: { Pedido: number; Retirada: number; Entrega: number } = { Pedido: 0, Retirada: 0, Entrega: 0 };
+
 
   constructor(private vendasService: VendasService, private toastr: ToastrService) {}
 
   ngOnInit(): void {
     this.getVendas();
     this.buscarCaixaAberto();
+    this.carregarStatsDia();
   }
   
 
@@ -304,6 +310,17 @@ export default class DashboardComponent implements OnInit {
           this.toastr.error('Erro ao buscar informações do caixa.', 'Erro');
         }
       }
+    });
+  }
+
+  carregarStatsDia(): void {
+    this.vendasService.getDashboardStats().subscribe({
+      next: (stats) => {
+        this.itemMaisVendido = stats.item_mais_vendido;
+        this.totalPedidosHoje = stats.total_pedidos_hoje;
+        this.tiposOrdem = stats.tipos_ordem;
+      },
+      error: () => {} // silencioso — não bloqueia o dashboard
     });
   }
 
