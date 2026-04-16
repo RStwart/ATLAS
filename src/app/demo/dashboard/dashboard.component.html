@@ -1,12 +1,20 @@
 <div class="row">
 
+  <!-- Botão ocultar valores -->
+  <div class="col-12 mb-2 d-flex justify-content-end">
+    <button class="btn-toggle-valores" (click)="toggleValores()" [title]="valoresVisiveis ? 'Ocultar valores' : 'Mostrar valores'">
+      <i class="feather" [ngClass]="valoresVisiveis ? 'icon-eye-off' : 'icon-eye'"></i>
+      <span>{{ valoresVisiveis ? 'Ocultar valores' : 'Mostrar valores' }}</span>
+    </button>
+  </div>
+
   <!-- Card Dinheiro -->
   <div class="col-xl-4 col-md-6">
     <div class="card" style="border-left: 4px solid #28a745;">
       <div class="card-body d-flex align-items-center justify-content-between">
         <div>
           <p class="text-muted mb-1" style="font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Total em Dinheiro</p>
-          <h4 class="mb-0 fw-bold">R$ {{ totalDinheiro | number:'1.2-2' }}</h4>
+          <h4 class="mb-0 fw-bold">{{ valoresVisiveis ? ('R$ ' + (totalDinheiro | number:'1.2-2')) : '••••••' }}</h4>
         </div>
         <div style="background:#e9f7ef; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center;">
           <i class="feather icon-dollar-sign" style="color:#28a745; font-size:1.4rem;"></i>
@@ -21,8 +29,8 @@
       <div class="card-body d-flex align-items-center justify-content-between">
         <div>
           <p class="text-muted mb-1" style="font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Total em Cartão</p>
-          <h4 class="mb-0 fw-bold">R$ {{ totalCartao | number:'1.2-2' }}</h4>
-          <small class="text-muted">Créd : R$ {{ totalCartaoCredito | number:'1.2-2' }} &nbsp;|&nbsp; Déb: R$ {{ totalCartaoDebito | number:'1.2-2' }}</small>
+          <h4 class="mb-0 fw-bold">{{ valoresVisiveis ? ('R$ ' + (totalCartao | number:'1.2-2')) : '••••••' }}</h4>
+          <small class="text-muted">Créd: {{ valoresVisiveis ? ('R$ ' + (totalCartaoCredito | number:'1.2-2')) : '••••' }} &nbsp;|&nbsp; Déb: {{ valoresVisiveis ? ('R$ ' + (totalCartaoDebito | number:'1.2-2')) : '••••' }}</small>
         </div>
         <div style="background:#e7f1ff; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center;">
           <i class="feather icon-credit-card" style="color:#007bff; font-size:1.4rem;"></i>
@@ -37,7 +45,7 @@
       <div class="card-body d-flex align-items-center justify-content-between">
         <div>
           <p class="text-muted mb-1" style="font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Total em PIX</p>
-          <h4 class="mb-0 fw-bold">R$ {{ totalPix | number:'1.2-2' }}</h4>
+          <h4 class="mb-0 fw-bold">{{ valoresVisiveis ? ('R$ ' + (totalPix | number:'1.2-2')) : '••••••' }}</h4>
         </div>
         <div style="background:#f0ebff; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center;">
           <i class="feather icon-zap" style="color:#6f42c1; font-size:1.4rem;"></i>
@@ -134,7 +142,7 @@
             </td>
             <!-- Total da Venda -->
             <td>
-              <p class="m-0">R$ {{ venda.total | number:'1.2-2' }}</p>
+              <p class="m-0">{{ valoresVisiveis ? ('R$ ' + (venda.total | number:'1.2-2')) : '••••••' }}</p>
             </td>
             <!-- Tipo de Pagamento -->
             <td>
@@ -152,7 +160,7 @@
               <ng-container *ngIf="venda.isDividido">
                 <span class="badge rounded-pill bg-dark"><i class="feather icon-layers me-1"></i>DIVIDIDO</span>
                 <div class="mt-1" *ngFor="let d of venda.divisoes">
-                  <small class="text-muted">{{ d.tipo_pagamento }}<span *ngIf="d.card_type && d.card_type !== 'NA'"> ({{ d.card_type }})</span>: R$ {{ d.total | number:'1.2-2' }}</small>
+                  <small class="text-muted">{{ d.tipo_pagamento }}<span *ngIf="d.card_type && d.card_type !== 'NA'"> ({{ d.card_type }})</span>: {{ valoresVisiveis ? ('R$ ' + (d.total | number:'1.2-2')) : '••••' }}</small>
                 </div>
               </ng-container>
             </td>
@@ -237,7 +245,7 @@
         <!-- Info Row -->
         <div class="d-flex gap-3 mt-3 caixa-card__meta">
           <span><i class="feather icon-calendar me-1"></i>{{ data_abertura | date:'dd/MM/yyyy' }} {{ hora_abertura }}</span>
-          <span><i class="feather icon-package me-1"></i>Fundo: <strong class="text-white">R$ {{ total_abertura | number:'1.2-2' }}</strong></span>
+          <span><i class="feather icon-package me-1"></i>Fundo: <strong class="text-white">{{ valoresVisiveis ? ('R$ ' + (total_abertura | number:'1.2-2')) : '••••••' }}</strong></span>
         </div>
       </div>
 
@@ -245,7 +253,7 @@
       <div class="caixa-card__total-section">
         <p class="mb-1 text-uppercase caixa-card__total-label">Total Recebido</p>
         <div class="d-flex align-items-center gap-2">
-          <h2 class="mb-0 text-white fw-bold caixa-card__total-amount">R$ {{ totalGanhos | number:'1.2-2' }}</h2>
+          <h2 class="mb-0 text-white fw-bold caixa-card__total-amount">{{ valoresVisiveis ? ('R$ ' + (totalGanhos | number:'1.2-2')) : '••••••' }}</h2>
           <span class="caixa-card__trend-badge">
             <i class="feather icon-trending-up"></i>
           </span>
@@ -258,25 +266,25 @@
           <div class="col-6">
             <div class="caixa-pay-tile">
               <p class="mb-1 caixa-pay-tile__label"><i class="feather icon-credit-card me-1"></i>Crédito</p>
-              <p class="mb-0 text-white fw-semibold caixa-pay-tile__value">R$ {{ totalCartaoCredito | number:'1.2-2' }}</p>
+              <p class="mb-0 text-white fw-semibold caixa-pay-tile__value">{{ valoresVisiveis ? ('R$ ' + (totalCartaoCredito | number:'1.2-2')) : '••••••' }}</p>
             </div>
           </div>
           <div class="col-6">
             <div class="caixa-pay-tile">
               <p class="mb-1 caixa-pay-tile__label"><i class="feather icon-credit-card me-1"></i>Débito</p>
-              <p class="mb-0 text-white fw-semibold caixa-pay-tile__value">R$ {{ totalCartaoDebito | number:'1.2-2' }}</p>
+              <p class="mb-0 text-white fw-semibold caixa-pay-tile__value">{{ valoresVisiveis ? ('R$ ' + (totalCartaoDebito | number:'1.2-2')) : '••••••' }}</p>
             </div>
           </div>
           <div class="col-6">
             <div class="caixa-pay-tile">
               <p class="mb-1 caixa-pay-tile__label"><i class="feather icon-dollar-sign me-1"></i>Dinheiro</p>
-              <p class="mb-0 text-white fw-semibold caixa-pay-tile__value">R$ {{ totalDinheiro | number:'1.2-2' }}</p>
+              <p class="mb-0 text-white fw-semibold caixa-pay-tile__value">{{ valoresVisiveis ? ('R$ ' + (totalDinheiro | number:'1.2-2')) : '••••••' }}</p>
             </div>
           </div>
           <div class="col-6">
             <div class="caixa-pay-tile">
               <p class="mb-1 caixa-pay-tile__label"><i class="feather icon-zap me-1"></i>PIX</p>
-              <p class="mb-0 text-white fw-semibold caixa-pay-tile__value">R$ {{ totalPix | number:'1.2-2' }}</p>
+              <p class="mb-0 text-white fw-semibold caixa-pay-tile__value">{{ valoresVisiveis ? ('R$ ' + (totalPix | number:'1.2-2')) : '••••••' }}</p>
             </div>
           </div>
         </div>

@@ -37,6 +37,12 @@ export default class DashboardComponent implements OnInit {
 
   divisoesPagamento: any[] = []; // Array de divisões
 
+  valoresVisiveis: boolean = true; // Controla a visibilidade dos valores financeiros
+
+  toggleValores(): void {
+    this.valoresVisiveis = !this.valoresVisiveis;
+  }
+
   // Stats do dia
   itemMaisVendido: { nome_item: string; total_vendido: number } | null = null;
   totalPedidosHoje: number = 0;
