@@ -143,7 +143,7 @@ const NavigationItems = [
         type: 'item',
         url: '/tables/produtos',
         classes: 'nav-item',
-        icon: 'feather icon-server'
+        icon: 'feather icon-package'
       },
       // {
       //   id: 'Funcionarios',
@@ -159,7 +159,7 @@ const NavigationItems = [
         type: 'item',
         url: '/tables/mesa',
         classes: 'nav-item',
-        icon: 'feather icon-server'
+        icon: 'feather icon-grid'
       },
       {
         id: 'Pedido',
@@ -167,7 +167,7 @@ const NavigationItems = [
         type: 'item',
         url: '/tables/pedidos',
         classes: 'nav-item',
-        icon: 'feather icon-server'
+        icon: 'feather icon-clipboard'
       },
       {
         id: 'Caixas',
@@ -175,7 +175,7 @@ const NavigationItems = [
         type: 'item',
         url: '/tables/caixas',
         classes: 'nav-item',
-        icon: 'feather icon-briefcase'
+        icon: 'feather icon-trending-up'
       }
     ]
   },

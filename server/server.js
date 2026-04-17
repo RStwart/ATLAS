@@ -491,9 +491,14 @@ app.get('/api/mesas/:id', autenticarTenant, (req, res) => {
 
 // Rota POST para adicionar uma nova mesa
 app.post('/api/mesas', autenticarTenant, (req, res) => {
-  const { numero, capacidade, status, pedidos, garcom, horaAbertura, totalConsumo, nome, ordem_type, endereco } = req.body;
-  const query = 'INSERT INTO mesa (numero, capacidade, status, pedidos, garcom, horaAbertura, totalConsumo, nome, ordem_type, endereco, id_empresa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-  const values = [numero, capacidade, status, JSON.stringify(pedidos), garcom, horaAbertura, totalConsumo, nome, ordem_type, endereco, req.id_empresa];
+  const { numero, capacidade, status, pedidos, garcom, totalConsumo, nome, ordem_type, endereco } = req.body;
+
+  const agora = new Date();
+  const data_abertura = agora.toISOString().split('T')[0]; // YYYY-MM-DD
+  const hora_abertura_dt = agora.toTimeString().split(' ')[0]; // HH:MM:SS
+
+  const query = 'INSERT INTO mesa (numero, capacidade, status, pedidos, garcom, totalConsumo, nome, ordem_type, endereco, id_empresa, data_abertura, hora_abertura_dt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  const values = [numero, capacidade, status, JSON.stringify(pedidos), garcom, totalConsumo, nome, ordem_type, endereco, req.id_empresa, data_abertura, hora_abertura_dt];
 
   db.query(query, values, (err, result) => {
     if (err) {
@@ -531,10 +536,6 @@ app.put('/api/mesas/:id', autenticarTenant, (req, res) => {
   if (req.body.garcom !== undefined) {
     fieldsToUpdate.push('garcom = ?');
     values.push(req.body.garcom);
-  }
-  if (req.body.horaAbertura !== undefined) {
-    fieldsToUpdate.push('horaAbertura = ?');
-    values.push(req.body.horaAbertura);
   }
   if (req.body.totalConsumo !== undefined) {
     fieldsToUpdate.push('totalConsumo = ?');
@@ -583,8 +584,13 @@ app.delete('/api/mesas/:id', autenticarTenant, (req, res) => {
 app.put('/api/mesas/:id/status', autenticarTenant, (req, res) => {
   const { id } = req.params;
   const status = 'Finalizada';
-  const query = `UPDATE mesa SET status = ? WHERE id_mesa = ? AND id_empresa = ?`;
-  db.query(query, [status, id, req.id_empresa], (err, result) => {
+
+  const agora = new Date();
+  const data_fechamento = agora.toISOString().split('T')[0];
+  const hora_fechamento = agora.toTimeString().split(' ')[0];
+
+  const query = `UPDATE mesa SET status = ?, data_fechamento = ?, hora_fechamento = ? WHERE id_mesa = ? AND id_empresa = ?`;
+  db.query(query, [status, data_fechamento, hora_fechamento, id, req.id_empresa], (err, result) => {
     if (err) {
       console.error('Erro ao atualizar status da mesa:', err);
       return res.status(500).json({ error: 'Erro ao atualizar status da mesa' });
@@ -745,19 +751,25 @@ app.get('/api/dashboard/stats', autenticarTenant, async (req, res) => {
       [req.id_empresa, hoje]
     );
 
-    // Contagem de ordens do dia por tipo (mesa.ordem_type): Pedido, Retirada, Entrega
+    // Contagem de mesas abertas hoje por tipo de ordem: Pedido, Retirada, Entrega
     const [tiposOrdem] = await db.promise().query(
       `SELECT ordem_type, COUNT(*) AS total
        FROM mesa
-       WHERE id_empresa = ? AND DATE(horaAbertura) = ?
+       WHERE id_empresa = ? AND (
+         data_abertura = ?
+         OR (data_abertura IS NULL AND LOWER(status) = 'aberta')
+       )
        GROUP BY ordem_type`,
       [req.id_empresa, hoje]
     );
 
+    console.log('[dashboard/stats] mesas abertas por tipo:', tiposOrdem);
+
     const tipos = { Pedido: 0, Retirada: 0, Entrega: 0 };
     tiposOrdem.forEach((t) => {
-      if (tipos.hasOwnProperty(t.ordem_type)) {
-        tipos[t.ordem_type] = Number(t.total);
+      const key = t.ordem_type;
+      if (key && tipos.hasOwnProperty(key)) {
+        tipos[key] = Number(t.total);
       }
     });
 
