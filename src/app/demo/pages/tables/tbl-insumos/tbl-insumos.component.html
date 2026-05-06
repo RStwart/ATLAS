@@ -1,0 +1,378 @@
+<div class="row">
+  <div class="col-xl-12">
+    <app-card cardTitle="Insumos / Estoque" [options]="false" [buttonh]="true"
+              buttonTitle="Novo Insumo" [buttonAction]="abrirModalAdd.bind(this)">
+
+      <!-- Resumo rápido -->
+      <div class="insumo-summary" *ngIf="insumos.length > 0">
+        <div class="insumo-summary__tile insumo-summary__tile--ok">
+          <i class="feather icon-check-circle"></i>
+          <div>
+            <span class="insumo-summary__num">{{ contarPorStatus('ok') }}</span>
+            <span class="insumo-summary__label">Normal</span>
+          </div>
+        </div>
+        <div class="insumo-summary__tile insumo-summary__tile--baixo">
+          <i class="feather icon-alert-triangle"></i>
+          <div>
+            <span class="insumo-summary__num">{{ contarPorStatus('baixo') }}</span>
+            <span class="insumo-summary__label">Estoque Baixo</span>
+          </div>
+        </div>
+        <div class="insumo-summary__tile insumo-summary__tile--zerado">
+          <i class="feather icon-x-circle"></i>
+          <div>
+            <span class="insumo-summary__num">{{ contarPorStatus('zerado') }}</span>
+            <span class="insumo-summary__label">Zerado</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela -->
+      <div class="table-responsive">
+        <table class="table insumos-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Unidade</th>
+              <th>Saldo Atual</th>
+              <th>Mínimo</th>
+              <th>Custo Unit.</th>
+              <th>Status</th>
+              <th class="text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let insumo of insumos" [class.row-baixo]="estoqueStatus(insumo) === 'baixo'"
+                [class.row-zerado]="estoqueStatus(insumo) === 'zerado'">
+              <td class="insumo-nome fw-semibold">{{ insumo.nome }}</td>
+              <td><span class="unit-badge">{{ insumo.unidade }}</span></td>
+              <td class="fw-bold" [class.text-success]="estoqueStatus(insumo) === 'ok'"
+                                  [class.text-warning]="estoqueStatus(insumo) === 'baixo'"
+                                  [class.text-danger]="estoqueStatus(insumo) === 'zerado'">
+                {{ insumo.estoque | number:'1.0-4' }} <small class="fw-normal text-muted">{{ insumo.unidade }}</small>
+              </td>
+              <td class="text-muted">{{ insumo.estoque_min | number:'1.0-4' }} <small>{{ insumo.unidade }}</small></td>
+              <td>{{ insumo.custo | currency:'BRL':'symbol':'1.2-4' }}</td>
+              <td>
+                <span class="status-pill"
+                      [class.status-pill--ok]="estoqueStatus(insumo) === 'ok'"
+                      [class.status-pill--baixo]="estoqueStatus(insumo) === 'baixo'"
+                      [class.status-pill--zerado]="estoqueStatus(insumo) === 'zerado'">
+                  <i class="feather"
+                     [class.icon-check-circle]="estoqueStatus(insumo) === 'ok'"
+                     [class.icon-alert-triangle]="estoqueStatus(insumo) === 'baixo'"
+                     [class.icon-x-circle]="estoqueStatus(insumo) === 'zerado'"></i>
+                  {{ estoqueStatus(insumo) === 'ok' ? 'Normal' : estoqueStatus(insumo) === 'baixo' ? 'Estoque Baixo' : 'Zerado' }}
+                </span>
+              </td>
+              <td>
+                <div class="ia-actions">
+                  <button class="ia-btn ia-btn--green" title="Entrada de estoque"
+                          (click)="abrirMovimentacao('entrada', insumo)">
+                    <i class="feather icon-plus"></i>
+                  </button>
+                  <button class="ia-btn ia-btn--orange" title="Ajuste / Perda"
+                          (click)="abrirMovimentacao('ajuste', insumo)">
+                    <i class="feather icon-minus"></i>
+                  </button>
+                  <button class="ia-btn ia-btn--purple" title="Histórico de movimentações"
+                          (click)="verHistorico(insumo)">
+                    <i class="feather icon-clock"></i>
+                  </button>
+                  <button class="ia-btn ia-btn--blue" title="Editar cadastro"
+                          (click)="editarInsumo(insumo)">
+                    <i class="feather icon-edit-2"></i>
+                  </button>
+                  <button class="ia-btn ia-btn--red" title="Excluir insumo"
+                          (click)="deletarInsumo(insumo)">
+                    <i class="feather icon-trash-2"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <tr *ngIf="insumos.length === 0">
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="feather icon-box empty-icon"></i>
+                <div class="mt-2">Nenhum insumo cadastrado ainda.</div>
+                <div class="mt-1" style="font-size:0.8rem;">Clique em <strong>Novo Insumo</strong> para começar.</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </app-card>
+  </div>
+</div>
+
+
+<!-- ===== MODAL NOVO INSUMO ===== -->
+<div class="atlas-modal" *ngIf="mostrarModalAdd">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:520px;">
+    <div class="atlas-modal-content">
+      <div class="modal-header-custom modal-header-custom--teal">
+        <div class="d-flex align-items-center gap-3">
+          <div class="modal-header-icon"><i class="feather icon-box"></i></div>
+          <div>
+            <p class="mb-0 modal-header-label">Estoque</p>
+            <h5 class="mb-0 text-white fw-bold">Novo Insumo</h5>
+          </div>
+        </div>
+        <button type="button" (click)="fecharModalAdd()" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body-custom">
+        <form id="form-novo-insumo" (ngSubmit)="salvarNovoInsumo()">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="field-label">Nome do Insumo</label>
+              <input type="text" class="field-input" [(ngModel)]="novoInsumo.nome"
+                     name="ni-nome" placeholder="Ex: Pão de hot dog, Salsicha, Molho..." required />
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Unidade de Medida</label>
+              <select class="field-input" [(ngModel)]="novoInsumo.unidade" name="ni-unidade">
+                <option *ngFor="let u of unidades" [value]="u">{{ u }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Estoque Inicial</label>
+              <input type="number" class="field-input" [(ngModel)]="novoInsumo.estoque"
+                     name="ni-estoque" min="0" step="1" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Custo Unitário (R$)</label>
+              <input type="number" class="field-input" [(ngModel)]="novoInsumo.custo"
+                     name="ni-custo" min="0" step="0.01" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Estoque Mínimo (alerta)</label>
+              <input type="number" class="field-input" [(ngModel)]="novoInsumo.estoque_min"
+                     name="ni-min" min="0" step="1" />
+            </div>
+
+            <div class="col-12">
+              <div class="tip-box">
+                <i class="feather icon-info"></i>
+                Sempre use a <strong>menor unidade</strong>: gramas (g) em vez de kg, ml em vez de litros.
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer-custom">
+        <button type="button" (click)="fecharModalAdd()" class="btn-modal-cancel">Cancelar</button>
+        <button type="submit" form="form-novo-insumo" [disabled]="!novoInsumo.nome?.trim()"
+                class="btn-modal-primary btn-modal-primary--teal">
+          <i class="feather icon-check me-1"></i>Criar Insumo
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="atlas-backdrop" *ngIf="mostrarModalAdd"></div>
+
+
+<!-- ===== MODAL EDITAR INSUMO ===== -->
+<div class="atlas-modal" *ngIf="insumoEmEdicao">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:520px;">
+    <div class="atlas-modal-content">
+      <div class="modal-header-custom modal-header-custom--blue">
+        <div class="d-flex align-items-center gap-3">
+          <div class="modal-header-icon"><i class="feather icon-edit-2"></i></div>
+          <div>
+            <p class="mb-0 modal-header-label">Insumo</p>
+            <h5 class="mb-0 text-white fw-bold">Editar Cadastro</h5>
+          </div>
+        </div>
+        <button type="button" (click)="cancelarEdicao()" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body-custom">
+        <form id="form-editar-insumo" (ngSubmit)="salvarEdicao()">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="field-label">Nome</label>
+              <input type="text" class="field-input" [(ngModel)]="insumoEmEdicao.nome"
+                     name="ei-nome" required />
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Unidade</label>
+              <select class="field-input" [(ngModel)]="insumoEmEdicao.unidade" name="ei-unidade">
+                <option *ngFor="let u of unidades" [value]="u">{{ u }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Saldo Atual</label>
+              <input type="text" class="field-input field-input--readonly"
+                     [value]="(insumoEmEdicao.estoque | number:'1.0-4') + ' ' + insumoEmEdicao.unidade" disabled />
+              <small class="text-muted">Use os botões +/- para alterar o saldo</small>
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Custo Unitário (R$)</label>
+              <input type="number" class="field-input" [(ngModel)]="insumoEmEdicao.custo"
+                     name="ei-custo" min="0" step="0.01" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Estoque Mínimo (alerta)</label>
+              <input type="number" class="field-input" [(ngModel)]="insumoEmEdicao.estoque_min"
+                     name="ei-min" min="0" />
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer-custom">
+        <button type="button" (click)="cancelarEdicao()" class="btn-modal-cancel">Cancelar</button>
+        <button type="submit" form="form-editar-insumo" class="btn-modal-primary btn-modal-primary--blue">
+          <i class="feather icon-check me-1"></i>Salvar Alterações
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="atlas-backdrop" *ngIf="insumoEmEdicao"></div>
+
+
+<!-- ===== MODAL MOVIMENTAÇÃO ===== -->
+<div class="atlas-modal" *ngIf="modalMovimentacao">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+    <div class="atlas-modal-content">
+      <div class="modal-header-custom"
+           [class.modal-header-custom--green]="modalMovimentacao === 'entrada'"
+           [class.modal-header-custom--orange]="modalMovimentacao === 'ajuste'">
+        <div class="d-flex align-items-center gap-3">
+          <div class="modal-header-icon">
+            <i class="feather"
+               [class.icon-plus-circle]="modalMovimentacao === 'entrada'"
+               [class.icon-minus-circle]="modalMovimentacao === 'ajuste'"></i>
+          </div>
+          <div>
+            <p class="mb-0 modal-header-label">{{ insumoMovimentacao?.nome }}</p>
+            <h5 class="mb-0 text-white fw-bold">
+              {{ modalMovimentacao === 'entrada' ? 'Entrada de Estoque' : 'Ajuste / Perda' }}
+            </h5>
+          </div>
+        </div>
+        <button type="button" (click)="fecharMovimentacao()" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body-custom">
+        <div class="mov-saldo-atual"
+             [class.mov-saldo-atual--green]="modalMovimentacao === 'entrada'"
+             [class.mov-saldo-atual--orange]="modalMovimentacao === 'ajuste'">
+          <span class="mov-saldo-atual__label">Saldo atual</span>
+          <span class="mov-saldo-atual__valor">
+            {{ insumoMovimentacao?.estoque }} {{ insumoMovimentacao?.unidade }}
+          </span>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-12">
+            <label class="field-label">
+              Quantidade ({{ insumoMovimentacao?.unidade }})
+              <span *ngIf="modalMovimentacao === 'entrada'" class="text-success"> — a adicionar</span>
+              <span *ngIf="modalMovimentacao === 'ajuste'" class="text-danger"> — a remover</span>
+            </label>
+            <input type="number" class="field-input" [(ngModel)]="qtdMovimentacao"
+                   min="0.0001" step="1" placeholder="0" />
+          </div>
+
+          <div class="col-12">
+            <label class="field-label">Observação (opcional)</label>
+            <input type="text" class="field-input" [(ngModel)]="obsMovimentacao"
+                   placeholder="Ex: Compra no fornecedor X, perda por vencimento..." />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer-custom">
+        <button type="button" (click)="fecharMovimentacao()" class="btn-modal-cancel">Cancelar</button>
+        <button type="button" [disabled]="qtdMovimentacao <= 0" (click)="salvarMovimentacao()"
+                class="btn-modal-primary"
+                [class.btn-modal-primary--green]="modalMovimentacao === 'entrada'"
+                [class.btn-modal-primary--orange]="modalMovimentacao === 'ajuste'">
+          <i class="feather me-1"
+             [class.icon-plus]="modalMovimentacao === 'entrada'"
+             [class.icon-minus]="modalMovimentacao === 'ajuste'"></i>
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="atlas-backdrop" *ngIf="modalMovimentacao"></div>
+
+
+<!-- ===== MODAL HISTÓRICO DE MOVIMENTAÇÕES ===== -->
+<div class="atlas-modal" *ngIf="insumoHistorico">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:640px;">
+    <div class="atlas-modal-content">
+      <div class="modal-header-custom modal-header-custom--purple">
+        <div class="d-flex align-items-center gap-3">
+          <div class="modal-header-icon"><i class="feather icon-clock"></i></div>
+          <div>
+            <p class="mb-0 modal-header-label">{{ insumoHistorico?.nome }}</p>
+            <h5 class="mb-0 text-white fw-bold">Histórico de Movimentações</h5>
+          </div>
+        </div>
+        <button type="button" (click)="fecharHistorico()" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body-custom mov-lista">
+        <div *ngIf="movimentacoes.length === 0" class="text-center text-muted py-4">
+          <i class="feather icon-clock empty-icon"></i>
+          <div class="mt-2">Nenhuma movimentação registrada.</div>
+        </div>
+
+        <div *ngFor="let m of movimentacoes" class="mov-item"
+             [class.mov-item--entrada]="m.tipo === 'ENTRADA'"
+             [class.mov-item--saida]="m.tipo === 'SAIDA'">
+
+          <div class="mov-item__icon">
+            <i class="feather"
+               [class.icon-arrow-down-circle]="m.tipo === 'ENTRADA'"
+               [class.icon-arrow-up-circle]="m.tipo === 'SAIDA'"></i>
+          </div>
+
+          <div class="mov-item__body">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="mov-badge" [class.mov-badge--entrada]="m.tipo === 'ENTRADA'"
+                                      [class.mov-badge--saida]="m.tipo === 'SAIDA'">
+                {{ m.tipo }}
+              </span>
+              <span class="mov-origem">{{ m.origem }}</span>
+              <span *ngIf="m.id_pedido" class="mov-pedido">#Pedido {{ m.id_pedido }}</span>
+            </div>
+            <div class="mov-qty">
+              {{ m.quantidade }} {{ insumoHistorico?.unidade }}
+            </div>
+            <div *ngIf="m.observacao" class="mov-obs">{{ m.observacao }}</div>
+          </div>
+
+          <div class="mov-item__meta">
+            <div class="mov-date">{{ m.data_hora | date:'dd/MM/yy' }}</div>
+            <div class="mov-time">{{ m.data_hora | date:'HH:mm' }}</div>
+            <div *ngIf="m.nome_usuario" class="mov-user">{{ m.nome_usuario }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer-custom">
+        <button type="button" (click)="fecharHistorico()" class="btn-modal-cancel">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="atlas-backdrop" *ngIf="insumoHistorico"></div>

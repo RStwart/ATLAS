@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TablesRoutingModule } from './tables-routing.module';
 import { TblProdutosComponent } from './tbl-produtos/tbl-produtos.component';
+import { TblInsumosComponent } from './tbl-insumos/tbl-insumos.component';
+import { TblMovimentacoesComponent } from './tbl-movimentacoes/tbl-movimentacoes.component';
 import { CardComponent } from 'src/app/theme/shared/components/card/card.component';  // Importar o CardComponent diretamente
 import { TblFuncionariosComponent } from './tbl-funcionarios/tbl-funcionarios.component';
 import { TblMesasComponent } from './tbl-mesa/tbl-mesa.component';
@@ -13,6 +15,8 @@ import { TblCaixasComponent } from './tbl-caixas/tbl-caixas.component';
 @NgModule({
   declarations: [
     TblProdutosComponent,     // Declare o componente TblProdutosComponent
+    TblInsumosComponent,      // Declare o componente TblInsumosComponent
+    TblMovimentacoesComponent, // Declare o componente TblMovimentacoesComponent
     TblFuncionariosComponent, // Declare o componente TblFuncionariosComponent
     TblMesasComponent,        // Declare o componente TblMesasComponent
     TblPedidosComponent,      // Declare o componente TblPedidosComponent

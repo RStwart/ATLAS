@@ -10,6 +10,14 @@ const routes: Routes = [
         loadComponent: () => import('./tbl-produtos/tbl-produtos.component').then(m => m.TblProdutosComponent)
       },
       {
+        path: 'insumos',
+        loadComponent: () => import('./tbl-insumos/tbl-insumos.component').then(m => m.TblInsumosComponent)
+      },
+      {
+        path: 'movimentacoes',
+        loadComponent: () => import('./tbl-movimentacoes/tbl-movimentacoes.component').then(m => m.TblMovimentacoesComponent)
+      },
+      {
         path: 'funcionarios',
         loadComponent: () => import('./tbl-funcionarios/tbl-funcionarios.component').then(m => m.TblFuncionariosComponent)
       },

@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ProdutoService } from 'src/app/services/produto.service';
+import { InsumoService } from 'src/app/services/insumo.service';
 import { Produto } from 'src/app/interfaces/produto.interface';
+import { ProdutoInsumo } from 'src/app/interfaces/insumo.interface';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
@@ -44,7 +46,13 @@ export class TblProdutosComponent implements OnInit {
     '#343a40', '#6c757d'
   ];
 
-  constructor(private ProdutoService: ProdutoService, private toastr: ToastrService) {}
+  // ===== FICHA TÉCNICA =====
+  produtoFicha: Produto | null = null;
+  fichaTecnica: ProdutoInsumo[] = [];
+  insumosDisponiveis: any[] = [];
+  novoItemFicha = { id_insumo: null as number | null, quantidade: 1 };
+
+  constructor(private ProdutoService: ProdutoService, private insumoService: InsumoService, private toastr: ToastrService) {}
 
   ngOnInit(): void {
     this.carregarProdutos();
@@ -258,6 +266,54 @@ export class TblProdutosComponent implements OnInit {
         this.toastr.success('Categoria excluída!', 'Sucesso');
       },
       () => { this.toastr.error('Erro ao excluir categoria', 'Erro'); }
+    );
+  }
+
+  // ===== FICHA TÉCNICA =====
+
+  abrirFichaTecnica(produto: Produto): void {
+    this.produtoFicha = produto;
+    this.novoItemFicha = { id_insumo: null, quantidade: 1 };
+    this.carregarFichaTecnica();
+    this.insumoService.getInsumos().subscribe(
+      data => { this.insumosDisponiveis = data; },
+      () => { this.toastr.error('Erro ao carregar insumos', 'Erro'); }
+    );
+  }
+
+  fecharFichaTecnica(): void { this.produtoFicha = null; }
+
+  carregarFichaTecnica(): void {
+    if (!this.produtoFicha) return;
+    this.insumoService.getFichaTecnica(this.produtoFicha.id_produto).subscribe(
+      data => { this.fichaTecnica = data; },
+      () => { this.toastr.error('Erro ao carregar ficha técnica', 'Erro'); }
+    );
+  }
+
+  adicionarItemFicha(): void {
+    if (!this.produtoFicha || !this.novoItemFicha.id_insumo || this.novoItemFicha.quantidade <= 0) return;
+    this.insumoService.addInsumoAoProduto(this.produtoFicha.id_produto, {
+      id_insumo: this.novoItemFicha.id_insumo!,
+      quantidade: this.novoItemFicha.quantidade
+    }).subscribe(
+      () => {
+        this.carregarFichaTecnica();
+        this.novoItemFicha = { id_insumo: null, quantidade: 1 };
+        this.toastr.success('Ingrediente adicionado!', 'Sucesso');
+      },
+      () => { this.toastr.error('Erro ao adicionar ingrediente', 'Erro'); }
+    );
+  }
+
+  removerItemFicha(idInsumo: number): void {
+    if (!this.produtoFicha) return;
+    this.insumoService.removeInsumoDoProduto(this.produtoFicha.id_produto, idInsumo).subscribe(
+      () => {
+        this.carregarFichaTecnica();
+        this.toastr.success('Ingrediente removido!', 'Sucesso');
+      },
+      () => { this.toastr.error('Erro ao remover ingrediente', 'Erro'); }
     );
   }
 }

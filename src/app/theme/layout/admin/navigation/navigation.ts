@@ -145,6 +145,22 @@ const NavigationItems = [
         classes: 'nav-item',
         icon: 'feather icon-package'
       },
+      {
+        id: 'Insumos',
+        title: 'Insumos / Estoque',
+        type: 'item',
+        url: '/tables/insumos',
+        classes: 'nav-item',
+        icon: 'feather icon-box'
+      },
+      {
+        id: 'Movimentacoes',
+        title: 'Movimentações',
+        type: 'item',
+        url: '/tables/movimentacoes',
+        classes: 'nav-item',
+        icon: 'feather icon-activity'
+      },
       // {
       //   id: 'Funcionarios',
       //   title: 'Funcionarios',

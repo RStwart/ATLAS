@@ -74,6 +74,9 @@
 
               <!-- Botões de ação -->
               <div class="product-card__actions">
+                <button class="prod-action-btn prod-action-btn--teal" (click)="abrirFichaTecnica(produto)">
+                  <i class="feather icon-layers me-1"></i>Ficha
+                </button>
                 <button class="prod-action-btn prod-action-btn--green" (click)="editarProduto(produto)">
                   <i class="feather icon-edit-2 me-1"></i>Editar
                 </button>
@@ -91,47 +94,70 @@
 </div>
 
 
-<div *ngIf="mostrarFormulario" class="row">
-  <div class="col-sm-12">
-    <app-card cardTitle="Adicionar Produto" [options]="false">
-      <div class="form-container">
-        <form (ngSubmit)="adicionarProduto()">
-          <div class="form-group">
-            <label for="nome">Nome</label>
-            <input id="nome" class="form-control" [(ngModel)]="novoProduto.nome" name="nome" required />
+<!-- ===== MODAL ADICIONAR PRODUTO ===== -->
+<div class="atlas-modal" *ngIf="mostrarFormulario">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:540px;">
+    <div class="atlas-modal-content">
+
+      <div class="modal-header-custom modal-header-custom--blue">
+        <div class="d-flex align-items-center gap-3">
+          <div class="modal-header-icon"><i class="feather icon-package"></i></div>
+          <div>
+            <p class="mb-0 modal-header-label">Produtos</p>
+            <h5 class="mb-0 text-white fw-bold">Novo Produto</h5>
           </div>
-          <div class="form-group">
-            <label for="descricao">Descrição</label>
-            <textarea id="descricao" class="form-control" [(ngModel)]="novoProduto.descricao" name="descricao"></textarea>
+        </div>
+        <button type="button" (click)="toggleFormulario()" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body-custom">
+        <form id="form-add-produto" (ngSubmit)="adicionarProduto()">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="field-label">Nome</label>
+              <input type="text" class="field-input" [(ngModel)]="novoProduto.nome" name="nome" required
+                     placeholder="Ex: Hot Dog, X-Burguer..." />
+            </div>
+
+            <div class="col-12">
+              <label class="field-label">Descrição</label>
+              <textarea class="field-input" rows="2" [(ngModel)]="novoProduto.descricao" name="descricao"
+                        placeholder="Descrição breve do produto" style="resize:none;"></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Preço (R$)</label>
+              <input type="number" class="field-input" [(ngModel)]="novoProduto.preco" name="preco"
+                     required min="0" step="0.01" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Categoria</label>
+              <select class="field-input" [(ngModel)]="novoProduto.categoria" name="categoria-add">
+                <option value="">Sem categoria</option>
+                <option *ngFor="let cat of categorias" [value]="cat.id_categoria">{{ cat.nome }}</option>
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="field-label">Imagem do Produto</label>
+              <input type="file" class="field-input" (change)="onFileSelected($event)" name="imagem"
+                     accept="image/*" />
+            </div>
           </div>
-          <div class="form-group">
-            <label for="preco">Preço</label>
-            <input id="preco" type="number" class="form-control" [(ngModel)]="novoProduto.preco" name="preco" required />
-          </div>
-          <div class="form-group">
-            <label for="quantidade_estoque">Quantidade em Estoque</label>
-            <input id="quantidade_estoque" type="number" class="form-control" [(ngModel)]="novoProduto.quantidade_estoque" name="quantidade_estoque" required />
-          </div>
-          <!-- Campo de upload de imagem -->
-          <div class="form-group">
-            <label for="imagem">Imagem do Produto</label>
-            <input type="file" class="form-control" (change)="onFileSelected($event)" name="imagem" />
-          </div>
-          <!-- Categoria -->
-          <div class="form-group">
-            <label for="categoria-add">Categoria</label>
-            <select id="categoria-add" class="form-control" [(ngModel)]="novoProduto.categoria" name="categoria-add">
-              <option value="">Sem categoria</option>
-              <option *ngFor="let cat of categorias" [value]="cat.id_categoria">{{ cat.nome }}</option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-success">Salvar</button>
-          <button type="button" class="btn btn-secondary" (click)="toggleFormulario()">Cancelar</button>
         </form>
       </div>
-    </app-card>
+
+      <div class="modal-footer-custom">
+        <button type="button" (click)="toggleFormulario()" class="btn-modal-cancel">Cancelar</button>
+        <button type="submit" form="form-add-produto" class="btn-modal-primary btn-modal-primary--blue">
+          <i class="feather icon-check me-1"></i>Salvar Produto
+        </button>
+      </div>
+    </div>
   </div>
 </div>
+<div class="atlas-backdrop" *ngIf="mostrarFormulario"></div>
 
 
 
@@ -257,6 +283,81 @@
   </div>
 </div>
 <div class="atlas-backdrop" *ngIf="mostrarModalCategoria"></div>
+
+
+<!-- ===== MODAL FICHA TÉCNICA ===== -->
+<div class="atlas-modal" *ngIf="produtoFicha">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:600px;">
+    <div class="atlas-modal-content">
+
+      <div class="modal-header-custom modal-header-custom--teal">
+        <div class="d-flex align-items-center gap-3">
+          <div class="modal-header-icon"><i class="feather icon-layers"></i></div>
+          <div>
+            <p class="mb-0 modal-header-label">{{ produtoFicha?.nome }}</p>
+            <h5 class="mb-0 text-white fw-bold">Ficha Técnica</h5>
+          </div>
+        </div>
+        <button type="button" (click)="fecharFichaTecnica()" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body-custom">
+
+        <!-- Ingredientes atuais -->
+        <p class="modal-section-label mb-2">Ingredientes cadastrados</p>
+        <div *ngIf="fichaTecnica.length === 0" class="ficha-empty">
+          <i class="feather icon-layers"></i>
+          <span>Nenhum ingrediente na ficha. Adicione abaixo.</span>
+        </div>
+        <div class="ficha-list">
+          <div *ngFor="let item of fichaTecnica" class="ficha-item">
+            <div class="ficha-item__info">
+              <span class="ficha-item__nome">{{ item.nome_insumo }}</span>
+              <span class="ficha-item__unidade">{{ item.quantidade }} {{ item.unidade }}</span>
+            </div>
+            <button class="ficha-item__del" title="Remover" (click)="removerItemFicha(item.id_insumo)">
+              <i class="feather icon-x"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Adicionar ingrediente -->
+        <div class="ficha-add-section">
+          <p class="modal-section-label mt-3 mb-2">Adicionar ingrediente</p>
+          <div class="row g-2 align-items-end">
+            <div class="col-6">
+              <label class="field-label">Insumo</label>
+              <select class="field-input" [(ngModel)]="novoItemFicha.id_insumo" name="fi-insumo">
+                <option [ngValue]="null">Selecione...</option>
+                <option *ngFor="let ins of insumosDisponiveis" [ngValue]="ins.id_insumo">
+                  {{ ins.nome }} ({{ ins.unidade }})
+                </option>
+              </select>
+            </div>
+            <div class="col-3">
+              <label class="field-label">Quantidade</label>
+              <input type="number" class="field-input" [(ngModel)]="novoItemFicha.quantidade"
+                     name="fi-qty" min="0.001" step="0.5" />
+            </div>
+            <div class="col-3">
+              <button class="btn-ficha-add" [disabled]="!novoItemFicha.id_insumo || novoItemFicha.quantidade <= 0"
+                      (click)="adicionarItemFicha()">
+                <i class="feather icon-plus me-1"></i>Adicionar
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer-custom">
+        <button type="button" (click)="fecharFichaTecnica()" class="btn-modal-cancel">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="atlas-backdrop" *ngIf="produtoFicha"></div>
+
 
 <!-- Paginação original -->
 <nav aria-label="Page navigation" class="mt-3">

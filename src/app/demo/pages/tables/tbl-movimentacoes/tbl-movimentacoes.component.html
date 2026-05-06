@@ -1,0 +1,191 @@
+<div class="row">
+  <div class="col-xl-12">
+    <app-card cardTitle="Movimentações de Estoque" [options]="false">
+
+      <!-- ── Filtros ─────────────────────────────────────────────────── -->
+      <div class="mov-filtros">
+        <div class="mov-filtros__row">
+
+          <div class="mov-filtros__group">
+            <label class="mov-filtros__label">Insumo</label>
+            <select class="field-input" [(ngModel)]="filtro.id_insumo" name="f-insumo">
+              <option [value]="null">Todos</option>
+              <option *ngFor="let i of insumos" [value]="i.id_insumo">{{ i.nome }}</option>
+            </select>
+          </div>
+
+          <div class="mov-filtros__group">
+            <label class="mov-filtros__label">Tipo</label>
+            <select class="field-input" [(ngModel)]="filtro.tipo" name="f-tipo">
+              <option value="">Todos</option>
+              <option value="ENTRADA">Entrada</option>
+              <option value="SAIDA">Saída</option>
+            </select>
+          </div>
+
+          <div class="mov-filtros__group">
+            <label class="mov-filtros__label">Origem</label>
+            <select class="field-input" [(ngModel)]="filtro.origem" name="f-origem">
+              <option value="">Todas</option>
+              <option value="COMPRA">Compra</option>
+              <option value="VENDA">Venda</option>
+              <option value="AJUSTE">Ajuste</option>
+              <option value="PERDA">Perda</option>
+            </select>
+          </div>
+
+          <div class="mov-filtros__group">
+            <label class="mov-filtros__label">De</label>
+            <input type="date" class="field-input" [(ngModel)]="filtro.data_inicio" name="f-de" />
+          </div>
+
+          <div class="mov-filtros__group">
+            <label class="mov-filtros__label">Até</label>
+            <input type="date" class="field-input" [(ngModel)]="filtro.data_fim" name="f-ate" />
+          </div>
+
+          <div class="mov-filtros__actions">
+            <button class="btn-filtro btn-filtro--primary" (click)="aplicarFiltros()">
+              <i class="feather icon-search me-1"></i>Filtrar
+            </button>
+            <button class="btn-filtro btn-filtro--secondary" (click)="limparFiltros()">
+              <i class="feather icon-x me-1"></i>Limpar
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Resumo cards ────────────────────────────────────────────── -->
+      <div class="mov-resumo" *ngIf="movimentacoes.length > 0">
+        <div class="mov-resumo__card mov-resumo__card--total">
+          <i class="feather icon-list"></i>
+          <div>
+            <span class="mov-resumo__num">{{ totalRegistros }}</span>
+            <span class="mov-resumo__label">Total de registros</span>
+          </div>
+        </div>
+        <div class="mov-resumo__card mov-resumo__card--entrada">
+          <i class="feather icon-arrow-down-circle"></i>
+          <div>
+            <span class="mov-resumo__num">{{ totalEntradas | number:'1.0-4' }}</span>
+            <span class="mov-resumo__label">Entradas (pág. atual)</span>
+          </div>
+        </div>
+        <div class="mov-resumo__card mov-resumo__card--saida">
+          <i class="feather icon-arrow-up-circle"></i>
+          <div>
+            <span class="mov-resumo__num">{{ totalSaidas | number:'1.0-4' }}</span>
+            <span class="mov-resumo__label">Saídas (pág. atual)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tabela ──────────────────────────────────────────────────── -->
+      <div class="table-responsive mt-3">
+        <table class="table mov-table">
+          <thead>
+            <tr>
+              <th>Data / Hora</th>
+              <th>Insumo</th>
+              <th class="text-center">Tipo</th>
+              <th class="text-center">Origem</th>
+              <th class="text-end">Quantidade</th>
+              <th>Observação</th>
+              <th>Pedido</th>
+              <th>Usuário</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- loading -->
+            <tr *ngIf="carregando">
+              <td colspan="8" class="text-center py-5 text-muted">
+                <span class="spinner-border spinner-border-sm me-2"></span>Carregando...
+              </td>
+            </tr>
+
+            <!-- vazio -->
+            <tr *ngIf="!carregando && movimentacoes.length === 0">
+              <td colspan="8" class="text-center py-5 text-muted">
+                <i class="feather icon-inbox empty-icon d-block mb-2"></i>
+                Nenhuma movimentação encontrada para os filtros selecionados.
+              </td>
+            </tr>
+
+            <!-- linhas -->
+            <tr *ngFor="let m of movimentacoes"
+                [class.mov-row--entrada]="m.tipo === 'ENTRADA'"
+                [class.mov-row--saida]="m.tipo === 'SAIDA'">
+
+              <td class="mov-cell-date">
+                <div class="mov-date">{{ m.data_hora | date:'dd/MM/yyyy' }}</div>
+                <div class="mov-time">{{ m.data_hora | date:'HH:mm' }}</div>
+              </td>
+
+              <td class="fw-semibold">{{ m.nome_insumo }}</td>
+
+              <td class="text-center">
+                <span class="tipo-badge"
+                      [class.tipo-badge--entrada]="m.tipo === 'ENTRADA'"
+                      [class.tipo-badge--saida]="m.tipo === 'SAIDA'">
+                  <i class="feather me-1"
+                     [class.icon-arrow-down-circle]="m.tipo === 'ENTRADA'"
+                     [class.icon-arrow-up-circle]="m.tipo === 'SAIDA'"></i>
+                  {{ m.tipo === 'ENTRADA' ? 'Entrada' : 'Saída' }}
+                </span>
+              </td>
+
+              <td class="text-center">
+                <span class="origem-badge"
+                      [class.origem-badge--compra]="m.origem === 'COMPRA'"
+                      [class.origem-badge--venda]="m.origem === 'VENDA'"
+                      [class.origem-badge--ajuste]="m.origem === 'AJUSTE'"
+                      [class.origem-badge--perda]="m.origem === 'PERDA'">
+                  {{ origemLabel(m.origem) }}
+                </span>
+              </td>
+
+              <td class="text-end fw-bold"
+                  [class.text-success]="m.tipo === 'ENTRADA'"
+                  [class.text-danger]="m.tipo === 'SAIDA'">
+                {{ m.tipo === 'SAIDA' ? '-' : '+' }}{{ m.quantidade | number:'1.0-4' }}
+                <small class="text-muted fw-normal ms-1">{{ m.unidade }}</small>
+              </td>
+
+              <td class="mov-obs-cell text-muted">
+                {{ m.observacao || '—' }}
+              </td>
+
+              <td>
+                <span *ngIf="m.id_pedido" class="pedido-badge">#{{ m.id_pedido }}</span>
+                <span *ngIf="!m.id_pedido" class="text-muted">—</span>
+              </td>
+
+              <td class="text-muted" style="font-size:0.8rem;">
+                {{ m.nome_usuario || '—' }}
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── Paginação ────────────────────────────────────────────────── -->
+      <div class="mov-paginacao" *ngIf="totalPaginas > 1">
+        <button class="pag-btn" [disabled]="paginaAtual === 1" (click)="irParaPagina(paginaAtual - 1)">
+          <i class="feather icon-chevron-left"></i>
+        </button>
+        <button *ngFor="let p of paginas" class="pag-btn" [class.pag-btn--ativo]="p === paginaAtual"
+                (click)="irParaPagina(p)">{{ p }}</button>
+        <button class="pag-btn" [disabled]="paginaAtual === totalPaginas" (click)="irParaPagina(paginaAtual + 1)">
+          <i class="feather icon-chevron-right"></i>
+        </button>
+        <span class="pag-info">
+          Página {{ paginaAtual }} de {{ totalPaginas }} — {{ totalRegistros }} registro(s)
+        </span>
+      </div>
+
+    </app-card>
+  </div>
+</div>

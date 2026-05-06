@@ -632,7 +632,7 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
   console.log('=== INÍCIO PROCESSAMENTO PEDIDO ===');
   console.log('Body recebido:', JSON.stringify(req.body, null, 2));
   
-  const { id_mesa, status, total, data, item, observacao, numero } = req.body;
+  const { id_mesa, status, total, data, item, observacao, numero, modificacoes } = req.body;
 
   // Log básico para depuração
   console.log('Campos extraídos:', { id_mesa, status, total, data, item, observacao, numero });
@@ -641,6 +641,13 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
   if (!id_mesa || !item) {
     console.log('ERRO: Campos obrigatórios ausentes');
     return res.status(400).json({ error: 'Campos obrigatórios ausentes: id_mesa ou item' });
+  }
+
+  // modificacoes: array opcional de ajustes de ingredientes por produto
+  // Formato: [{ id_item: 34, remover: [3,5], extra: [{ id_insumo: 2, quantidade: 1 }] }]
+  const modsMap = {};
+  if (Array.isArray(modificacoes)) {
+    modificacoes.forEach(m => { modsMap[String(m.id_item)] = m; });
   }
 
   try {
@@ -657,44 +664,103 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
 
     console.log('Itens processados:', itens);
 
-    const results = [];
-    
-    // Inserir cada item como um registro separado na tabela pedido
-    for (const itemData of itens) {
-      const query = `INSERT INTO pedido (id_mesa, id_empresa, id_item, nome_item, preco, quantidade, observacao, data_pedido, id_usuario, nome_usuario) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-      
-      const values = [
-        id_mesa,
-        req.id_empresa,
-        itemData.id_item,
-        itemData.nome_item,
-        itemData.preco,
-        itemData.quantidade,
-        observacao || null,
-        data || new Date(), // usar data fornecida ou atual
-        req.user.id,
-        req.user.nome || null
-      ];
-      
-      console.log('Inserindo item:', { query, values });
-      
-      const [result] = await db.promise().execute(query, values);
-      results.push({ 
-        id_pedido: result.insertId, 
-        item: itemData.nome_item,
-        quantidade: itemData.quantidade 
-      });
-    }
+    const conn = await db.promise().getConnection();
+    try {
+      await conn.beginTransaction();
 
-    console.log('Todos os itens inseridos com sucesso:', results);
-    console.log('=== FIM PROCESSAMENTO PEDIDO (SUCESSO) ===');
-    
-    res.status(201).json({ 
-      message: 'Pedido adicionado com sucesso', 
-      itens_inseridos: results.length,
-      detalhes: results
-    });
+      const results = [];
+
+      // Inserir cada item como um registro separado na tabela pedido
+      for (const itemData of itens) {
+        const query = `INSERT INTO pedido (id_mesa, id_empresa, id_item, nome_item, preco, quantidade, observacao, data_pedido, id_usuario, nome_usuario) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        
+        const values = [
+          id_mesa,
+          req.id_empresa,
+          itemData.id_item,
+          itemData.nome_item,
+          itemData.preco,
+          itemData.quantidade,
+          observacao || null,
+          data || new Date(),
+          req.user.id,
+          req.user.nome || null
+        ];
+
+        const [result] = await conn.execute(query, values);
+        const id_pedido_inserido = result.insertId;
+
+        results.push({ 
+          id_pedido: id_pedido_inserido, 
+          item: itemData.nome_item,
+          quantidade: itemData.quantidade 
+        });
+
+        // --- Baixa de estoque por insumos ---
+        if (itemData.id_item) {
+          // Busca ficha técnica do produto
+          const [fichaItens] = await conn.query(
+            'SELECT id_insumo, quantidade FROM produto_insumo WHERE id_produto = ? AND id_empresa = ?',
+            [itemData.id_item, req.id_empresa]
+          );
+
+          if (fichaItens.length > 0) {
+            const mod = modsMap[String(itemData.id_item)];
+            const removidos = mod && Array.isArray(mod.remover) ? mod.remover.map(Number) : [];
+            const extras    = mod && Array.isArray(mod.extra)   ? mod.extra   : [];
+
+            for (const fi of fichaItens) {
+              if (removidos.includes(fi.id_insumo)) continue; // item removido pelo cliente
+
+              const qtdBaixa = fi.quantidade * itemData.quantidade;
+              await conn.execute(
+                'UPDATE estoque SET quantidade = GREATEST(0, quantidade - ?) WHERE id_insumo = ? AND id_empresa = ?',
+                [qtdBaixa, fi.id_insumo, req.id_empresa]
+              );
+              await conn.execute(
+                `INSERT INTO movimentacao_estoque
+                   (id_insumo, tipo, quantidade, origem, id_pedido, id_usuario, nome_usuario, id_empresa)
+                 VALUES (?, 'SAIDA', ?, 'VENDA', ?, ?, ?, ?)`,
+                [fi.id_insumo, qtdBaixa, id_pedido_inserido, req.user.id, req.user.nome || null, req.id_empresa]
+              );
+            }
+
+            // Extras solicitados pelo cliente (ex: "+ salsicha")
+            for (const ex of extras) {
+              if (!ex.id_insumo || !ex.quantidade) continue;
+              const qtdExtra = parseFloat(ex.quantidade) * itemData.quantidade;
+              await conn.execute(
+                'UPDATE estoque SET quantidade = GREATEST(0, quantidade - ?) WHERE id_insumo = ? AND id_empresa = ?',
+                [qtdExtra, ex.id_insumo, req.id_empresa]
+              );
+              await conn.execute(
+                `INSERT INTO movimentacao_estoque
+                   (id_insumo, tipo, quantidade, origem, id_pedido, observacao, id_usuario, nome_usuario, id_empresa)
+                 VALUES (?, 'SAIDA', ?, 'VENDA', ?, 'extra solicitado', ?, ?, ?)`,
+                [ex.id_insumo, qtdExtra, id_pedido_inserido, req.user.id, req.user.nome || null, req.id_empresa]
+              );
+            }
+          }
+        }
+      }
+
+      await conn.commit();
+      console.log('Todos os itens inseridos com sucesso:', results);
+      console.log('=== FIM PROCESSAMENTO PEDIDO (SUCESSO) ===');
+      
+      res.status(201).json({ 
+        message: 'Pedido adicionado com sucesso', 
+        itens_inseridos: results.length,
+        detalhes: results
+      });
+
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
     
   } catch (err) {
     // Registrar erro detalhado
@@ -1186,6 +1252,266 @@ app.post('/api/caixa/fechar', autenticarTenant, async (req, res) => {
 
 
 const ip = '0.0.0.0'; // Permite conexões externas
+
+// ===== ROTAS DE INSUMOS =====
+
+// GET /api/insumos — lista todos os insumos da empresa
+app.get('/api/insumos', autenticarTenant, async (req, res) => {
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT i.*, COALESCE(e.quantidade, 0) AS estoque
+       FROM insumo i
+       LEFT JOIN estoque e ON e.id_insumo = i.id_insumo AND e.id_empresa = i.id_empresa
+       WHERE i.id_empresa = ? ORDER BY i.nome`,
+      [req.id_empresa]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Erro ao listar insumos:', err);
+    res.status(500).json({ error: 'Erro ao listar insumos' });
+  }
+});
+
+// GET /api/insumos/:id — retorna um insumo específico
+app.get('/api/insumos/:id', autenticarTenant, async (req, res) => {
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT i.*, COALESCE(e.quantidade, 0) AS estoque
+       FROM insumo i
+       LEFT JOIN estoque e ON e.id_insumo = i.id_insumo AND e.id_empresa = i.id_empresa
+       WHERE i.id_insumo = ? AND i.id_empresa = ?`,
+      [req.params.id, req.id_empresa]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Insumo não encontrado' });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Erro ao buscar insumo:', err);
+    res.status(500).json({ error: 'Erro ao buscar insumo' });
+  }
+});
+
+// POST /api/insumos — cria um novo insumo
+app.post('/api/insumos', autenticarTenant, async (req, res) => {
+  const { nome, unidade, estoque, custo, estoque_min } = req.body;
+  if (!nome || !unidade) return res.status(400).json({ error: 'nome e unidade são obrigatórios' });
+  const conn = await db.promise().getConnection();
+  try {
+    await conn.beginTransaction();
+    // Insere cadastro do insumo (sem coluna estoque — saldo fica em `estoque`)
+    const [result] = await conn.execute(
+      'INSERT INTO insumo (nome, unidade, custo, estoque_min, id_empresa) VALUES (?, ?, ?, ?, ?)',
+      [nome, unidade, custo || 0, estoque_min || 0, req.id_empresa]
+    );
+    const id_insumo = result.insertId;
+    // Cria o registro de saldo inicial na tabela estoque (1:1 com insumo)
+    await conn.execute(
+      'INSERT INTO estoque (id_insumo, quantidade, id_empresa) VALUES (?, ?, ?)',
+      [id_insumo, estoque || 0, req.id_empresa]
+    );
+    // Registra entrada inicial se houver estoque informado
+    if (Number(estoque) > 0) {
+      await conn.execute(
+        `INSERT INTO movimentacao_estoque
+           (id_insumo, tipo, quantidade, origem, observacao, id_usuario, nome_usuario, id_empresa)
+         VALUES (?, 'ENTRADA', ?, 'COMPRA', 'Estoque inicial', ?, ?, ?)`,
+        [id_insumo, estoque, req.user.id, req.user.nome || null, req.id_empresa]
+      );
+    }
+    await conn.commit();
+    res.status(201).json({ message: 'Insumo criado com sucesso', id_insumo });
+  } catch (err) {
+    await conn.rollback();
+    console.error('Erro ao criar insumo:', err);
+    res.status(500).json({ error: 'Erro ao criar insumo' });
+  } finally {
+    conn.release();
+  }
+});
+
+// PUT /api/insumos/:id — atualiza dados cadastrais do insumo (não altera estoque diretamente)
+app.put('/api/insumos/:id', autenticarTenant, async (req, res) => {
+  const { nome, unidade, custo, estoque_min } = req.body;
+  try {
+    const [result] = await db.promise().execute(
+      `UPDATE insumo SET nome = ?, unidade = ?, custo = ?, estoque_min = ?
+       WHERE id_insumo = ? AND id_empresa = ?`,
+      [nome, unidade, custo || 0, estoque_min || 0, req.params.id, req.id_empresa]
+    );
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Insumo não encontrado' });
+    res.json({ message: 'Insumo atualizado com sucesso' });
+  } catch (err) {
+    console.error('Erro ao atualizar insumo:', err);
+    res.status(500).json({ error: 'Erro ao atualizar insumo' });
+  }
+});
+
+// DELETE /api/insumos/:id — remove insumo (só se não houver movimentações)
+app.delete('/api/insumos/:id', autenticarTenant, async (req, res) => {
+  try {
+    const [result] = await db.promise().execute(
+      'DELETE FROM insumo WHERE id_insumo = ? AND id_empresa = ?',
+      [req.params.id, req.id_empresa]
+    );
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Insumo não encontrado' });
+    res.json({ message: 'Insumo removido com sucesso' });
+  } catch (err) {
+    console.error('Erro ao remover insumo:', err);
+    res.status(500).json({ error: 'Erro ao remover insumo. Verifique se há movimentações vinculadas.' });
+  }
+});
+
+// ===== ROTAS DE FICHA TÉCNICA (produto_insumo) =====
+
+// GET /api/produtos/:id/ficha-tecnica — retorna ingredientes de um produto
+app.get('/api/produtos/:id/ficha-tecnica', autenticarTenant, async (req, res) => {
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT pi.id, pi.id_produto, pi.id_insumo, pi.quantidade,
+              i.nome AS nome_insumo, i.unidade, i.custo
+       FROM produto_insumo pi
+       JOIN insumo i ON i.id_insumo = pi.id_insumo
+       WHERE pi.id_produto = ? AND pi.id_empresa = ?
+       ORDER BY i.nome`,
+      [req.params.id, req.id_empresa]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Erro ao buscar ficha técnica:', err);
+    res.status(500).json({ error: 'Erro ao buscar ficha técnica' });
+  }
+});
+
+// POST /api/produtos/:id/ficha-tecnica — adiciona/atualiza um insumo na ficha do produto
+app.post('/api/produtos/:id/ficha-tecnica', autenticarTenant, async (req, res) => {
+  const { id_insumo, quantidade } = req.body;
+  if (!id_insumo || quantidade == null) return res.status(400).json({ error: 'id_insumo e quantidade são obrigatórios' });
+  try {
+    // Upsert: se já existe a combinação produto+insumo, atualiza a quantidade
+    await db.promise().execute(
+      `INSERT INTO produto_insumo (id_produto, id_insumo, quantidade, id_empresa)
+       VALUES (?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE quantidade = VALUES(quantidade)`,
+      [req.params.id, id_insumo, quantidade, req.id_empresa]
+    );
+    res.status(201).json({ message: 'Insumo adicionado à ficha técnica' });
+  } catch (err) {
+    console.error('Erro ao salvar ficha técnica:', err);
+    res.status(500).json({ error: 'Erro ao salvar ficha técnica' });
+  }
+});
+
+// DELETE /api/produtos/:id/ficha-tecnica/:idInsumo — remove um insumo da ficha do produto
+app.delete('/api/produtos/:id/ficha-tecnica/:idInsumo', autenticarTenant, async (req, res) => {
+  try {
+    const [result] = await db.promise().execute(
+      'DELETE FROM produto_insumo WHERE id_produto = ? AND id_insumo = ? AND id_empresa = ?',
+      [req.params.id, req.params.idInsumo, req.id_empresa]
+    );
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Relação não encontrada' });
+    res.json({ message: 'Insumo removido da ficha técnica' });
+  } catch (err) {
+    console.error('Erro ao remover da ficha técnica:', err);
+    res.status(500).json({ error: 'Erro ao remover da ficha técnica' });
+  }
+});
+
+// ===== ROTAS DE MOVIMENTAÇÃO DE ESTOQUE =====
+
+// GET /api/estoque/movimentacoes — lista movimentações com filtros e paginação
+app.get('/api/estoque/movimentacoes', autenticarTenant, async (req, res) => {
+  const { id_insumo, tipo, origem, data_inicio, data_fim, limit = 100, offset = 0 } = req.query;
+  let sql = `
+    SELECT m.*, i.nome AS nome_insumo, i.unidade
+    FROM movimentacao_estoque m
+    JOIN insumo i ON i.id_insumo = m.id_insumo
+    WHERE m.id_empresa = ?
+  `;
+  const params = [req.id_empresa];
+  if (id_insumo)   { sql += ' AND m.id_insumo = ?';            params.push(id_insumo); }
+  if (tipo)        { sql += ' AND m.tipo = ?';                  params.push(tipo.toUpperCase()); }
+  if (origem)      { sql += ' AND m.origem = ?';                params.push(origem.toUpperCase()); }
+  if (data_inicio) { sql += ' AND DATE(m.data_hora) >= ?';      params.push(data_inicio); }
+  if (data_fim)    { sql += ' AND DATE(m.data_hora) <= ?';      params.push(data_fim); }
+  sql += ' ORDER BY m.data_hora DESC';
+  sql += ' LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), parseInt(offset));
+  try {
+    const [rows] = await db.promise().query(sql, params);
+    // Count total for pagination
+    let countSql = `SELECT COUNT(*) AS total FROM movimentacao_estoque m WHERE m.id_empresa = ?`;
+    const countParams = [req.id_empresa];
+    if (id_insumo)   { countSql += ' AND m.id_insumo = ?';       countParams.push(id_insumo); }
+    if (tipo)        { countSql += ' AND m.tipo = ?';             countParams.push(tipo.toUpperCase()); }
+    if (origem)      { countSql += ' AND m.origem = ?';           countParams.push(origem.toUpperCase()); }
+    if (data_inicio) { countSql += ' AND DATE(m.data_hora) >= ?'; countParams.push(data_inicio); }
+    if (data_fim)    { countSql += ' AND DATE(m.data_hora) <= ?'; countParams.push(data_fim); }
+    const [[{ total }]] = await db.promise().query(countSql, countParams);
+    res.json({ rows, total });
+  } catch (err) {
+    console.error('Erro ao listar movimentações:', err);
+    res.status(500).json({ error: 'Erro ao listar movimentações' });
+  }
+});
+
+// POST /api/estoque/entrada — entrada manual de insumo (compra / ajuste)
+app.post('/api/estoque/entrada', autenticarTenant, async (req, res) => {
+  const { id_insumo, quantidade, origem, observacao } = req.body;
+  if (!id_insumo || !quantidade || quantidade <= 0) {
+    return res.status(400).json({ error: 'id_insumo e quantidade (> 0) são obrigatórios' });
+  }
+  const conn = await db.promise().getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.execute(
+      'UPDATE estoque SET quantidade = quantidade + ? WHERE id_insumo = ? AND id_empresa = ?',
+      [quantidade, id_insumo, req.id_empresa]
+    );
+    await conn.execute(
+      `INSERT INTO movimentacao_estoque
+         (id_insumo, tipo, quantidade, origem, observacao, id_usuario, nome_usuario, id_empresa)
+       VALUES (?, 'ENTRADA', ?, ?, ?, ?, ?, ?)`,
+      [id_insumo, quantidade, origem || 'COMPRA', observacao || null, req.user.id, req.user.nome || null, req.id_empresa]
+    );
+    await conn.commit();
+    res.status(201).json({ message: 'Entrada de estoque registrada com sucesso' });
+  } catch (err) {
+    await conn.rollback();
+    console.error('Erro ao registrar entrada:', err);
+    res.status(500).json({ error: 'Erro ao registrar entrada de estoque' });
+  } finally {
+    conn.release();
+  }
+});
+
+// POST /api/estoque/ajuste — ajuste / perda manual de insumo
+app.post('/api/estoque/ajuste', autenticarTenant, async (req, res) => {
+  const { id_insumo, quantidade, origem, observacao } = req.body;
+  if (!id_insumo || !quantidade || quantidade <= 0) {
+    return res.status(400).json({ error: 'id_insumo e quantidade (> 0) são obrigatórios' });
+  }
+  const conn = await db.promise().getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.execute(
+      'UPDATE estoque SET quantidade = GREATEST(0, quantidade - ?) WHERE id_insumo = ? AND id_empresa = ?',
+      [quantidade, id_insumo, req.id_empresa]
+    );
+    await conn.execute(
+      `INSERT INTO movimentacao_estoque
+         (id_insumo, tipo, quantidade, origem, observacao, id_usuario, nome_usuario, id_empresa)
+       VALUES (?, 'SAIDA', ?, ?, ?, ?, ?, ?)`,
+      [id_insumo, quantidade, origem || 'AJUSTE', observacao || null, req.user.id, req.user.nome || null, req.id_empresa]
+    );
+    await conn.commit();
+    res.status(201).json({ message: 'Ajuste de estoque registrado com sucesso' });
+  } catch (err) {
+    await conn.rollback();
+    console.error('Erro ao registrar ajuste:', err);
+    res.status(500).json({ error: 'Erro ao registrar ajuste de estoque' });
+  } finally {
+    conn.release();
+  }
+});
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Servidor rodando na porta ${port}`);
