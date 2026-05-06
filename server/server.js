@@ -701,7 +701,10 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
         if (itemData.id_item) {
           // Busca ficha técnica do produto
           const [fichaItens] = await conn.query(
-            'SELECT id_insumo, quantidade FROM produto_insumo WHERE id_produto = ? AND id_empresa = ?',
+            `SELECT pi.id_insumo, pi.quantidade, i.nome AS nome_insumo, i.unidade
+             FROM produto_insumo pi
+             JOIN insumo i ON i.id_insumo = pi.id_insumo
+             WHERE pi.id_produto = ? AND pi.id_empresa = ?`,
             [itemData.id_item, req.id_empresa]
           );
 
@@ -720,9 +723,9 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
               );
               await conn.execute(
                 `INSERT INTO movimentacao_estoque
-                   (id_insumo, tipo, quantidade, origem, id_pedido, id_usuario, nome_usuario, id_empresa)
-                 VALUES (?, 'SAIDA', ?, 'VENDA', ?, ?, ?, ?)`,
-                [fi.id_insumo, qtdBaixa, id_pedido_inserido, req.user.id, req.user.nome || null, req.id_empresa]
+                   (id_insumo, tipo, quantidade, origem, id_pedido, id_usuario, nome_usuario, nome_insumo_log, unidade_log, id_empresa)
+                 VALUES (?, 'SAIDA', ?, 'VENDA', ?, ?, ?, ?, ?, ?)`,
+                [fi.id_insumo, qtdBaixa, id_pedido_inserido, req.user.id, req.user.nome || null, fi.nome_insumo || null, fi.unidade || null, req.id_empresa]
               );
             }
 
@@ -734,11 +737,16 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
                 'UPDATE estoque SET quantidade = GREATEST(0, quantidade - ?) WHERE id_insumo = ? AND id_empresa = ?',
                 [qtdExtra, ex.id_insumo, req.id_empresa]
               );
+              // Busca nome do insumo extra para o snapshot
+              const [[exInsumo]] = await conn.execute(
+                'SELECT nome, unidade FROM insumo WHERE id_insumo = ? AND id_empresa = ?',
+                [ex.id_insumo, req.id_empresa]
+              );
               await conn.execute(
                 `INSERT INTO movimentacao_estoque
-                   (id_insumo, tipo, quantidade, origem, id_pedido, observacao, id_usuario, nome_usuario, id_empresa)
-                 VALUES (?, 'SAIDA', ?, 'VENDA', ?, 'extra solicitado', ?, ?, ?)`,
-                [ex.id_insumo, qtdExtra, id_pedido_inserido, req.user.id, req.user.nome || null, req.id_empresa]
+                   (id_insumo, tipo, quantidade, origem, id_pedido, observacao, id_usuario, nome_usuario, nome_insumo_log, unidade_log, id_empresa)
+                 VALUES (?, 'SAIDA', ?, 'VENDA', ?, 'extra solicitado', ?, ?, ?, ?, ?)`,
+                [ex.id_insumo, qtdExtra, id_pedido_inserido, req.user.id, req.user.nome || null, exInsumo?.nome || null, exInsumo?.unidade || null, req.id_empresa]
               );
             }
           }
@@ -1292,7 +1300,10 @@ app.get('/api/insumos/:id', autenticarTenant, async (req, res) => {
 
 // POST /api/insumos — cria um novo insumo
 app.post('/api/insumos', autenticarTenant, async (req, res) => {
-  const { nome, unidade, estoque, custo, estoque_min } = req.body;
+  const { nome, unidade } = req.body;
+  const estoque     = parseFloat(req.body.estoque)     || 0;
+  const custo       = parseFloat(req.body.custo)       || 0;
+  const estoque_min = parseFloat(req.body.estoque_min) || 0;
   if (!nome || !unidade) return res.status(400).json({ error: 'nome e unidade são obrigatórios' });
   const conn = await db.promise().getConnection();
   try {
@@ -1300,21 +1311,21 @@ app.post('/api/insumos', autenticarTenant, async (req, res) => {
     // Insere cadastro do insumo (sem coluna estoque — saldo fica em `estoque`)
     const [result] = await conn.execute(
       'INSERT INTO insumo (nome, unidade, custo, estoque_min, id_empresa) VALUES (?, ?, ?, ?, ?)',
-      [nome, unidade, custo || 0, estoque_min || 0, req.id_empresa]
+      [nome, unidade, custo, estoque_min, req.id_empresa]
     );
     const id_insumo = result.insertId;
     // Cria o registro de saldo inicial na tabela estoque (1:1 com insumo)
     await conn.execute(
       'INSERT INTO estoque (id_insumo, quantidade, id_empresa) VALUES (?, ?, ?)',
-      [id_insumo, estoque || 0, req.id_empresa]
+      [id_insumo, estoque, req.id_empresa]
     );
     // Registra entrada inicial se houver estoque informado
-    if (Number(estoque) > 0) {
+    if (estoque > 0) {
       await conn.execute(
         `INSERT INTO movimentacao_estoque
-           (id_insumo, tipo, quantidade, origem, observacao, id_usuario, nome_usuario, id_empresa)
-         VALUES (?, 'ENTRADA', ?, 'COMPRA', 'Estoque inicial', ?, ?, ?)`,
-        [id_insumo, estoque, req.user.id, req.user.nome || null, req.id_empresa]
+           (id_insumo, tipo, quantidade, origem, observacao, id_usuario, nome_usuario, nome_insumo_log, unidade_log, id_empresa)
+         VALUES (?, 'ENTRADA', ?, 'COMPRA', 'Estoque inicial', ?, ?, ?, ?, ?)`,
+        [id_insumo, estoque, req.user.id, req.user.nome || null, nome, unidade, req.id_empresa]
       );
     }
     await conn.commit();
@@ -1330,12 +1341,14 @@ app.post('/api/insumos', autenticarTenant, async (req, res) => {
 
 // PUT /api/insumos/:id — atualiza dados cadastrais do insumo (não altera estoque diretamente)
 app.put('/api/insumos/:id', autenticarTenant, async (req, res) => {
-  const { nome, unidade, custo, estoque_min } = req.body;
+  const { nome, unidade } = req.body;
+  const custo       = parseFloat(req.body.custo)       || 0;
+  const estoque_min = parseFloat(req.body.estoque_min) || 0;
   try {
     const [result] = await db.promise().execute(
       `UPDATE insumo SET nome = ?, unidade = ?, custo = ?, estoque_min = ?
        WHERE id_insumo = ? AND id_empresa = ?`,
-      [nome, unidade, custo || 0, estoque_min || 0, req.params.id, req.id_empresa]
+      [nome, unidade, custo, estoque_min, req.params.id, req.id_empresa]
     );
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Insumo não encontrado' });
     res.json({ message: 'Insumo atualizado com sucesso' });
@@ -1345,18 +1358,71 @@ app.put('/api/insumos/:id', autenticarTenant, async (req, res) => {
   }
 });
 
-// DELETE /api/insumos/:id — remove insumo (só se não houver movimentações)
+// DELETE /api/insumos/:id — remove insumo e registra exclusão como auditoria
 app.delete('/api/insumos/:id', autenticarTenant, async (req, res) => {
+  const conn = await db.promise().getConnection();
   try {
-    const [result] = await db.promise().execute(
+    await conn.beginTransaction();
+
+    // 1. Busca o insumo + saldo atual para o log de auditoria
+    const [[insumo]] = await conn.execute(
+      `SELECT i.id_insumo, i.nome, i.unidade, COALESCE(e.quantidade, 0) AS estoque
+       FROM insumo i
+       LEFT JOIN estoque e ON e.id_insumo = i.id_insumo AND e.id_empresa = i.id_empresa
+       WHERE i.id_insumo = ? AND i.id_empresa = ?`,
+      [req.params.id, req.id_empresa]
+    );
+    if (!insumo) {
+      await conn.rollback();
+      return res.status(404).json({ error: 'Insumo não encontrado' });
+    }
+
+    // 2. Registra a exclusão como auditoria em movimentacao_estoque.
+    //    id_insumo é inserido como NULL diretamente para não ser afetado pelo ON DELETE SET NULL.
+    //    Todas as informações relevantes ficam preservadas na observação.
+    await conn.execute(
+      `INSERT INTO movimentacao_estoque
+         (id_insumo, tipo, quantidade, origem, observacao, id_usuario, nome_usuario, nome_insumo_log, unidade_log, id_empresa)
+       VALUES (NULL, 'SAIDA', ?, 'EXCLUSAO', ?, ?, ?, ?, ?, ?)`,
+      [
+        parseFloat(insumo.estoque) || 0,
+        `Insumo excluído: ${insumo.nome} (${insumo.unidade}) — saldo final: ${insumo.estoque}`,
+        req.user.id,
+        req.user.nome || null,
+        insumo.nome,
+        insumo.unidade,
+        req.id_empresa
+      ]
+    );
+
+    // 3. Remove registros dependentes (mantém movimentacao_estoque — id_insumo vai a NULL via FK)
+    await conn.execute(
+      'DELETE FROM estoque WHERE id_insumo = ? AND id_empresa = ?',
+      [req.params.id, req.id_empresa]
+    );
+    await conn.execute(
+      'DELETE FROM produto_insumo WHERE id_insumo = ? AND id_empresa = ?',
+      [req.params.id, req.id_empresa]
+    );
+
+    // 4. Remove o insumo (trigger ON DELETE SET NULL preserva o histórico de movimentações)
+    const [result] = await conn.execute(
       'DELETE FROM insumo WHERE id_insumo = ? AND id_empresa = ?',
       [req.params.id, req.id_empresa]
     );
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Insumo não encontrado' });
-    res.json({ message: 'Insumo removido com sucesso' });
+    if (result.affectedRows === 0) {
+      await conn.rollback();
+      return res.status(404).json({ error: 'Insumo não encontrado' });
+    }
+
+    await conn.commit();
+    res.json({ message: `Insumo "${insumo.nome}" removido com sucesso` });
   } catch (err) {
+    await conn.rollback();
     console.error('Erro ao remover insumo:', err);
-    res.status(500).json({ error: 'Erro ao remover insumo. Verifique se há movimentações vinculadas.' });
+    res.status(500).json({ error: 'Erro ao remover insumo' });
+  } finally {
+    conn.release();
   }
 });
 
@@ -1421,9 +1487,11 @@ app.delete('/api/produtos/:id/ficha-tecnica/:idInsumo', autenticarTenant, async 
 app.get('/api/estoque/movimentacoes', autenticarTenant, async (req, res) => {
   const { id_insumo, tipo, origem, data_inicio, data_fim, limit = 100, offset = 0 } = req.query;
   let sql = `
-    SELECT m.*, i.nome AS nome_insumo, i.unidade
+    SELECT m.*,
+           COALESCE(i.nome,    m.nome_insumo_log, '[Insumo removido]') AS nome_insumo,
+           COALESCE(i.unidade, m.unidade_log,      '')                 AS unidade
     FROM movimentacao_estoque m
-    JOIN insumo i ON i.id_insumo = m.id_insumo
+    LEFT JOIN insumo i ON i.id_insumo = m.id_insumo
     WHERE m.id_empresa = ?
   `;
   const params = [req.id_empresa];
@@ -1455,22 +1523,27 @@ app.get('/api/estoque/movimentacoes', autenticarTenant, async (req, res) => {
 
 // POST /api/estoque/entrada — entrada manual de insumo (compra / ajuste)
 app.post('/api/estoque/entrada', autenticarTenant, async (req, res) => {
-  const { id_insumo, quantidade, origem, observacao } = req.body;
-  if (!id_insumo || !quantidade || quantidade <= 0) {
+  const { id_insumo, origem, observacao } = req.body;
+  const quantidade = parseFloat(req.body.quantidade);
+  if (!id_insumo || !(quantidade > 0)) {
     return res.status(400).json({ error: 'id_insumo e quantidade (> 0) são obrigatórios' });
   }
   const conn = await db.promise().getConnection();
   try {
     await conn.beginTransaction();
+    const [[ins]] = await conn.execute(
+      'SELECT nome, unidade FROM insumo WHERE id_insumo = ? AND id_empresa = ?',
+      [id_insumo, req.id_empresa]
+    );
     await conn.execute(
       'UPDATE estoque SET quantidade = quantidade + ? WHERE id_insumo = ? AND id_empresa = ?',
       [quantidade, id_insumo, req.id_empresa]
     );
     await conn.execute(
       `INSERT INTO movimentacao_estoque
-         (id_insumo, tipo, quantidade, origem, observacao, id_usuario, nome_usuario, id_empresa)
-       VALUES (?, 'ENTRADA', ?, ?, ?, ?, ?, ?)`,
-      [id_insumo, quantidade, origem || 'COMPRA', observacao || null, req.user.id, req.user.nome || null, req.id_empresa]
+         (id_insumo, tipo, quantidade, origem, observacao, id_usuario, nome_usuario, nome_insumo_log, unidade_log, id_empresa)
+       VALUES (?, 'ENTRADA', ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id_insumo, quantidade, origem || 'COMPRA', observacao || null, req.user.id, req.user.nome || null, ins?.nome || null, ins?.unidade || null, req.id_empresa]
     );
     await conn.commit();
     res.status(201).json({ message: 'Entrada de estoque registrada com sucesso' });
@@ -1485,22 +1558,27 @@ app.post('/api/estoque/entrada', autenticarTenant, async (req, res) => {
 
 // POST /api/estoque/ajuste — ajuste / perda manual de insumo
 app.post('/api/estoque/ajuste', autenticarTenant, async (req, res) => {
-  const { id_insumo, quantidade, origem, observacao } = req.body;
-  if (!id_insumo || !quantidade || quantidade <= 0) {
+  const { id_insumo, origem, observacao } = req.body;
+  const quantidade = parseFloat(req.body.quantidade);
+  if (!id_insumo || !(quantidade > 0)) {
     return res.status(400).json({ error: 'id_insumo e quantidade (> 0) são obrigatórios' });
   }
   const conn = await db.promise().getConnection();
   try {
     await conn.beginTransaction();
+    const [[ins]] = await conn.execute(
+      'SELECT nome, unidade FROM insumo WHERE id_insumo = ? AND id_empresa = ?',
+      [id_insumo, req.id_empresa]
+    );
     await conn.execute(
       'UPDATE estoque SET quantidade = GREATEST(0, quantidade - ?) WHERE id_insumo = ? AND id_empresa = ?',
       [quantidade, id_insumo, req.id_empresa]
     );
     await conn.execute(
       `INSERT INTO movimentacao_estoque
-         (id_insumo, tipo, quantidade, origem, observacao, id_usuario, nome_usuario, id_empresa)
-       VALUES (?, 'SAIDA', ?, ?, ?, ?, ?, ?)`,
-      [id_insumo, quantidade, origem || 'AJUSTE', observacao || null, req.user.id, req.user.nome || null, req.id_empresa]
+         (id_insumo, tipo, quantidade, origem, observacao, id_usuario, nome_usuario, nome_insumo_log, unidade_log, id_empresa)
+       VALUES (?, 'SAIDA', ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id_insumo, quantidade, origem || 'AJUSTE', observacao || null, req.user.id, req.user.nome || null, ins?.nome || null, ins?.unidade || null, req.id_empresa]
     );
     await conn.commit();
     res.status(201).json({ message: 'Ajuste de estoque registrado com sucesso' });
@@ -1513,6 +1591,76 @@ app.post('/api/estoque/ajuste', autenticarTenant, async (req, res) => {
   }
 });
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Servidor rodando na porta ${port}`);
+// ===== MIGRAÇÃO AUTOMÁTICA: FK movimentacao_estoque.id_insumo → ON DELETE SET NULL =====
+async function aplicarMigracoesDB() {
+  const conn = await db.promise().getConnection();
+  try {
+    // ── Migração 1: FK id_insumo → ON DELETE SET NULL ──────────────────────
+    const [[col]] = await conn.execute(`
+      SELECT IS_NULLABLE
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME   = 'movimentacao_estoque'
+        AND COLUMN_NAME  = 'id_insumo'
+    `);
+    if (col && col.IS_NULLABLE === 'NO') {
+      console.log('[migração] Atualizando FK fk_mov_insumo para ON DELETE SET NULL...');
+      await conn.execute('ALTER TABLE movimentacao_estoque DROP FOREIGN KEY fk_mov_insumo');
+      await conn.execute('ALTER TABLE movimentacao_estoque MODIFY COLUMN id_insumo INT DEFAULT NULL');
+      await conn.execute(`
+        ALTER TABLE movimentacao_estoque
+          ADD CONSTRAINT fk_mov_insumo
+          FOREIGN KEY (id_insumo) REFERENCES insumo (id_insumo) ON DELETE SET NULL
+      `);
+      console.log('[migração] FK atualizada com sucesso.');
+    }
+
+    // ── Migração 2: colunas snapshot de nome/unidade do insumo ────────────
+    const [cols] = await conn.execute(`
+      SELECT COLUMN_NAME
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME   = 'movimentacao_estoque'
+        AND COLUMN_NAME  IN ('nome_insumo_log', 'unidade_log')
+    `);
+    const existentes = cols.map(c => c.COLUMN_NAME);
+
+    if (!existentes.includes('nome_insumo_log')) {
+      console.log('[migração] Adicionando coluna nome_insumo_log...');
+      await conn.execute(
+        `ALTER TABLE movimentacao_estoque
+           ADD COLUMN nome_insumo_log VARCHAR(150) DEFAULT NULL
+           AFTER nome_usuario`
+      );
+    }
+    if (!existentes.includes('unidade_log')) {
+      console.log('[migração] Adicionando coluna unidade_log...');
+      await conn.execute(
+        `ALTER TABLE movimentacao_estoque
+           ADD COLUMN unidade_log VARCHAR(20) DEFAULT NULL
+           AFTER nome_insumo_log`
+      );
+    }
+
+    // Preenche snapshots retroativos para registros que ainda têm id_insumo válido
+    await conn.execute(`
+      UPDATE movimentacao_estoque m
+      JOIN insumo i ON i.id_insumo = m.id_insumo
+      SET m.nome_insumo_log = COALESCE(m.nome_insumo_log, i.nome),
+          m.unidade_log     = COALESCE(m.unidade_log,     i.unidade)
+      WHERE m.nome_insumo_log IS NULL
+    `);
+    console.log('[migração] Snapshots de nome/unidade aplicados com sucesso.');
+
+  } catch (err) {
+    console.warn('[migração] Aviso ao aplicar migração:', err.message);
+  } finally {
+    conn.release();
+  }
+}
+
+aplicarMigracoesDB().then(() => {
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`Servidor rodando na porta ${port}`);
+  });
 });

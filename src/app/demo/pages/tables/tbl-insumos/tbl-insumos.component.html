@@ -46,13 +46,13 @@
             <tr *ngFor="let insumo of insumos" [class.row-baixo]="estoqueStatus(insumo) === 'baixo'"
                 [class.row-zerado]="estoqueStatus(insumo) === 'zerado'">
               <td class="insumo-nome fw-semibold">{{ insumo.nome }}</td>
-              <td><span class="unit-badge">{{ insumo.unidade }}</span></td>
+              <td><span class="unit-badge">{{ labelUnidade(insumo.unidade) }}</span></td>
               <td class="fw-bold" [class.text-success]="estoqueStatus(insumo) === 'ok'"
                                   [class.text-warning]="estoqueStatus(insumo) === 'baixo'"
                                   [class.text-danger]="estoqueStatus(insumo) === 'zerado'">
-                {{ insumo.estoque | number:'1.0-4' }} <small class="fw-normal text-muted">{{ insumo.unidade }}</small>
+                {{ insumo.estoque | number:'1.0-4' }} <small class="fw-normal text-muted">{{ labelUnidade(insumo.unidade) }}</small>
               </td>
-              <td class="text-muted">{{ insumo.estoque_min | number:'1.0-4' }} <small>{{ insumo.unidade }}</small></td>
+              <td class="text-muted">{{ insumo.estoque_min | number:'1.0-4' }} <small>{{ labelUnidade(insumo.unidade) }}</small></td>
               <td>{{ insumo.custo | currency:'BRL':'symbol':'1.2-4' }}</td>
               <td>
                 <span class="status-pill"
@@ -135,14 +135,14 @@
             <div class="col-md-6">
               <label class="field-label">Unidade de Medida</label>
               <select class="field-input" [(ngModel)]="novoInsumo.unidade" name="ni-unidade">
-                <option *ngFor="let u of unidades" [value]="u">{{ u }}</option>
+                <option *ngFor="let u of unidades" [value]="u.value">{{ u.label }}</option>
               </select>
             </div>
 
             <div class="col-md-6">
               <label class="field-label">Estoque Inicial</label>
               <input type="number" class="field-input" [(ngModel)]="novoInsumo.estoque"
-                     name="ni-estoque" min="0" step="1" />
+                     name="ni-estoque" min="0" step="any" />
             </div>
 
             <div class="col-md-6">
@@ -154,7 +154,7 @@
             <div class="col-md-6">
               <label class="field-label">Estoque Mínimo (alerta)</label>
               <input type="number" class="field-input" [(ngModel)]="novoInsumo.estoque_min"
-                     name="ni-min" min="0" step="1" />
+                     name="ni-min" min="0" step="any" />
             </div>
 
             <div class="col-12">
@@ -207,7 +207,7 @@
             <div class="col-md-6">
               <label class="field-label">Unidade</label>
               <select class="field-input" [(ngModel)]="insumoEmEdicao.unidade" name="ei-unidade">
-                <option *ngFor="let u of unidades" [value]="u">{{ u }}</option>
+                <option *ngFor="let u of unidades" [value]="u.value">{{ u.label }}</option>
               </select>
             </div>
 
@@ -227,7 +227,7 @@
             <div class="col-md-6">
               <label class="field-label">Estoque Mínimo (alerta)</label>
               <input type="number" class="field-input" [(ngModel)]="insumoEmEdicao.estoque_min"
-                     name="ei-min" min="0" />
+                     name="ei-min" min="0" step="any" />
             </div>
           </div>
         </form>
@@ -274,19 +274,19 @@
              [class.mov-saldo-atual--orange]="modalMovimentacao === 'ajuste'">
           <span class="mov-saldo-atual__label">Saldo atual</span>
           <span class="mov-saldo-atual__valor">
-            {{ insumoMovimentacao?.estoque }} {{ insumoMovimentacao?.unidade }}
+            {{ insumoMovimentacao?.estoque }} {{ labelUnidade(insumoMovimentacao?.unidade) }}
           </span>
         </div>
 
         <div class="row g-3 mt-1">
           <div class="col-12">
             <label class="field-label">
-              Quantidade ({{ insumoMovimentacao?.unidade }})
+              Quantidade ({{ labelUnidade(insumoMovimentacao?.unidade) }})
               <span *ngIf="modalMovimentacao === 'entrada'" class="text-success"> — a adicionar</span>
               <span *ngIf="modalMovimentacao === 'ajuste'" class="text-danger"> — a remover</span>
             </label>
             <input type="number" class="field-input" [(ngModel)]="qtdMovimentacao"
-                   min="0.0001" step="1" placeholder="0" />
+                   min="0" step="any" placeholder="0" />
           </div>
 
           <div class="col-12">
@@ -356,7 +356,7 @@
               <span *ngIf="m.id_pedido" class="mov-pedido">#Pedido {{ m.id_pedido }}</span>
             </div>
             <div class="mov-qty">
-              {{ m.quantidade }} {{ insumoHistorico?.unidade }}
+              {{ m.quantidade }} {{ labelUnidade(insumoHistorico?.unidade) }}
             </div>
             <div *ngIf="m.observacao" class="mov-obs">{{ m.observacao }}</div>
           </div>

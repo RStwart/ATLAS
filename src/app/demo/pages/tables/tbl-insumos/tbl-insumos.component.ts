@@ -29,7 +29,18 @@ export class TblInsumosComponent implements OnInit {
   insumoHistorico: any = null;
   movimentacoes: MovimentacaoEstoque[] = [];
 
-  unidades = ['un', 'g', 'ml', 'kg', 'l', 'porcao'];
+  unidades = [
+    { value: 'un',     label: 'UN — Unidade' },
+    { value: 'kg',     label: 'KG — Quilograma' },
+    { value: 'g',      label: 'g — Grama' },
+    { value: 'l',      label: 'L — Litro' },
+    { value: 'ml',     label: 'ML — Mililitro' },
+    { value: 'porcao', label: 'Porção' },
+  ];
+
+  labelUnidade(value: string): string {
+    return this.unidades.find(u => u.value === value)?.label.split(' — ')[0] || value.toUpperCase();
+  }
 
   constructor(
     private insumoService: InsumoService,
@@ -76,7 +87,13 @@ export class TblInsumosComponent implements OnInit {
 
   salvarNovoInsumo(): void {
     if (!this.novoInsumo.nome?.trim()) return;
-    this.insumoService.createInsumo(this.novoInsumo).subscribe(
+    const payload = {
+      ...this.novoInsumo,
+      estoque:     parseFloat(this.novoInsumo.estoque)     || 0,
+      estoque_min: parseFloat(this.novoInsumo.estoque_min) || 0,
+      custo:       parseFloat(this.novoInsumo.custo)       || 0,
+    };
+    this.insumoService.createInsumo(payload).subscribe(
       () => {
         this.carregar();
         this.fecharModalAdd();
@@ -131,10 +148,11 @@ export class TblInsumosComponent implements OnInit {
   }
 
   salvarMovimentacao(): void {
-    if (!this.insumoMovimentacao || this.qtdMovimentacao <= 0) return;
+    const qtd = parseFloat(String(this.qtdMovimentacao));
+    if (!this.insumoMovimentacao || !(qtd > 0)) return;
     const dados = {
       id_insumo: this.insumoMovimentacao.id_insumo,
-      quantidade: this.qtdMovimentacao,
+      quantidade: qtd,
       observacao: this.obsMovimentacao || undefined
     };
     const req = this.modalMovimentacao === 'entrada'

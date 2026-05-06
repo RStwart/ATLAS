@@ -23,7 +23,7 @@ export interface MovimentacaoEstoque {
   id_insumo: number;
   tipo: 'ENTRADA' | 'SAIDA';
   quantidade: number;
-  origem: 'COMPRA' | 'VENDA' | 'AJUSTE' | 'PERDA';
+  origem: 'COMPRA' | 'VENDA' | 'AJUSTE' | 'PERDA' | 'EXCLUSAO';
   id_pedido?: number | null;
   observacao?: string | null;
   data_hora: string;
