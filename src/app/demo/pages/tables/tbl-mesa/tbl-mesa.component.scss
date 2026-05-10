@@ -487,13 +487,10 @@
 
   &__info {
     flex: 1;
-    cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    user-select: none;
-    &:hover { opacity: 0.8; }
   }
 
   &__nome {

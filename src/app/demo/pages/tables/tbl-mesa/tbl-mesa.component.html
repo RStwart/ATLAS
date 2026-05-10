@@ -253,7 +253,7 @@
                 <!-- ── Seção 1: Ingredientes da ficha técnica ─────────────── -->
                 <p class="ficha-section-label">
                   <i class="feather icon-layers me-1"></i>Ingredientes Inclusos
-                  <small class="text-muted ms-1">(clique para remover)</small>
+                  <small class="text-muted ms-1">(ajuste as quantidades)</small>
                 </p>
 
                 <div *ngIf="fichaIngredientes.length === 0" class="ficha-panel__empty">
@@ -262,16 +262,16 @@
 
                 <div class="ficha-ing-list" *ngIf="fichaIngredientes.length > 0">
                   <div *ngFor="let ing of fichaIngredientes" class="ficha-ing-row"
-                       [class.ficha-ing-row--removido]="ing.removido"
-                       (click)="toggleRemoverIngrediente(ing.id_insumo)">
+                       [class.ficha-ing-row--removido]="ing.qtdCustom === 0">
                     <div class="ficha-ing-row__info">
                       <span class="ficha-ing-row__nome">{{ ing.nome_insumo }}</span>
-                      <span class="ficha-ing-row__qty">{{ ing.quantidade | number:'1.0-4' }} {{ ing.unidade | uppercase }}</span>
+                      <span *ngIf="ing.qtdCustom === 0" class="ficha-ing-row__tag ficha-ing-row__tag--rem">SEM</span>
                     </div>
-                    <span *ngIf="ing.removido" class="ficha-ing-row__tag ficha-ing-row__tag--rem">SEM</span>
-                    <span *ngIf="!ing.removido" class="ficha-ing-row__tag ficha-ing-row__tag--ok">
-                      <i class="feather icon-check"></i>
-                    </span>
+                    <div class="ficha-ing-row__btns">
+                      <button class="ficha-extra-btn" (click)="alterarIngredienteQtd(ing.id_insumo, -1)" [disabled]="ing.qtdCustom === 0">−</button>
+                      <span class="acr-qty-val">{{ ing.qtdCustom | number:'1.0-2' }} <small style="font-weight:400;font-size:0.7rem">{{ ing.unidade | uppercase }}</small></span>
+                      <button class="ficha-extra-btn" (click)="alterarIngredienteQtd(ing.id_insumo, 1)">+</button>
+                    </div>
                   </div>
                 </div>
 

@@ -58,7 +58,7 @@ export class TblMesasComponent implements OnInit {
   produtoFichaAberta: Produto | null = null;
   fichaIngredientes: Array<{
     id_insumo: number; nome_insumo: string; unidade: string;
-    quantidade: number; removido: boolean;
+    quantidade: number; qtdCustom: number; removido: boolean;
   }> = [];
   acrescimosDisponiveis: Array<{
     id_insumo: number; nome: string; unidade: string; preco_acrescimo: number; qtd: number;
@@ -69,6 +69,7 @@ export class TblMesasComponent implements OnInit {
   modificacoesPorProduto: {
     [id_produto: number]: {
       remover: number[];
+      quantidades: { id_insumo: number; quantidade: number }[];
       acrescimos: { id_insumo: number; quantidade: number; preco_acrescimo: number; nome: string }[];
     }
   } = {};
@@ -233,6 +234,7 @@ export class TblMesasComponent implements OnInit {
           nome_insumo: i.nome_insumo || '',
           unidade: i.unidade || '',
           quantidade: Number(i.quantidade),
+          qtdCustom: Number(i.quantidade),
           removido: false
         }));
         const idsBase = new Set(itens.map(i => i.id_insumo));
@@ -268,12 +270,15 @@ export class TblMesasComponent implements OnInit {
         const mods = this.modificacoesPorProduto[pedido.id_produto];
         this.fichaIngredientes = itens.map(i => {
           const removido = mods ? mods.remover.includes(i.id_insumo) : false;
+          const qtdSalva = mods?.quantidades?.find(q => q.id_insumo === i.id_insumo)?.quantidade;
+          const qtdCustom = removido ? 0 : (qtdSalva !== undefined ? qtdSalva : Number(i.quantidade));
           return {
             id_insumo: i.id_insumo,
             nome_insumo: i.nome_insumo || '',
             unidade: i.unidade || '',
             quantidade: Number(i.quantidade),
-            removido
+            qtdCustom,
+            removido: qtdCustom === 0
           };
         });
         const idsBase = new Set(itens.map(i => i.id_insumo));
@@ -302,7 +307,7 @@ export class TblMesasComponent implements OnInit {
 
   temPersonalizacao(idProduto: number): boolean {
     const m = this.modificacoesPorProduto[idProduto];
-    return !!(m && (m.remover.length > 0 || m.acrescimos.length > 0));
+    return !!(m && (m.remover.length > 0 || m.quantidades?.length > 0 || m.acrescimos.length > 0));
   }
 
   fecharFichaIngredientes(): void {
@@ -318,6 +323,14 @@ export class TblMesasComponent implements OnInit {
     if (ing) { ing.removido = !ing.removido; }
   }
 
+  alterarIngredienteQtd(id_insumo: number, delta: number): void {
+    const ing = this.fichaIngredientes.find(i => i.id_insumo === id_insumo);
+    if (ing) {
+      ing.qtdCustom = Math.max(0, ing.qtdCustom + delta);
+      ing.removido = ing.qtdCustom === 0;
+    }
+  }
+
   alterarAcrescimo(id_insumo: number, delta: number): void {
     const acr = this.acrescimosDisponiveis.find(a => a.id_insumo === id_insumo);
     if (acr) acr.qtd = Math.max(0, acr.qtd + delta);
@@ -327,7 +340,10 @@ export class TblMesasComponent implements OnInit {
     if (!this.produtoFichaAberta || !this.mesaSelecionada) return;
     const produto = this.produtoFichaAberta;
     const isEdicao = this.modoEdicaoFicha;
-    const remover = this.fichaIngredientes.filter(i => i.removido).map(i => i.id_insumo);
+    const remover = this.fichaIngredientes.filter(i => i.qtdCustom === 0).map(i => i.id_insumo);
+    const quantidades = this.fichaIngredientes
+      .filter(i => i.qtdCustom > 0 && i.qtdCustom !== i.quantidade)
+      .map(i => ({ id_insumo: i.id_insumo, quantidade: i.qtdCustom }));
     const acrescimos = this.acrescimosDisponiveis
       .filter(a => a.qtd > 0)
       .map(a => ({ id_insumo: a.id_insumo, quantidade: a.qtd, preco_acrescimo: a.preco_acrescimo, nome: a.nome }));
@@ -337,8 +353,8 @@ export class TblMesasComponent implements OnInit {
       if (existente) { existente.quantidade += 1; }
       else { this.mesaSelecionada.pedidos.push({ id_produto: produto.id_produto, nome: produto.nome, preco: produto.preco, quantidade: 1 }); }
     }
-    if (remover.length > 0 || acrescimos.length > 0) {
-      this.modificacoesPorProduto[produto.id_produto] = { remover, acrescimos };
+    if (remover.length > 0 || quantidades.length > 0 || acrescimos.length > 0) {
+      this.modificacoesPorProduto[produto.id_produto] = { remover, quantidades, acrescimos };
     } else {
       delete this.modificacoesPorProduto[produto.id_produto];
     }
