@@ -66,8 +66,11 @@ export class TblMesasComponent implements OnInit {
   filtroAcrescimo = '';
   fichaCarregando = false;
   modoEdicaoFicha = false;
-  modificacoesPorProduto: {
-    [id_produto: number]: {
+  private nextItemId = 0;
+  itemIdFichaEditando: string | null = null;
+  modificacoesPorItem: {
+    [itemId: string]: {
+      id_produto: number;
       remover: number[];
       quantidades: { id_insumo: number; quantidade: number }[];
       acrescimos: { id_insumo: number; quantidade: number; preco_acrescimo: number; nome: string }[];
@@ -96,7 +99,7 @@ export class TblMesasComponent implements OnInit {
 
   calcularPrecoItem(pedido: any): number {
     let preco = Number(pedido.preco) || 0;
-    const mods = this.modificacoesPorProduto[pedido.id_produto];
+    const mods = this.modificacoesPorItem[pedido.itemId];
     if (mods?.acrescimos) {
       mods.acrescimos.forEach(a => { preco += (Number(a.preco_acrescimo) || 0) * (Number(a.quantidade) || 0); });
     }
@@ -110,12 +113,12 @@ export class TblMesasComponent implements OnInit {
       let precoUnitario = Number(pedido.preco) || 0;
 
       // Se a ficha deste produto está aberta, usa os acréscimos em tempo real
-      if (this.produtoFichaAberta && this.produtoFichaAberta.id_produto === pedido.id_produto) {
+      if (this.itemIdFichaEditando && this.itemIdFichaEditando === pedido.itemId) {
         this.acrescimosDisponiveis.forEach(a => {
           if (a.qtd > 0) precoUnitario += (Number(a.preco_acrescimo) || 0) * a.qtd;
         });
       } else {
-        const mods = this.modificacoesPorProduto[pedido.id_produto];
+        const mods = this.modificacoesPorItem[pedido.itemId];
         if (mods?.acrescimos) {
           mods.acrescimos.forEach(a => { precoUnitario += (Number(a.preco_acrescimo) || 0) * (Number(a.quantidade) || 0); });
         }
@@ -191,7 +194,8 @@ export class TblMesasComponent implements OnInit {
     this.filtroProduto = '';
     this.produtoFichaAberta = null;
     this.fichaIngredientes = [];
-    this.modificacoesPorProduto = {};
+    this.modificacoesPorItem = {};
+    this.itemIdFichaEditando = null;
   }
 
   // Método para filtrar os produtos com base no texto do filtro
@@ -207,14 +211,9 @@ export class TblMesasComponent implements OnInit {
   adicionarProdutoAPedido(produto: Produto): void {
     if (this.mesaSelecionada) {
       if (!Array.isArray(this.mesaSelecionada.pedidos)) this.mesaSelecionada.pedidos = [];
-      const produtoExistente = this.mesaSelecionada.pedidos.find(p => p.id_produto === produto.id_produto);
-      if (!produtoExistente) {
-        this.mesaSelecionada.pedidos.push({ id_produto: produto.id_produto, nome: produto.nome, preco: produto.preco, quantidade: 1 });
-        delete this.modificacoesPorProduto[produto.id_produto];
-        this.toastr.success('Produto adicionado!', 'Sucesso');
-      } else {
-        this.toastr.warning('Produto já adicionado ao pedido!', 'Aviso');
-      }
+      const itemId = `item_${++this.nextItemId}`;
+      this.mesaSelecionada.pedidos.push({ id_produto: produto.id_produto, nome: produto.nome, preco: produto.preco, quantidade: 1, itemId });
+      this.toastr.success('Produto adicionado!', 'Sucesso');
     }
   }
 
@@ -222,6 +221,7 @@ export class TblMesasComponent implements OnInit {
 
   abrirFichaIngredientes(produto: Produto): void {
     this.modoEdicaoFicha = false;
+    this.itemIdFichaEditando = null;
     this.produtoFichaAberta = produto;
     this.fichaCarregando = true;
     this.fichaIngredientes = [];
@@ -260,6 +260,7 @@ export class TblMesasComponent implements OnInit {
 
   editarIngredientesDoPedido(pedido: any): void {
     this.modoEdicaoFicha = true;
+    this.itemIdFichaEditando = pedido.itemId;
     this.produtoFichaAberta = { id_produto: pedido.id_produto, nome: pedido.nome, preco: pedido.preco, descricao: '', imagem: null, quantidade_estoque: 0 };
     this.fichaCarregando = true;
     this.fichaIngredientes = [];
@@ -267,7 +268,7 @@ export class TblMesasComponent implements OnInit {
     this.filtroAcrescimo = '';
     this.insumoService.getFichaTecnica(pedido.id_produto).subscribe(
       itens => {
-        const mods = this.modificacoesPorProduto[pedido.id_produto];
+        const mods = this.modificacoesPorItem[pedido.itemId];
         this.fichaIngredientes = itens.map(i => {
           const removido = mods ? mods.remover.includes(i.id_insumo) : false;
           const qtdSalva = mods?.quantidades?.find(q => q.id_insumo === i.id_insumo)?.quantidade;
@@ -305,8 +306,8 @@ export class TblMesasComponent implements OnInit {
     );
   }
 
-  temPersonalizacao(idProduto: number): boolean {
-    const m = this.modificacoesPorProduto[idProduto];
+  temPersonalizacao(itemId: string): boolean {
+    const m = this.modificacoesPorItem[itemId];
     return !!(m && (m.remover.length > 0 || m.quantidades?.length > 0 || m.acrescimos.length > 0));
   }
 
@@ -347,43 +348,42 @@ export class TblMesasComponent implements OnInit {
     const acrescimos = this.acrescimosDisponiveis
       .filter(a => a.qtd > 0)
       .map(a => ({ id_insumo: a.id_insumo, quantidade: a.qtd, preco_acrescimo: a.preco_acrescimo, nome: a.nome }));
+    let itemId: string;
     if (!isEdicao) {
       if (!Array.isArray(this.mesaSelecionada.pedidos)) this.mesaSelecionada.pedidos = [];
-      const existente = this.mesaSelecionada.pedidos.find(p => p.id_produto === produto.id_produto);
-      if (existente) { existente.quantidade += 1; }
-      else { this.mesaSelecionada.pedidos.push({ id_produto: produto.id_produto, nome: produto.nome, preco: produto.preco, quantidade: 1 }); }
+      itemId = `item_${++this.nextItemId}`;
+      this.mesaSelecionada.pedidos.push({ id_produto: produto.id_produto, nome: produto.nome, preco: produto.preco, quantidade: 1, itemId });
+    } else {
+      itemId = this.itemIdFichaEditando!;
     }
     if (remover.length > 0 || quantidades.length > 0 || acrescimos.length > 0) {
-      this.modificacoesPorProduto[produto.id_produto] = { remover, quantidades, acrescimos };
+      this.modificacoesPorItem[itemId] = { id_produto: produto.id_produto, remover, quantidades, acrescimos };
     } else {
-      delete this.modificacoesPorProduto[produto.id_produto];
+      delete this.modificacoesPorItem[itemId];
     }
     this.fecharFichaIngredientes();
     this.toastr.success(isEdicao ? 'Ingredientes atualizados!' : 'Produto adicionado ao pedido!', 'Sucesso');
   }
 
   // Funções para manipulação da quantidade
-  incrementarQuantidade(idProduto: number): void {
+  incrementarQuantidade(itemId: string): void {
     if (this.mesaSelecionada) {
-      const item = this.mesaSelecionada.pedidos.find(pedido => pedido.id_produto === idProduto);
-      if (item) {
-        item.quantidade += 1;  // Incrementa a quantidade
-      }
+      const item = this.mesaSelecionada.pedidos.find((pedido: any) => pedido.itemId === itemId);
+      if (item) { item.quantidade += 1; }
     }
   }
 
-  decrementarQuantidade(idProduto: number): void {
+  decrementarQuantidade(itemId: string): void {
     if (this.mesaSelecionada) {
-      const item = this.mesaSelecionada.pedidos.find(pedido => pedido.id_produto === idProduto);
-      if (item && item.quantidade > 1) {
-        item.quantidade -= 1;  // Decrementa a quantidade, mas não permite ser menor que 1
-      }
+      const item = this.mesaSelecionada.pedidos.find((pedido: any) => pedido.itemId === itemId);
+      if (item && item.quantidade > 1) { item.quantidade -= 1; }
     }
   }
 
-  removerProdutoDoPedido(index: number): void {
+  removerProdutoDoPedido(index: number, itemId: string): void {
     if (this.mesaSelecionada) {
       this.mesaSelecionada.pedidos.splice(index, 1);
+      delete this.modificacoesPorItem[itemId];
       this.toastr.info('Produto removido do pedido.', 'Removido');
     }
   }
@@ -432,9 +432,9 @@ export class TblMesasComponent implements OnInit {
         ordem_type_pe: this.mesaSelecionada.ordem_type,
       };
   
-      const modificacoes = Object.entries(this.modificacoesPorProduto)
-        .map(([id_produto, mods]) => ({
-          id_item: parseInt(id_produto, 10),
+      const modificacoes = Object.entries(this.modificacoesPorItem)
+        .map(([, mods]) => ({
+          id_item: mods.id_produto,
           remover: mods.remover,
           extra: mods.acrescimos.map(a => ({
             id_insumo: a.id_insumo,

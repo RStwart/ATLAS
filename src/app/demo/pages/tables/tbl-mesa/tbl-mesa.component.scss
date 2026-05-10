@@ -539,17 +539,27 @@
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+.mesa-card__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+
+  .mesa-action-btn {
+    flex: 1;
+  }
+}
+
 .mesa-action-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 10px 6px;
+  gap: 6px;
+  padding: 14px 8px;
   border: none;
-  border-radius: 10px;
-  font-size: 0.7rem;
-  font-weight: 600;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s, transform 0.15s;
 
@@ -558,7 +568,7 @@
     transform: translateY(-2px);
   }
 
-  i { font-size: 1.1rem; }
+  i { font-size: 1.4rem; }
 
   &--purple {
     background: linear-gradient(135deg, #6f42c1, #4a148c);

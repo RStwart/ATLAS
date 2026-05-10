@@ -331,15 +331,15 @@
                 <div style="flex:1;" class="order-item__info">
                   <p class="list-row__name">
                     {{ pedido.nome }}
-                    <span *ngIf="temPersonalizacao(pedido.id_produto)" class="order-item__pers-badge">Personalizado</span>
+                    <span *ngIf="temPersonalizacao(pedido.itemId)" class="order-item__pers-badge">Personalizado</span>
                   </p>
                   <p class="list-row__price">{{ calcularPrecoItem(pedido) | currency: 'BRL' }}</p>
                 </div>
                 <div class="d-flex align-items-center gap-1" (click)="$event.stopPropagation()">
-                  <button (click)="decrementarQuantidade(pedido.id_produto)" class="qty-btn">-</button>
+                  <button (click)="decrementarQuantidade(pedido.itemId)" class="qty-btn">-</button>
                   <span class="qty-value">{{ pedido.quantidade }}</span>
-                  <button (click)="incrementarQuantidade(pedido.id_produto)" class="qty-btn">+</button>
-                  <button (click)="removerProdutoDoPedido(i)" class="btn-remove-item">
+                  <button (click)="incrementarQuantidade(pedido.itemId)" class="qty-btn">+</button>
+                  <button (click)="removerProdutoDoPedido(i, pedido.itemId)" class="btn-remove-item">
                     <i class="feather icon-x"></i>
                   </button>
                 </div>
