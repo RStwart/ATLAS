@@ -317,6 +317,7 @@ export class TblMesasComponent implements OnInit {
     this.acrescimosDisponiveis = [];
     this.filtroAcrescimo = '';
     this.modoEdicaoFicha = false;
+    this.itemIdFichaEditando = null;
   }
 
   toggleRemoverIngrediente(id_insumo: number): void {
