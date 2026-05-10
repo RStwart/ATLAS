@@ -158,10 +158,30 @@
             </div>
 
             <div class="col-12">
-              <div class="tip-box">
-                <i class="feather icon-info"></i>
-                Sempre use a <strong>menor unidade</strong>: gramas (g) em vez de kg, ml em vez de litros.
+              <div class="acrescimo-toggle">
+                <label class="acrescimo-toggle__label">
+                  <input type="checkbox" [(ngModel)]="novoInsumo.is_acrescimo"
+                         name="ni-is-acr"
+                         (ngModelChange)="!$event && (novoInsumo.preco_acrescimo = 0)" />
+                  <span class="acrescimo-toggle__text">
+                    <i class="feather icon-plus-circle me-1"></i>
+                    Este insumo é um <strong>Acréscimo</strong>
+                  </span>
+                </label>
+                <small class="text-muted d-block mt-1">Acréscimos ficam disponíveis para o cliente adicionar no pedido.</small>
               </div>
+            </div>
+
+            <div class="col-md-6" *ngIf="novoInsumo.is_acrescimo">
+              <label class="field-label">Preço de Acréscimo (R$)</label>
+              <input type="number" class="field-input" [(ngModel)]="novoInsumo.preco_acrescimo"
+                     name="ni-preco-acr" min="0" step="0.01"
+                     placeholder="0.00" />
+              <small class="text-muted">Cobrado ao adicionar como acréscimo no pedido</small>
+            </div>
+
+            <div class="col-12">
+              <div class="tip-box"><i class="feather icon-info"></i><span>Sempre use a <strong>menor unidade</strong>: gramas (g) em vez de kg, ml em vez de litros.</span></div>
             </div>
           </div>
         </form>
@@ -222,6 +242,30 @@
               <label class="field-label">Custo Unitário (R$)</label>
               <input type="number" class="field-input" [(ngModel)]="insumoEmEdicao.custo"
                      name="ei-custo" min="0" step="0.01" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="field-label">Preço de Acréscimo (R$)</label>
+              <input type="number" class="field-input" [(ngModel)]="insumoEmEdicao.preco_acrescimo"
+                     name="ei-preco-acr" min="0" step="0.01"
+                     placeholder="0.00"
+                     [disabled]="!insumoEmEdicao.is_acrescimo" />
+              <small class="text-muted">Cobrado ao adicionar como acréscimo no pedido</small>
+            </div>
+
+            <div class="col-12">
+              <div class="acrescimo-toggle">
+                <label class="acrescimo-toggle__label">
+                  <input type="checkbox" [(ngModel)]="insumoEmEdicao.is_acrescimo"
+                         name="ei-is-acr"
+                         (ngModelChange)="!$event && (insumoEmEdicao.preco_acrescimo = 0)" />
+                  <span class="acrescimo-toggle__text">
+                    <i class="feather icon-plus-circle me-1"></i>
+                    Este insumo é um <strong>Acréscimo</strong>
+                  </span>
+                </label>
+                <small class="text-muted d-block mt-1">Acréscimos ficam disponíveis para o cliente adicionar no pedido.</small>
+              </div>
             </div>
 
             <div class="col-md-6">
@@ -356,7 +400,7 @@
               <span *ngIf="m.id_pedido" class="mov-pedido">#Pedido {{ m.id_pedido }}</span>
             </div>
             <div class="mov-qty">
-              {{ m.quantidade }} {{ labelUnidade(insumoHistorico?.unidade) }}
+              {{ m.quantidade | number:'1.0-4' }} {{ labelUnidade(insumoHistorico?.unidade) }}
             </div>
             <div *ngIf="m.observacao" class="mov-obs">{{ m.observacao }}</div>
           </div>

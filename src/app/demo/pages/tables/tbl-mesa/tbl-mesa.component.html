@@ -185,7 +185,7 @@
     <div class="atlas-modal-content">
 
       <!-- Header -->
-      <div class="modal-header-custom modal-header-custom--purple">
+      <div class="modal-header-custom" [ngClass]="produtoFichaAberta ? 'modal-header-custom--teal' : 'modal-header-custom--purple'">
         <div class="d-flex align-items-center gap-3">
           <div class="modal-header-icon">
             <i class="feather icon-shopping-cart"></i>
@@ -202,39 +202,140 @@
       <div class="modal-body-custom">
         <div class="row g-4">
 
-          <!-- Lista de Produtos -->
-          <div class="col-md-6">
-            <p class="modal-section-label"><i class="feather icon-package me-1"></i>Catálogo</p>
-            <input type="text" [(ngModel)]="filtroProduto" placeholder="Pesquisar produto..."
-              class="field-input" style="margin-bottom:12px;">
+          <!-- Lista de Produtos / Ficha Técnica -->
+          <div [ngClass]="produtoFichaAberta ? 'col-12' : 'col-md-6'">
 
-            <div class="product-list-scroll">
-              <div *ngFor="let produto of produtosFiltrados.slice(0, limiteProdutos)" class="list-row">
-                <div>
-                  <p class="list-row__name">{{ produto.nome }}</p>
-                  <p class="list-row__price">{{ produto.preco | currency }}</p>
+            <!-- ── Catálogo ──────────────────────────────────────────────── -->
+            <ng-container *ngIf="!produtoFichaAberta">
+              <p class="modal-section-label"><i class="feather icon-package me-1"></i>Catálogo</p>
+              <input type="text" [(ngModel)]="filtroProduto" placeholder="Pesquisar produto..."
+                class="field-input" style="margin-bottom:12px;">
+
+              <div class="product-list-scroll">
+                <div *ngFor="let produto of produtosFiltrados" class="list-row list-row--clickable"
+                     (click)="abrirFichaIngredientes(produto)">
+                  <div>
+                    <p class="list-row__name">{{ produto.nome }}</p>
+                    <p class="list-row__price">{{ produto.preco | currency: 'BRL' }}</p>
+                  </div>
+                  <button (click)="$event.stopPropagation(); adicionarProdutoAPedido(produto)"
+                          class="btn-add-product" title="Adicionar sem personalizar">
+                    <i class="feather icon-plus"></i>
+                  </button>
                 </div>
-                <button (click)="adicionarProdutoAPedido(produto)" class="btn-add-product">
-                  <i class="feather icon-plus"></i>
+                <div *ngIf="produtosFiltrados.length === 0" class="empty-state" style="border:none; margin:0;">
+                  Nenhum produto encontrado
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- ── Ficha Técnica do Produto ───────────────────────────────── -->
+            <ng-container *ngIf="produtoFichaAberta">
+              <div class="ficha-panel__header">
+                <button class="ficha-panel__back" (click)="fecharFichaIngredientes()" title="Voltar">
+                  <i class="feather icon-arrow-left"></i>
                 </button>
+                <div>
+                  <p class="modal-section-label mb-0">
+                    <i class="feather icon-layers me-1"></i>
+                    {{ modoEdicaoFicha ? 'Editar Ingredientes' : 'Personalizar Ingredientes' }}
+                  </p>
+                  <p class="ficha-panel__produto-nome">{{ produtoFichaAberta.nome }}</p>
+                </div>
               </div>
-              <div *ngIf="produtosFiltrados.length === 0" class="empty-state" style="border:none; margin:0;">
-                Nenhum produto encontrado
+
+              <div *ngIf="fichaCarregando" class="ficha-panel__loading">
+                <i class="feather icon-loader me-1"></i> Carregando ingredientes...
               </div>
-            </div>
+
+              <ng-container *ngIf="!fichaCarregando">
+
+                <!-- ── Seção 1: Ingredientes da ficha técnica ─────────────── -->
+                <p class="ficha-section-label">
+                  <i class="feather icon-layers me-1"></i>Ingredientes Inclusos
+                  <small class="text-muted ms-1">(clique para remover)</small>
+                </p>
+
+                <div *ngIf="fichaIngredientes.length === 0" class="ficha-panel__empty">
+                  <i class="feather icon-info me-1"></i>Sem ficha técnica cadastrada.
+                </div>
+
+                <div class="ficha-ing-list" *ngIf="fichaIngredientes.length > 0">
+                  <div *ngFor="let ing of fichaIngredientes" class="ficha-ing-row"
+                       [class.ficha-ing-row--removido]="ing.removido"
+                       (click)="toggleRemoverIngrediente(ing.id_insumo)">
+                    <div class="ficha-ing-row__info">
+                      <span class="ficha-ing-row__nome">{{ ing.nome_insumo }}</span>
+                      <span class="ficha-ing-row__qty">{{ ing.quantidade | number:'1.0-4' }} {{ ing.unidade | uppercase }}</span>
+                    </div>
+                    <span *ngIf="ing.removido" class="ficha-ing-row__tag ficha-ing-row__tag--rem">SEM</span>
+                    <span *ngIf="!ing.removido" class="ficha-ing-row__tag ficha-ing-row__tag--ok">
+                      <i class="feather icon-check"></i>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- ── Seção 2: Acréscimos ─────────────────────────────────── -->
+                <p class="ficha-section-label mt-3">
+                  <i class="feather icon-plus-circle me-1"></i>Acréscimos Disponíveis
+                </p>
+
+                <input type="text" class="field-input field-input--sm mb-2"
+                       placeholder="Filtrar acréscimos..."
+                       [(ngModel)]="filtroAcrescimo" name="filtro-acr" />
+
+                <div *ngIf="acrescimosDisponiveis.length === 0" class="ficha-panel__empty">
+                  <i class="feather icon-info me-1"></i>Nenhum acréscimo disponível.
+                </div>
+
+                <div class="ficha-acr-list" *ngIf="acrescimosDisponiveis.length > 0">
+                  <div *ngFor="let acr of acrescimosVisiveis" class="ficha-acr-row"
+                       [class.ficha-acr-row--ativo]="acr.qtd > 0">
+                    <div class="ficha-acr-row__info">
+                      <span class="ficha-acr-row__nome">{{ acr.nome }}</span>
+                      <span class="ficha-acr-row__preco" *ngIf="acr.preco_acrescimo > 0">
+                        +{{ acr.preco_acrescimo | currency:'BRL' }} / un
+                      </span>
+                      <span class="ficha-acr-row__preco ficha-acr-row__preco--free" *ngIf="acr.preco_acrescimo === 0">
+                        Grátis
+                      </span>
+                    </div>
+                    <div class="ficha-ing-row__btns">
+                      <button class="ficha-extra-btn" (click)="alterarAcrescimo(acr.id_insumo, -1)" [disabled]="acr.qtd === 0">−</button>
+                      <span class="acr-qty-val">{{ acr.qtd }}</span>
+                      <button class="ficha-extra-btn" (click)="alterarAcrescimo(acr.id_insumo, 1)">+</button>
+                    </div>
+                  </div>
+                  <div *ngIf="acrescimosVisiveis.length === 0" class="ficha-panel__empty">
+                    Nenhum resultado para "{{ filtroAcrescimo }}"
+                  </div>
+                </div>
+
+                <button class="btn-modal-primary btn-modal-primary--purple w-100 mt-3"
+                        (click)="confirmarAdicionarProduto()">
+                  <i class="feather me-1" [class.icon-check]="modoEdicaoFicha" [class.icon-plus]="!modoEdicaoFicha"></i>
+                  {{ modoEdicaoFicha ? 'Salvar Ingredientes' : 'Adicionar ao Pedido' }}
+                </button>
+              </ng-container>
+            </ng-container>
+
           </div>
 
           <!-- Pedido Atual -->
-          <div class="col-md-6">
+          <div class="col-md-6" *ngIf="!produtoFichaAberta">
             <p class="modal-section-label"><i class="feather icon-clipboard me-1"></i>Pedido Atual</p>
 
             <div class="order-list-scroll" *ngIf="mesaSelecionada?.pedidos && mesaSelecionada.pedidos.length > 0">
-              <div *ngFor="let pedido of mesaSelecionada.pedidos; let i = index" class="list-row">
-                <div style="flex:1;">
-                  <p class="list-row__name">{{ pedido.nome }}</p>
-                  <p class="list-row__price">{{ pedido.preco | currency }}</p>
+              <div *ngFor="let pedido of mesaSelecionada.pedidos; let i = index" class="list-row order-item"
+                   (click)="editarIngredientesDoPedido(pedido)">
+                <div style="flex:1;" class="order-item__info">
+                  <p class="list-row__name">
+                    {{ pedido.nome }}
+                    <span *ngIf="temPersonalizacao(pedido.id_produto)" class="order-item__pers-badge">Personalizado</span>
+                  </p>
+                  <p class="list-row__price">{{ calcularPrecoItem(pedido) | currency: 'BRL' }}</p>
                 </div>
-                <div class="d-flex align-items-center gap-1">
+                <div class="d-flex align-items-center gap-1" (click)="$event.stopPropagation()">
                   <button (click)="decrementarQuantidade(pedido.id_produto)" class="qty-btn">-</button>
                   <span class="qty-value">{{ pedido.quantidade }}</span>
                   <button (click)="incrementarQuantidade(pedido.id_produto)" class="qty-btn">+</button>

@@ -8,6 +8,7 @@ import { Pedido } from 'src/app/interfaces/pedidos.interface';  // Importe a int
 import { PedidoService } from 'src/app/services/pedidos.service';  // Adicione a importação
 import { VendasService } from 'src/app/services/vendas.service';  // Adicione a importação
 import { Venda } from 'src/app/interfaces/vendas.interface';  // Importe a interface Pedido
+import { InsumoService } from 'src/app/services/insumo.service';
 
 
 @Component({
@@ -53,10 +54,36 @@ export class TblMesasComponent implements OnInit {
   // Histórico de pedidos
   historicoPedidos: Pedido[] = [];
 
+  // ── Ficha de Ingredientes (personalização do produto) ─────────────────────
+  produtoFichaAberta: Produto | null = null;
+  fichaIngredientes: Array<{
+    id_insumo: number; nome_insumo: string; unidade: string;
+    quantidade: number; removido: boolean;
+  }> = [];
+  acrescimosDisponiveis: Array<{
+    id_insumo: number; nome: string; unidade: string; preco_acrescimo: number; qtd: number;
+  }> = [];
+  filtroAcrescimo = '';
+  fichaCarregando = false;
+  modoEdicaoFicha = false;
+  modificacoesPorProduto: {
+    [id_produto: number]: {
+      remover: number[];
+      acrescimos: { id_insumo: number; quantidade: number; preco_acrescimo: number; nome: string }[];
+    }
+  } = {};
+
+  get acrescimosVisiveis() {
+    const f = this.filtroAcrescimo.trim().toLowerCase();
+    return f ? this.acrescimosDisponiveis.filter(a => a.nome.toLowerCase().includes(f))
+             : this.acrescimosDisponiveis;
+  }
+
   constructor(
     private mesaService: MesaService,
     private produtoService: ProdutoService,
     private pedidoService: PedidoService, // Injetando o PedidoService
+    private insumoService: InsumoService,
     private toastr: ToastrService,
     private VendasService: VendasService
   ) {}
@@ -66,16 +93,35 @@ export class TblMesasComponent implements OnInit {
     this.carregarProdutos();
   }
 
-  calcularTotalPedido(): number {
-    if (!this.mesaSelecionada?.pedidos || !Array.isArray(this.mesaSelecionada.pedidos)) {
-      return 0; // Se não houver pedidos ou se não for um array, retorna 0
+  calcularPrecoItem(pedido: any): number {
+    let preco = Number(pedido.preco) || 0;
+    const mods = this.modificacoesPorProduto[pedido.id_produto];
+    if (mods?.acrescimos) {
+      mods.acrescimos.forEach(a => { preco += (Number(a.preco_acrescimo) || 0) * (Number(a.quantidade) || 0); });
     }
-  
+    return preco;
+  }
+
+  calcularTotalPedido(): number {
+    if (!this.mesaSelecionada?.pedidos || !Array.isArray(this.mesaSelecionada.pedidos)) return 0;
     let total = 0;
     this.mesaSelecionada.pedidos.forEach(pedido => {
-      total += pedido.preco * pedido.quantidade;
+      let precoUnitario = Number(pedido.preco) || 0;
+
+      // Se a ficha deste produto está aberta, usa os acréscimos em tempo real
+      if (this.produtoFichaAberta && this.produtoFichaAberta.id_produto === pedido.id_produto) {
+        this.acrescimosDisponiveis.forEach(a => {
+          if (a.qtd > 0) precoUnitario += (Number(a.preco_acrescimo) || 0) * a.qtd;
+        });
+      } else {
+        const mods = this.modificacoesPorProduto[pedido.id_produto];
+        if (mods?.acrescimos) {
+          mods.acrescimos.forEach(a => { precoUnitario += (Number(a.preco_acrescimo) || 0) * (Number(a.quantidade) || 0); });
+        }
+      }
+
+      total += precoUnitario * (Number(pedido.quantidade) || 0);
     });
-  
     return total;
   }
 
@@ -141,7 +187,10 @@ export class TblMesasComponent implements OnInit {
   fecharModal(): void {
     this.mostrarModal = false;
     this.mesaSelecionada = null;
-    this.filtroProduto = ''; // Reseta a pesquisa ao fechar o modal
+    this.filtroProduto = '';
+    this.produtoFichaAberta = null;
+    this.fichaIngredientes = [];
+    this.modificacoesPorProduto = {};
   }
 
   // Método para filtrar os produtos com base no texto do filtro
@@ -156,25 +205,145 @@ export class TblMesasComponent implements OnInit {
 
   adicionarProdutoAPedido(produto: Produto): void {
     if (this.mesaSelecionada) {
-      if (!Array.isArray(this.mesaSelecionada.pedidos)) {
-        this.mesaSelecionada.pedidos = [];
-      }
-  
-      const produtoExistente = this.mesaSelecionada.pedidos.find(pedido => pedido.id_produto === produto.id_produto);
-      
+      if (!Array.isArray(this.mesaSelecionada.pedidos)) this.mesaSelecionada.pedidos = [];
+      const produtoExistente = this.mesaSelecionada.pedidos.find(p => p.id_produto === produto.id_produto);
       if (!produtoExistente) {
-        const novoPedido = {
-          id_produto: produto.id_produto,
-          nome: produto.nome,
-          preco: produto.preco,
-          quantidade: 1 // Inicializa a quantidade como 1
-        };
-        this.mesaSelecionada.pedidos.push(novoPedido);
-        this.toastr.success('Produto adicionado ao pedido!', 'Sucesso');
+        this.mesaSelecionada.pedidos.push({ id_produto: produto.id_produto, nome: produto.nome, preco: produto.preco, quantidade: 1 });
+        delete this.modificacoesPorProduto[produto.id_produto];
+        this.toastr.success('Produto adicionado!', 'Sucesso');
       } else {
-        this.toastr.warning('Produto já foi adicionado ao pedido!', 'Aviso');
+        this.toastr.warning('Produto já adicionado ao pedido!', 'Aviso');
       }
     }
+  }
+
+  // ── Ficha Técnica / Personalização de Ingredientes ─────────────────────────
+
+  abrirFichaIngredientes(produto: Produto): void {
+    this.modoEdicaoFicha = false;
+    this.produtoFichaAberta = produto;
+    this.fichaCarregando = true;
+    this.fichaIngredientes = [];
+    this.acrescimosDisponiveis = [];
+    this.filtroAcrescimo = '';
+    this.insumoService.getFichaTecnica(produto.id_produto).subscribe(
+      itens => {
+        this.fichaIngredientes = itens.map(i => ({
+          id_insumo: i.id_insumo,
+          nome_insumo: i.nome_insumo || '',
+          unidade: i.unidade || '',
+          quantidade: Number(i.quantidade),
+          removido: false
+        }));
+        const idsBase = new Set(itens.map(i => i.id_insumo));
+        this.insumoService.getInsumos().subscribe(
+          todos => {
+            this.acrescimosDisponiveis = todos
+              .filter(i => i.is_acrescimo && !idsBase.has(i.id_insumo))
+              .map(i => ({
+                id_insumo: i.id_insumo,
+                nome: i.nome,
+                unidade: i.unidade,
+                preco_acrescimo: Number(i.preco_acrescimo) || 0,
+                qtd: 0
+              }));
+            this.fichaCarregando = false;
+          },
+          () => { this.fichaCarregando = false; }
+        );
+      },
+      () => { this.fichaIngredientes = []; this.fichaCarregando = false; }
+    );
+  }
+
+  editarIngredientesDoPedido(pedido: any): void {
+    this.modoEdicaoFicha = true;
+    this.produtoFichaAberta = { id_produto: pedido.id_produto, nome: pedido.nome, preco: pedido.preco, descricao: '', imagem: null, quantidade_estoque: 0 };
+    this.fichaCarregando = true;
+    this.fichaIngredientes = [];
+    this.acrescimosDisponiveis = [];
+    this.filtroAcrescimo = '';
+    this.insumoService.getFichaTecnica(pedido.id_produto).subscribe(
+      itens => {
+        const mods = this.modificacoesPorProduto[pedido.id_produto];
+        this.fichaIngredientes = itens.map(i => {
+          const removido = mods ? mods.remover.includes(i.id_insumo) : false;
+          return {
+            id_insumo: i.id_insumo,
+            nome_insumo: i.nome_insumo || '',
+            unidade: i.unidade || '',
+            quantidade: Number(i.quantidade),
+            removido
+          };
+        });
+        const idsBase = new Set(itens.map(i => i.id_insumo));
+        this.insumoService.getInsumos().subscribe(
+          todos => {
+            this.acrescimosDisponiveis = todos
+              .filter(i => i.is_acrescimo && !idsBase.has(i.id_insumo))
+              .map(i => {
+                const qtdExistente = mods?.acrescimos?.find(a => a.id_insumo === i.id_insumo)?.quantidade || 0;
+                return {
+                  id_insumo: i.id_insumo,
+                  nome: i.nome,
+                  unidade: i.unidade,
+                  preco_acrescimo: Number(i.preco_acrescimo) || 0,
+                  qtd: qtdExistente
+                };
+              });
+            this.fichaCarregando = false;
+          },
+          () => { this.fichaCarregando = false; }
+        );
+      },
+      () => { this.fichaIngredientes = []; this.fichaCarregando = false; }
+    );
+  }
+
+  temPersonalizacao(idProduto: number): boolean {
+    const m = this.modificacoesPorProduto[idProduto];
+    return !!(m && (m.remover.length > 0 || m.acrescimos.length > 0));
+  }
+
+  fecharFichaIngredientes(): void {
+    this.produtoFichaAberta = null;
+    this.fichaIngredientes = [];
+    this.acrescimosDisponiveis = [];
+    this.filtroAcrescimo = '';
+    this.modoEdicaoFicha = false;
+  }
+
+  toggleRemoverIngrediente(id_insumo: number): void {
+    const ing = this.fichaIngredientes.find(i => i.id_insumo === id_insumo);
+    if (ing) { ing.removido = !ing.removido; }
+  }
+
+  alterarAcrescimo(id_insumo: number, delta: number): void {
+    const acr = this.acrescimosDisponiveis.find(a => a.id_insumo === id_insumo);
+    if (acr) acr.qtd = Math.max(0, acr.qtd + delta);
+  }
+
+  confirmarAdicionarProduto(): void {
+    if (!this.produtoFichaAberta || !this.mesaSelecionada) return;
+    const produto = this.produtoFichaAberta;
+    const isEdicao = this.modoEdicaoFicha;
+    const remover = this.fichaIngredientes.filter(i => i.removido).map(i => i.id_insumo);
+    const acrescimos = this.acrescimosDisponiveis
+      .filter(a => a.qtd > 0)
+      .map(a => ({ id_insumo: a.id_insumo, quantidade: a.qtd, preco_acrescimo: a.preco_acrescimo, nome: a.nome }));
+    if (!isEdicao) {
+      if (!Array.isArray(this.mesaSelecionada.pedidos)) this.mesaSelecionada.pedidos = [];
+      const existente = this.mesaSelecionada.pedidos.find(p => p.id_produto === produto.id_produto);
+      if (existente) { existente.quantidade += 1; }
+      else { this.mesaSelecionada.pedidos.push({ id_produto: produto.id_produto, nome: produto.nome, preco: produto.preco, quantidade: 1 }); }
+    }
+    if (remover.length > 0 || acrescimos.length > 0) {
+      this.modificacoesPorProduto[produto.id_produto] = { remover, acrescimos };
+    } else {
+      delete this.modificacoesPorProduto[produto.id_produto];
+    }
+    this.fecharFichaIngredientes();
+    this.toastr.success(isEdicao ? 'Ingredientes atualizados!' : 'Produto adicionado ao pedido!', 'Sucesso');
   }
 
   // Funções para manipulação da quantidade
@@ -213,9 +382,10 @@ export class TblMesasComponent implements OnInit {
       console.log('ITEM ENVIADOS', this.mesaSelecionada.pedidos);
   
       // Criar a string personalizada para os itens do pedido
+      // O preço enviado já inclui o valor dos acréscimos do item
       const itensFormatados = this.mesaSelecionada.pedidos.map((pedido: any) => {
-        console.log('NOME DOS PEDIDOS', pedido);
-        return `${pedido.id_produto}|${pedido.nome}|${pedido.quantidade}|${pedido.preco}`;
+        const precoFinal = this.calcularPrecoItem(pedido);
+        return `${pedido.id_produto}|${pedido.nome}|${pedido.quantidade}|${precoFinal}`;
       }).join('; ');
 
             // Obtém a data e hora atual no horário local
@@ -246,10 +416,22 @@ export class TblMesasComponent implements OnInit {
         ordem_type_pe: this.mesaSelecionada.ordem_type,
       };
   
-      console.log('Pedido enviado:', pedido);  // Verifique se o pedido está correto
-  
+      const modificacoes = Object.entries(this.modificacoesPorProduto)
+        .map(([id_produto, mods]) => ({
+          id_item: parseInt(id_produto, 10),
+          remover: mods.remover,
+          extra: mods.acrescimos.map(a => ({
+            id_insumo: a.id_insumo,
+            quantidade: a.quantidade,
+            preco_acrescimo: a.preco_acrescimo,
+            nome: a.nome
+          }))
+        }));
+
+      console.log('Pedido enviado:', pedido, 'Modificações:', modificacoes);
+
       // Adicionar o pedido no banco de dados primeiro
-      this.pedidoService.addPedido(pedido).subscribe(
+      this.pedidoService.addPedido({ ...pedido, modificacoes } as any).subscribe(
         (response) => {
           this.toastr.success('Pedido finalizado e adicionado com sucesso!', 'Sucesso');
   

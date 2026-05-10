@@ -14,7 +14,7 @@ export class TblInsumosComponent implements OnInit {
 
   // ── ADD ──────────────────────────────────────────────────────
   mostrarModalAdd = false;
-  novoInsumo: any = { nome: '', unidade: 'un', custo: 0, estoque_min: 0, estoque: 0 };
+  novoInsumo: any = { nome: '', unidade: 'un', custo: 0, preco_acrescimo: 0, estoque_min: 0, estoque: 0, is_acrescimo: false };
 
   // ── EDIT ─────────────────────────────────────────────────────
   insumoEmEdicao: any = null;
@@ -56,9 +56,10 @@ export class TblInsumosComponent implements OnInit {
       data => {
         this.insumos = data.map(i => ({
           ...i,
-          estoque:     Number(i.estoque),
-          estoque_min: Number(i.estoque_min),
-          custo:       Number(i.custo)
+          estoque:          Number(i.estoque),
+          estoque_min:      Number(i.estoque_min),
+          custo:            Number(i.custo),
+          preco_acrescimo:  Number(i.preco_acrescimo)
         }));
       },
       () => { this.toastr.error('Erro ao carregar insumos', 'Erro'); }
@@ -79,7 +80,7 @@ export class TblInsumosComponent implements OnInit {
 
   // ── ADD ──────────────────────────────────────────────────────
   abrirModalAdd(): void {
-    this.novoInsumo = { nome: '', unidade: 'un', custo: 0, estoque_min: 0, estoque: 0 };
+    this.novoInsumo = { nome: '', unidade: 'un', custo: 0, preco_acrescimo: 0, estoque_min: 0, estoque: 0, is_acrescimo: false };
     this.mostrarModalAdd = true;
   }
 
@@ -89,9 +90,11 @@ export class TblInsumosComponent implements OnInit {
     if (!this.novoInsumo.nome?.trim()) return;
     const payload = {
       ...this.novoInsumo,
-      estoque:     parseFloat(this.novoInsumo.estoque)     || 0,
-      estoque_min: parseFloat(this.novoInsumo.estoque_min) || 0,
-      custo:       parseFloat(this.novoInsumo.custo)       || 0,
+      estoque:          parseFloat(this.novoInsumo.estoque)          || 0,
+      estoque_min:      parseFloat(this.novoInsumo.estoque_min)      || 0,
+      custo:            parseFloat(this.novoInsumo.custo)            || 0,
+      preco_acrescimo:  this.novoInsumo.is_acrescimo ? (parseFloat(this.novoInsumo.preco_acrescimo) || 0) : 0,
+      is_acrescimo:     !!this.novoInsumo.is_acrescimo,
     };
     this.insumoService.createInsumo(payload).subscribe(
       () => {

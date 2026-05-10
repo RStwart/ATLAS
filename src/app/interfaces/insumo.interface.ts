@@ -4,7 +4,9 @@ export interface Insumo {
   unidade: 'un' | 'g' | 'ml' | 'kg' | 'l' | 'porcao';
   estoque: number;
   custo: number;
+  preco_acrescimo: number;
   estoque_min: number;
+  is_acrescimo?: boolean;
   id_empresa?: number;
 }
 

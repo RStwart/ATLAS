@@ -742,11 +742,28 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
                 'SELECT nome, unidade FROM insumo WHERE id_insumo = ? AND id_empresa = ?',
                 [ex.id_insumo, req.id_empresa]
               );
+              const nomeExtra = ex.nome || exInsumo?.nome || null;
               await conn.execute(
                 `INSERT INTO movimentacao_estoque
                    (id_insumo, tipo, quantidade, origem, id_pedido, observacao, id_usuario, nome_usuario, nome_insumo_log, unidade_log, id_empresa)
                  VALUES (?, 'SAIDA', ?, 'VENDA', ?, 'extra solicitado', ?, ?, ?, ?, ?)`,
-                [ex.id_insumo, qtdExtra, id_pedido_inserido, req.user.id, req.user.nome || null, exInsumo?.nome || null, exInsumo?.unidade || null, req.id_empresa]
+                [ex.id_insumo, qtdExtra, id_pedido_inserido, req.user.id, req.user.nome || null, nomeExtra, exInsumo?.unidade || null, req.id_empresa]
+              );
+              // Persiste no histórico de modificações do pedido
+              await conn.execute(
+                `INSERT INTO pedido_modificacao (id_pedido, tipo, id_insumo, nome_insumo, quantidade, preco_acrescimo, id_empresa)
+                 VALUES (?, 'EXTRA', ?, ?, ?, ?, ?)`,
+                [id_pedido_inserido, ex.id_insumo, nomeExtra, parseFloat(ex.quantidade) || 1, parseFloat(ex.preco_acrescimo) || 0, req.id_empresa]
+              );
+            }
+
+            // Persiste ingredientes removidos no histórico de modificações
+            for (const idRemovido of removidos) {
+              const fichaItem = fichaItens.find(fi => fi.id_insumo === idRemovido);
+              await conn.execute(
+                `INSERT INTO pedido_modificacao (id_pedido, tipo, id_insumo, nome_insumo, quantidade, preco_acrescimo, id_empresa)
+                 VALUES (?, 'REMOVER', ?, ?, ?, 0, ?)`,
+                [id_pedido_inserido, idRemovido, fichaItem?.nome_insumo || null, fichaItem?.quantidade || null, req.id_empresa]
               );
             }
           }
@@ -1301,17 +1318,19 @@ app.get('/api/insumos/:id', autenticarTenant, async (req, res) => {
 // POST /api/insumos — cria um novo insumo
 app.post('/api/insumos', autenticarTenant, async (req, res) => {
   const { nome, unidade } = req.body;
-  const estoque     = parseFloat(req.body.estoque)     || 0;
-  const custo       = parseFloat(req.body.custo)       || 0;
-  const estoque_min = parseFloat(req.body.estoque_min) || 0;
+  const estoque         = parseFloat(req.body.estoque)         || 0;
+  const custo           = parseFloat(req.body.custo)           || 0;
+  const estoque_min     = parseFloat(req.body.estoque_min)     || 0;
+  const preco_acrescimo = parseFloat(req.body.preco_acrescimo) || 0;
+  const is_acrescimo    = req.body.is_acrescimo ? 1 : 0;
   if (!nome || !unidade) return res.status(400).json({ error: 'nome e unidade são obrigatórios' });
   const conn = await db.promise().getConnection();
   try {
     await conn.beginTransaction();
     // Insere cadastro do insumo (sem coluna estoque — saldo fica em `estoque`)
     const [result] = await conn.execute(
-      'INSERT INTO insumo (nome, unidade, custo, estoque_min, id_empresa) VALUES (?, ?, ?, ?, ?)',
-      [nome, unidade, custo, estoque_min, req.id_empresa]
+      'INSERT INTO insumo (nome, unidade, custo, preco_acrescimo, estoque_min, is_acrescimo, id_empresa) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [nome, unidade, custo, preco_acrescimo, estoque_min, is_acrescimo, req.id_empresa]
     );
     const id_insumo = result.insertId;
     // Cria o registro de saldo inicial na tabela estoque (1:1 com insumo)
@@ -1342,13 +1361,15 @@ app.post('/api/insumos', autenticarTenant, async (req, res) => {
 // PUT /api/insumos/:id — atualiza dados cadastrais do insumo (não altera estoque diretamente)
 app.put('/api/insumos/:id', autenticarTenant, async (req, res) => {
   const { nome, unidade } = req.body;
-  const custo       = parseFloat(req.body.custo)       || 0;
-  const estoque_min = parseFloat(req.body.estoque_min) || 0;
+  const custo           = parseFloat(req.body.custo)           || 0;
+  const estoque_min     = parseFloat(req.body.estoque_min)     || 0;
+  const preco_acrescimo = parseFloat(req.body.preco_acrescimo) || 0;
+  const is_acrescimo    = req.body.is_acrescimo ? 1 : 0;
   try {
     const [result] = await db.promise().execute(
-      `UPDATE insumo SET nome = ?, unidade = ?, custo = ?, estoque_min = ?
+      `UPDATE insumo SET nome = ?, unidade = ?, custo = ?, preco_acrescimo = ?, estoque_min = ?, is_acrescimo = ?
        WHERE id_insumo = ? AND id_empresa = ?`,
-      [nome, unidade, custo, estoque_min, req.params.id, req.id_empresa]
+      [nome, unidade, custo, preco_acrescimo, estoque_min, is_acrescimo, req.params.id, req.id_empresa]
     );
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Insumo não encontrado' });
     res.json({ message: 'Insumo atualizado com sucesso' });
@@ -1651,6 +1672,64 @@ async function aplicarMigracoesDB() {
       WHERE m.nome_insumo_log IS NULL
     `);
     console.log('[migração] Snapshots de nome/unidade aplicados com sucesso.');
+
+    // ── Migração 3: coluna preco_acrescimo na tabela insumo ───────────────
+    const [[colPreco]] = await conn.execute(`
+      SELECT COUNT(*) AS cnt
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME   = 'insumo'
+        AND COLUMN_NAME  = 'preco_acrescimo'
+    `);
+    if (colPreco.cnt === 0) {
+      console.log('[migração] Adicionando coluna preco_acrescimo na tabela insumo...');
+      await conn.execute(
+        `ALTER TABLE insumo ADD COLUMN preco_acrescimo DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER custo`
+      );
+      console.log('[migração] Coluna preco_acrescimo adicionada com sucesso.');
+    }
+
+    // ── Migração 4: coluna is_acrescimo na tabela insumo ─────────────────
+    const [[colIsAcr]] = await conn.execute(`
+      SELECT COUNT(*) AS cnt
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME   = 'insumo'
+        AND COLUMN_NAME  = 'is_acrescimo'
+    `);
+    if (colIsAcr.cnt === 0) {
+      console.log('[migração] Adicionando coluna is_acrescimo na tabela insumo...');
+      await conn.execute(
+        `ALTER TABLE insumo ADD COLUMN is_acrescimo TINYINT(1) NOT NULL DEFAULT 0 AFTER preco_acrescimo`
+      );
+      console.log('[migração] Coluna is_acrescimo adicionada com sucesso.');
+    }
+
+    // ── Migração 5: tabela pedido_modificacao ─────────────────────────────
+    const [[tblMod]] = await conn.execute(`
+      SELECT COUNT(*) AS cnt
+      FROM information_schema.TABLES
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME   = 'pedido_modificacao'
+    `);
+    if (tblMod.cnt === 0) {
+      console.log('[migração] Criando tabela pedido_modificacao...');
+      await conn.execute(`
+        CREATE TABLE pedido_modificacao (
+          id             INT AUTO_INCREMENT PRIMARY KEY,
+          id_pedido      INT           NOT NULL,
+          tipo           ENUM('REMOVER','EXTRA') NOT NULL,
+          id_insumo      INT           DEFAULT NULL,
+          nome_insumo    VARCHAR(150)  DEFAULT NULL,
+          quantidade     DECIMAL(10,4) DEFAULT NULL,
+          preco_acrescimo DECIMAL(10,2) DEFAULT 0.00,
+          id_empresa     INT           NOT NULL,
+          INDEX idx_pm_pedido (id_pedido),
+          INDEX idx_pm_empresa (id_empresa)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+      console.log('[migração] Tabela pedido_modificacao criada com sucesso.');
+    }
 
   } catch (err) {
     console.warn('[migração] Aviso ao aplicar migração:', err.message);

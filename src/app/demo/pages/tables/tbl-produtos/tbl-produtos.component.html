@@ -313,7 +313,7 @@
           <div *ngFor="let item of fichaTecnica" class="ficha-item">
             <div class="ficha-item__info">
               <span class="ficha-item__nome">{{ item.nome_insumo }}</span>
-              <span class="ficha-item__unidade">{{ item.quantidade }} {{ item.unidade }}</span>
+              <span class="ficha-item__unidade">{{ item.quantidade | number:'1.0-4' }} {{ item.unidade | uppercase }}</span>
             </div>
             <button class="ficha-item__del" title="Remover" (click)="removerItemFicha(item.id_insumo)">
               <i class="feather icon-x"></i>
@@ -330,7 +330,7 @@
               <select class="field-input" [(ngModel)]="novoItemFicha.id_insumo" name="fi-insumo">
                 <option [ngValue]="null">Selecione...</option>
                 <option *ngFor="let ins of insumosDisponiveis" [ngValue]="ins.id_insumo">
-                  {{ ins.nome }} ({{ ins.unidade }})
+                  {{ ins.nome }} ({{ ins.unidade | uppercase }})
                 </option>
               </select>
             </div>

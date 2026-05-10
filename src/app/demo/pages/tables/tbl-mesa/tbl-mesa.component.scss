@@ -313,8 +313,236 @@
   }
 }
 
+// ── Ficha Técnica — painel de personalização ──────────────────────────────────
+
+.list-row--clickable {
+  cursor: pointer;
+  &:hover { background: #f8f7ff; }
+}
+
+.order-item {
+  cursor: pointer;
+  &:hover { background: #f8f7ff; }
+
+  &__info { flex: 1; }
+
+  &__pers-badge {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #ede7f6;
+    color: #6f42c1;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+}
+
+.ficha-panel {
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  &__back {
+    background: #f3f4f5;
+    border: none;
+    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    color: #495057;
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover { background: #e9ecef; }
+  }
+  &__produto-nome {
+    margin: 2px 0 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #343a40;
+  }
+  &__hint {
+    font-size: 0.73rem;
+    color: #adb5bd;
+    margin: 0 0 8px;
+  }
+  &__loading, &__empty {
+    font-size: 0.82rem;
+    color: #adb5bd;
+    padding: 14px 0;
+    text-align: center;
+  }
+}
+
+// Título de seção dentro do painel de ficha
+.ficha-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #6c757d;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+}
+
+// Campo de filtro compacto
+.field-input--sm {
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  height: auto;
+}
+
+.ficha-ing-list {
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+}
+
+// Lista de acréscimos disponíveis
+.ficha-acr-list {
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+}
+
+.ficha-acr-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f3f4f5;
+  transition: background 0.12s;
+
+  &:last-child { border-bottom: none; }
+
+  &--ativo {
+    background: #f0fdf4;
+    .ficha-acr-row__nome { color: #166534; font-weight: 700; }
+  }
+
+  &__info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__nome {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #343a40;
+  }
+
+  &__preco {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6f42c1;
+    background: #f3e8ff;
+    padding: 2px 7px;
+    border-radius: 4px;
+
+    &--free {
+      color: #198754;
+      background: #d1fae5;
+    }
+  }
+}
+
+// Quantidade exibida entre os botões + / - nos acréscimos
+.acr-qty-val {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #343a40;
+  min-width: 22px;
+  text-align: center;
+}
+
+.ficha-ing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-bottom: 1px solid #f3f4f5;
+  transition: background 0.12s;
+
+  &:last-child { border-bottom: none; }
+
+  &--removido {
+    background: #fff5f5;
+    .ficha-ing-row__nome { text-decoration: line-through; color: #adb5bd; }
+    .ficha-ing-row__qty  { color: #adb5bd; }
+  }
+
+  &__info {
+    flex: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    user-select: none;
+    &:hover { opacity: 0.8; }
+  }
+
+  &__nome {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #343a40;
+  }
+
+  &__qty {
+    font-size: 0.75rem;
+    color: #6c757d;
+  }
+
+  &__tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    &--rem   { background: #ffe0e0; color: #e53935; }
+    &--extra { background: #e0f7e9; color: #2e7d32; }
+    &--ok    { background: #e8f5e9; color: #2e7d32; display: flex; align-items: center; }
+  }
+
+  &__btns {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+}
+
+.ficha-extra-btn {
+  background: #f8f9fc;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:hover:not(:disabled) { background: #e9ecef; }
+  &:disabled { opacity: 0.35; cursor: default; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 .mesa-action-btn {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -18,4 +18,5 @@ export interface Pedido {
   nome_pe: string;          // Nome da mesa
   endereco_pe: string;      // Endedreço de entrega
   ordem_type_pe: 'Pedido' | 'Retirada' | 'Entrega'; // Tipo de ordem
+  modificacoes?: { id_item: number; remover: number[]; extra: { id_insumo: number; quantidade: number }[] }[];
 }
