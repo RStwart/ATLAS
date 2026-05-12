@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+﻿import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 const routes: Routes = [
@@ -22,8 +22,8 @@ const routes: Routes = [
         loadComponent: () => import('./tbl-funcionarios/tbl-funcionarios.component').then(m => m.TblFuncionariosComponent)
       },
       {
-        path: 'mesa',
-        loadComponent: () => import('./tbl-mesa/tbl-mesa.component').then(m => m.TblMesasComponent)
+        path: 'comanda',
+        loadComponent: () => import('./tbl-comanda/tbl-comanda.component').then(m => m.TblComandasComponent)
       },
       {
         path: 'pedidos',

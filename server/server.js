@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
@@ -164,10 +164,10 @@ app.post('/api/imprimir-pedido', autenticarTenant, (req, res) => {
 
   console.log('Dados de impressao',req.body)
 
-  const { id_mesa,numero, total, item, observacao, nome_pe, endereco_pe, ordem_type_pe } = req.body;
+  const { id_comanda,numero, total, item, observacao, nome_pe, endereco_pe, ordem_type_pe } = req.body;
 
   // Verificar se os dados necessários foram passados
-  if (!id_mesa || !total || !item) {
+  if (!id_comanda || !total || !item) {
     return res.status(400).json({ error: 'Faltando dados obrigatórios para imprimir o pedido' });
   }
 
@@ -179,7 +179,7 @@ app.post('/api/imprimir-pedido', autenticarTenant, (req, res) => {
 
   // Formatar o conteúdo do ticket (não vai para o banco)
   const content = `
-* MESA: ${numero} \n
+* COMANDA: ${numero} \n
 * NOME: ${nome_pe} \n
 * ORDEM: ${ordem_type_pe} \n
 * ENDEREÇO: ${endereco_pe} \n
@@ -190,7 +190,7 @@ ${itensArray.map(i => `* ${i.quantidade}X -- ${i.nome} `).join('\n')}
 `.trim();
 
   // Caminho do arquivo temporário de ticket
-  const filePath = path.resolve(__dirname, `ticket_temp_${id_mesa}.txt`);
+  const filePath = path.resolve(__dirname, `ticket_temp_${id_comanda}.txt`);
 
   // Criar o arquivo de ticket
   fs.writeFileSync(filePath, content, 'utf8');
@@ -220,17 +220,17 @@ ${itensArray.map(i => `* ${i.quantidade}X -- ${i.nome} `).join('\n')}
 });
 
 
-// Rota POST para imprimir o histórico de pedidos de uma mesa
-app.post('/api/imprimir-historico-mesa', autenticarTenant, (req, res) => {
-  const { id_mesa, pedidos, nome , endereco } = req.body;
+// Rota POST para imprimir o histórico de pedidos de uma comanda
+app.post('/api/imprimir-historico-comanda', autenticarTenant, (req, res) => {
+  const { id_comanda, pedidos, nome , endereco } = req.body;
 
   // Verificar se os dados necessários foram passados
-  if (!id_mesa || !pedidos || pedidos.length === 0) {
+  if (!id_comanda || !pedidos || pedidos.length === 0) {
     return res.status(400).json({ error: 'Faltando dados obrigatórios para imprimir o histórico de pedidos' });
   }
 
   // Formatar o conteúdo do histórico de pedidos
-  let content = `Histórico de Pedidos - Mesa: ${id_mesa}\n`;
+  let content = `Histórico de Pedidos - Comanda: ${id_comanda}\n`;
   content += `Nome: ${nome}\n`;
   content += `Endereço: ${endereco}\n`;
   content += '***************************************\n';
@@ -271,7 +271,7 @@ app.post('/api/imprimir-historico-mesa', autenticarTenant, (req, res) => {
   content += '***************************************\n\n';
 
   // Caminho do arquivo temporário de ticket
-  const filePath = path.resolve(__dirname, `ticket_temp_${id_mesa}.txt`);
+  const filePath = path.resolve(__dirname, `ticket_temp_${id_comanda}.txt`);
 
   // Criar o arquivo de ticket
   fs.writeFileSync(filePath, content, 'utf8');
@@ -459,59 +459,59 @@ app.get('/api/funcionarios', autenticarTenant, (req, res) => {
 });
 
 
-// CRUD da Mesa
+// CRUD da Comanda
 
-// Rota GET para obter todas as mesas
-app.get('/api/mesas', autenticarTenant, (req, res) => {
-  db.query('SELECT * FROM mesa WHERE status != "finalizada" AND id_empresa = ? ORDER BY id_mesa DESC', [req.id_empresa], (err, results) => {
+// Rota GET para obter todas as comandas
+app.get('/api/comandas', autenticarTenant, (req, res) => {
+  db.query('SELECT * FROM comanda WHERE status != "finalizada" AND id_empresa = ? ORDER BY id_comanda DESC', [req.id_empresa], (err, results) => {
     if (err) {
-      console.error('Erro ao consultar as mesas:', err);
-      res.status(500).json({ error: 'Erro ao obter mesas', details: err });
+      console.error('Erro ao consultar as comandas:', err);
+      res.status(500).json({ error: 'Erro ao obter comandas', details: err });
     } else {
-      console.log('Mesas encontradas:', results);
+      console.log('Comandas encontradas:', results);
       res.json(results);
     }
   });
 });
 
-// Rota GET para obter uma mesa pelo ID
-app.get('/api/mesas/:id', autenticarTenant, (req, res) => {
+// Rota GET para obter uma comanda pelo ID
+app.get('/api/comandas/:id', autenticarTenant, (req, res) => {
   const { id } = req.params;
-  db.query('SELECT * FROM mesa WHERE id_mesa = ? AND id_empresa = ?', [id, req.id_empresa], (err, results) => {
+  db.query('SELECT * FROM comanda WHERE id_comanda = ? AND id_empresa = ?', [id, req.id_empresa], (err, results) => {
     if (err) {
-      console.error('Erro ao consultar a mesa:', err);
-      res.status(500).json({ error: 'Erro ao obter mesa', details: err });
+      console.error('Erro ao consultar a comanda:', err);
+      res.status(500).json({ error: 'Erro ao obter comanda', details: err });
     } else if (results.length === 0) {
-      res.status(404).json({ error: 'Mesa não encontrada' });
+      res.status(404).json({ error: 'Comanda não encontrada' });
     } else {
       res.json(results[0]);
     }
   });
 });
 
-// Rota POST para adicionar uma nova mesa
-app.post('/api/mesas', autenticarTenant, (req, res) => {
+// Rota POST para adicionar uma nova comanda
+app.post('/api/comandas', autenticarTenant, (req, res) => {
   const { numero, capacidade, status, pedidos, garcom, totalConsumo, nome, ordem_type, endereco } = req.body;
 
   const agora = new Date();
   const data_abertura = agora.toISOString().split('T')[0]; // YYYY-MM-DD
   const hora_abertura_dt = agora.toTimeString().split(' ')[0]; // HH:MM:SS
 
-  const query = 'INSERT INTO mesa (numero, capacidade, status, pedidos, garcom, totalConsumo, nome, ordem_type, endereco, id_empresa, data_abertura, hora_abertura_dt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  const query = 'INSERT INTO comanda (numero, capacidade, status, pedidos, garcom, totalConsumo, nome, ordem_type, endereco, id_empresa, data_abertura, hora_abertura_dt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
   const values = [numero, capacidade, status, JSON.stringify(pedidos), garcom, totalConsumo, nome, ordem_type, endereco, req.id_empresa, data_abertura, hora_abertura_dt];
 
   db.query(query, values, (err, result) => {
     if (err) {
-      console.error('Erro ao adicionar mesa:', err);
-      res.status(500).json({ error: 'Erro ao adicionar mesa' });
+      console.error('Erro ao adicionar comanda:', err);
+      res.status(500).json({ error: 'Erro ao adicionar comanda' });
     } else {
-      console.log('Mesa adicionada com sucesso:', result);
-      res.status(201).json({ message: 'Mesa adicionada com sucesso', id: result.insertId });
+      console.log('Comanda adicionada com sucesso:', result);
+      res.status(201).json({ message: 'Comanda adicionada com sucesso', id: result.insertId });
     }
   });
 });
 
-app.put('/api/mesas/:id', autenticarTenant, (req, res) => {
+app.put('/api/comandas/:id', autenticarTenant, (req, res) => {
   const { id } = req.params;
   const fieldsToUpdate = [];
   const values = [];
@@ -549,39 +549,39 @@ app.put('/api/mesas/:id', autenticarTenant, (req, res) => {
 
   values.push(id);
   values.push(req.id_empresa);
-  const query = `UPDATE mesa SET ${fieldsToUpdate.join(', ')} WHERE id_mesa = ? AND id_empresa = ?`;
+  const query = `UPDATE comanda SET ${fieldsToUpdate.join(', ')} WHERE id_comanda = ? AND id_empresa = ?`;
 
   db.query(query, values, (err, result) => {
     if (err) {
-      console.error('Erro ao atualizar mesa:', err);
-      return res.status(500).json({ error: 'Erro ao atualizar mesa' });
+      console.error('Erro ao atualizar comanda:', err);
+      return res.status(500).json({ error: 'Erro ao atualizar comanda' });
     }
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Mesa não encontrada' });
+      return res.status(404).json({ error: 'Comanda não encontrada' });
     }
-    res.json({ message: 'Mesa atualizada com sucesso' });
+    res.json({ message: 'Comanda atualizada com sucesso' });
   });
 });
 
 
-// Rota DELETE para deletar uma mesa pelo ID
-app.delete('/api/mesas/:id', autenticarTenant, (req, res) => {
+// Rota DELETE para deletar uma comanda pelo ID
+app.delete('/api/comandas/:id', autenticarTenant, (req, res) => {
   const { id } = req.params;
-  db.query('DELETE FROM mesa WHERE id_mesa = ? AND id_empresa = ?', [id, req.id_empresa], (err, result) => {
+  db.query('DELETE FROM comanda WHERE id_comanda = ? AND id_empresa = ?', [id, req.id_empresa], (err, result) => {
     if (err) {
-      console.error('Erro ao deletar mesa:', err);
-      res.status(500).json({ error: 'Erro ao deletar mesa' });
+      console.error('Erro ao deletar comanda:', err);
+      res.status(500).json({ error: 'Erro ao deletar comanda' });
     } else if (result.affectedRows === 0) {
-      res.status(404).json({ error: 'Mesa não encontrada' });
+      res.status(404).json({ error: 'Comanda não encontrada' });
     } else {
-      console.log('Mesa deletada com sucesso:', id);
-      res.json({ message: 'Mesa deletada com sucesso' });
+      console.log('Comanda deletada com sucesso:', id);
+      res.json({ message: 'Comanda deletada com sucesso' });
     }
   });
 });
 
-// Rota PUT para atualizar o status da mesa para "Finalizada"
-app.put('/api/mesas/:id/status', autenticarTenant, (req, res) => {
+// Rota PUT para atualizar o status da comanda para "Finalizada"
+app.put('/api/comandas/:id/status', autenticarTenant, (req, res) => {
   const { id } = req.params;
   const status = 'Finalizada';
 
@@ -589,19 +589,19 @@ app.put('/api/mesas/:id/status', autenticarTenant, (req, res) => {
   const data_fechamento = agora.toISOString().split('T')[0];
   const hora_fechamento = agora.toTimeString().split(' ')[0];
 
-  const query = `UPDATE mesa SET status = ?, data_fechamento = ?, hora_fechamento = ? WHERE id_mesa = ? AND id_empresa = ?`;
+  const query = `UPDATE comanda SET status = ?, data_fechamento = ?, hora_fechamento = ? WHERE id_comanda = ? AND id_empresa = ?`;
   db.query(query, [status, data_fechamento, hora_fechamento, id, req.id_empresa], (err, result) => {
     if (err) {
-      console.error('Erro ao atualizar status da mesa:', err);
-      return res.status(500).json({ error: 'Erro ao atualizar status da mesa' });
+      console.error('Erro ao atualizar status da comanda:', err);
+      return res.status(500).json({ error: 'Erro ao atualizar status da comanda' });
     }
 
-    // Se não encontrou a mesa para atualizar
+    // Se não encontrou a comanda para atualizar
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Mesa não encontrada' });
+      return res.status(404).json({ error: 'Comanda não encontrada' });
     }
 
-    res.json({ message: 'Status da mesa atualizado com sucesso' });
+    res.json({ message: 'Status da comanda atualizado com sucesso' });
   });
 });
 
@@ -632,15 +632,15 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
   console.log('=== INÍCIO PROCESSAMENTO PEDIDO ===');
   console.log('Body recebido:', JSON.stringify(req.body, null, 2));
   
-  const { id_mesa, status, total, data, item, observacao, numero, modificacoes } = req.body;
+  const { id_comanda, status, total, data, item, observacao, numero, modificacoes } = req.body;
 
   // Log básico para depuração
-  console.log('Campos extraídos:', { id_mesa, status, total, data, item, observacao, numero });
+  console.log('Campos extraídos:', { id_comanda, status, total, data, item, observacao, numero });
 
   // Validações mínimas
-  if (!id_mesa || !item) {
+  if (!id_comanda || !item) {
     console.log('ERRO: Campos obrigatórios ausentes');
-    return res.status(400).json({ error: 'Campos obrigatórios ausentes: id_mesa ou item' });
+    return res.status(400).json({ error: 'Campos obrigatórios ausentes: id_comanda ou item' });
   }
 
   // modificacoes: array opcional de ajustes de ingredientes por produto
@@ -672,11 +672,11 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
 
       // Inserir cada item como um registro separado na tabela pedido
       for (const itemData of itens) {
-        const query = `INSERT INTO pedido (id_mesa, id_empresa, id_item, nome_item, preco, quantidade, observacao, data_pedido, id_usuario, nome_usuario) 
+        const query = `INSERT INTO pedido (id_comanda, id_empresa, id_item, nome_item, preco, quantidade, observacao, data_pedido, id_usuario, nome_usuario) 
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
         
         const values = [
-          id_mesa,
+          id_comanda,
           req.id_empresa,
           itemData.id_item,
           itemData.nome_item,
@@ -842,10 +842,10 @@ app.get('/api/dashboard/stats', autenticarTenant, async (req, res) => {
       [req.id_empresa, hoje]
     );
 
-    // Contagem de mesas abertas hoje por tipo de ordem: Pedido, Retirada, Entrega
+    // Contagem de comandas abertas hoje por tipo de ordem: Pedido, Retirada, Entrega
     const [tiposOrdem] = await db.promise().query(
       `SELECT ordem_type, COUNT(*) AS total
-       FROM mesa
+       FROM comanda
        WHERE id_empresa = ? AND (
          data_abertura = ?
          OR (data_abertura IS NULL AND LOWER(status) = 'aberta')
@@ -854,7 +854,7 @@ app.get('/api/dashboard/stats', autenticarTenant, async (req, res) => {
       [req.id_empresa, hoje]
     );
 
-    console.log('[dashboard/stats] mesas abertas por tipo:', tiposOrdem);
+    console.log('[dashboard/stats] comandas abertas por tipo:', tiposOrdem);
 
     const tipos = { Pedido: 0, Retirada: 0, Entrega: 0 };
     tiposOrdem.forEach((t) => {
@@ -876,12 +876,12 @@ app.get('/api/dashboard/stats', autenticarTenant, async (req, res) => {
 });
 
 
-app.get('/api/mesas/:id/historico-pedidos', autenticarTenant, (req, res) => {
-  const mesaId = req.params.id;
+app.get('/api/comandas/:id/historico-pedidos', autenticarTenant, (req, res) => {
+  const comandaId = req.params.id;
 
-  const query = `SELECT * FROM pedido WHERE id_mesa = ? AND id_empresa = ? ORDER BY data_pedido DESC`;
+  const query = `SELECT * FROM pedido WHERE id_comanda = ? AND id_empresa = ? ORDER BY data_pedido DESC`;
 
-  db.query(query, [mesaId, req.id_empresa], (err, results) => {
+  db.query(query, [comandaId, req.id_empresa], (err, results) => {
     if (err) {
       console.error('Erro ao buscar histórico de pedidos:', err);
       return res.status(500).json({ error: 'Erro ao buscar histórico de pedidos' });
@@ -971,8 +971,8 @@ app.delete('/api/pedidos/:id', autenticarTenant, (req, res) => {
 // Rota POST para adicionar uma nova venda (agora com ID_CAIXA incluso)
 app.post('/api/vendas', autenticarTenant, (req, res) => {
   const {
-    id_mesa,
-    numero_mesa,
+    id_comanda,
+    numero_comanda,
     total,
     data_venda,
     hora_venda,
@@ -998,10 +998,10 @@ app.post('/api/vendas', autenticarTenant, (req, res) => {
 
     // Inserir a venda na tabela 'vendas' com ID_CAIXA
     const query = `
-      INSERT INTO vendas (id_mesa, numero_mesa, total, data_venda, hora_venda, nota, status_venda, tipo_pagamento, movimento, card_type, ID_CAIXA, id_empresa)
+      INSERT INTO vendas (id_comanda, numero_comanda, total, data_venda, hora_venda, nota, status_venda, tipo_pagamento, movimento, card_type, ID_CAIXA, id_empresa)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const values = [id_mesa, numero_mesa, total, data_venda, hora_venda, nota, status_venda, tipo_pagamento, movimento, card_type, id_caixa, req.id_empresa];
+    const values = [id_comanda, numero_comanda, total, data_venda, hora_venda, nota, status_venda, tipo_pagamento, movimento, card_type, id_caixa, req.id_empresa];
 
     db.query(query, values, (err, result) => {
       if (err) {
@@ -1050,14 +1050,14 @@ app.get('/api/vendas', autenticarTenant, (req, res) => {
 // Rota PUT para atualizar uma venda
 app.put('/api/vendas/:id', autenticarTenant, (req, res) => {
   const { id } = req.params;
-  const { id_mesa, numero_mesa, total, data_venda, hora_venda, nota, status_venda, tipo_pagamento, movimento, card_type } = req.body;
+  const { id_comanda, numero_comanda, total, data_venda, hora_venda, nota, status_venda, tipo_pagamento, movimento, card_type } = req.body;
 
   const query = `
     UPDATE vendas
-    SET id_mesa = ?, numero_mesa = ?, total = ?, data_venda = ?, hora_venda = ?, nota = ?, status_venda = ?, tipo_pagamento = ?, movimento = ?, card_type = ?
+    SET id_comanda = ?, numero_comanda = ?, total = ?, data_venda = ?, hora_venda = ?, nota = ?, status_venda = ?, tipo_pagamento = ?, movimento = ?, card_type = ?
     WHERE id_venda = ? AND id_empresa = ?
   `;
-  const values = [id_mesa, numero_mesa, total, data_venda, hora_venda, nota, status_venda, tipo_pagamento, movimento, card_type, id, req.id_empresa];
+  const values = [id_comanda, numero_comanda, total, data_venda, hora_venda, nota, status_venda, tipo_pagamento, movimento, card_type, id, req.id_empresa];
 
   db.query(query, values, (err, result) => {
     if (err) {

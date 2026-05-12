@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+﻿import { Component } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -36,7 +36,7 @@ export default class AuthSigninComponent {
           if (tipo === 'ADMIN') {
             this.router.navigate(['/dashboard']);
           } else if (tipo === 'FUNCIONARIO') {
-            this.router.navigate(['/tables/mesa']);
+            this.router.navigate(['/tables/comanda']);
           } else {
             this.router.navigate(['/home']);
           }

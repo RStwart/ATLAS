@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Pedido, Produto } from 'src/app/interfaces/pedidos.interface';  // Importe a interface de Pedido
@@ -23,8 +23,8 @@ export class PedidoService {
     return this.http.get<Pedido>(`${this.apiUrl}/pedidos/${id}`);
   }
 
-  getHistoricoPedidosPorMesa(mesaId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/mesas/${mesaId}/historico-pedidos`);
+  getHistoricoPedidosPorComanda(comandaId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/comandas/${comandaId}/historico-pedidos`);
   }
   
   // Método para adicionar um novo pedido
@@ -62,10 +62,10 @@ export class PedidoService {
     return this.http.post(`${this.apiUrl}/imprimir-pedido`, pedido);
   }
 
-  // Método para imprimir o histórico de pedidos de uma mesa
-  imprimirHistoricoMesa(mesaId: number, pedidos: any[],nome: string, endereco: string): Observable<any> {
-    const payload = { id_mesa: mesaId, pedidos: pedidos,nome: nome, endereco: endereco };
-    return this.http.post(`${this.apiUrl}/imprimir-historico-mesa`, payload);
+  // Método para imprimir o histórico de pedidos de uma comanda
+  imprimirHistoricoComanda(comandaId: number, pedidos: any[],nome: string, endereco: string): Observable<any> {
+    const payload = { id_comanda: comandaId, pedidos: pedidos,nome: nome, endereco: endereco };
+    return this.http.post(`${this.apiUrl}/imprimir-historico-comanda`, payload);
   }
   
 }

@@ -1,4 +1,4 @@
-// ── Radio-pill: Tipo de Ordem ──────────────────────────────────────────────
+﻿// ── Radio-pill: Tipo de Ordem ──────────────────────────────────────────────
 .tipo-btn {
   flex: 1;
   border-radius: 8px;
@@ -194,8 +194,8 @@
   }
 }
 
-// ── Mesa card ────────────────────────────────────────────────────────────────
-.mesa-card {
+// ── Comanda card ────────────────────────────────────────────────────────────────
+.comanda-card {
   border: none;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -539,17 +539,17 @@
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-.mesa-card__actions {
+.comanda-card__actions {
   display: flex;
   gap: 10px;
   margin-top: 14px;
 
-  .mesa-action-btn {
+  .comanda-action-btn {
     flex: 1;
   }
 }
 
-.mesa-action-btn {
+.comanda-action-btn {
   display: flex;
   flex-direction: column;
   align-items: center;

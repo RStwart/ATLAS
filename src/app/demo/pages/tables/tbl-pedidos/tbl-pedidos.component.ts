@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { PedidoService } from 'src/app/services/pedidos.service';
 import { Pedido } from 'src/app/interfaces/pedidos.interface';
 import { ToastrService } from 'ngx-toastr';
@@ -39,9 +39,9 @@ export class TblPedidosComponent implements OnInit {
           this.pedidosComProdutos = pedidos.map((pedido: Pedido) => {
             try {
               const produtosString = pedido.item;  // String com os produtos
-              const numeroMesa = (pedido as any).num_mesa;  // Acessa num_mesa com casting
+              const numeroComanda = (pedido as any).num_comanda;  // Acessa num_comanda com casting
   
-              console.log('Número da Mesa:', numeroMesa); // Verifica o número da mesa
+              console.log('Número da Comanda:', numeroComanda); // Verifica o número da comanda
   
               if (produtosString && typeof produtosString === 'string') {
                 // Converte a string de produtos em um array de objetos de produtos
@@ -61,11 +61,11 @@ export class TblPedidosComponent implements OnInit {
                   };
                 });
   
-                // Retorna o pedido com a lista de produtos e o número da mesa
+                // Retorna o pedido com a lista de produtos e o número da comanda
                 return {
                   ...pedido,
                   produtos,
-                  numero: numeroMesa, // Aqui, você associa o número da mesa corretamente no pedido
+                  numero: numeroComanda, // Aqui, você associa o número da comanda corretamente no pedido
                 };
               } else {
                 return {

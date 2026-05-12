@@ -1,4 +1,4 @@
-# ATLAS — Banco de Dados MySQL
+﻿# ATLAS — Banco de Dados MySQL
 
 > Script completo para recriar o banco de dados do zero.
 > **Gerado em Maio/2026 diretamente do código-fonte (`server.js` + `criar-admin.js`).**
@@ -42,10 +42,10 @@ Cole e execute **tudo de uma vez** após o §1. A ordem respeita todas as depend
 -- ============================================================
 --  ATLAS — Criação completa do banco
 --  Ordem: empresa → USUARIOS → categoria → produto
---         → CAIXA → mesa → pedido → vendas → funcionario
+--         → CAIXA → comanda → pedido → vendas → funcionario
 --
 --  Dependências FK:
---    pedido.id_mesa  → mesa.id_mesa    (ON DELETE CASCADE)
+--    pedido.id_comanda  → comanda.id_comanda    (ON DELETE CASCADE)
 --    vendas.ID_CAIXA → CAIXA.ID_CAIXA
 -- ============================================================
 
@@ -134,14 +134,14 @@ CREATE TABLE CAIXA (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------------
--- 6. MESA
+-- 6. COMANDA
 -- Sem dependências. Criada antes de pedido (FK obrigatória).
 -- ATENÇÃO: data_abertura, hora_abertura_dt, data_fechamento e
 -- hora_fechamento são usadas diretamente pelo server.js.
--- Sem elas, nenhuma mesa pode ser aberta ou fechada.
+-- Sem elas, nenhuma comanda pode ser aberta ou fechada.
 -- -------------------------------------------------------------
-CREATE TABLE mesa (
-  id_mesa          INT            NOT NULL AUTO_INCREMENT,
+CREATE TABLE comanda (
+  id_comanda          INT            NOT NULL AUTO_INCREMENT,
   numero           INT            NOT NULL DEFAULT 0,
   capacidade       INT            NOT NULL DEFAULT 1,
   status           VARCHAR(20)    NOT NULL DEFAULT 'Aberta', -- 'Aberta' | 'Finalizada'
@@ -152,23 +152,23 @@ CREATE TABLE mesa (
   ordem_type       VARCHAR(20)    NOT NULL DEFAULT 'Pedido', -- 'Pedido' | 'Retirada' | 'Entrega'
   endereco         VARCHAR(255),
   id_empresa       INT            NOT NULL DEFAULT 1,
-  data_abertura    DATE,                                      -- preenchida no POST /api/mesas
-  hora_abertura_dt TIME,                                      -- preenchida no POST /api/mesas
-  data_fechamento  DATE,                                      -- preenchida no PUT /api/mesas/:id/status
-  hora_fechamento  TIME,                                      -- preenchida no PUT /api/mesas/:id/status
-  PRIMARY KEY (id_mesa)
+  data_abertura    DATE,                                      -- preenchida no POST /api/comandas
+  hora_abertura_dt TIME,                                      -- preenchida no POST /api/comandas
+  data_fechamento  DATE,                                      -- preenchida no PUT /api/comandas/:id/status
+  hora_fechamento  TIME,                                      -- preenchida no PUT /api/comandas/:id/status
+  PRIMARY KEY (id_comanda)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------------
 -- 7. PEDIDO
--- FK → mesa.id_mesa  (ON DELETE CASCADE)
+-- FK → comanda.id_comanda  (ON DELETE CASCADE)
 -- Cada linha é UM item. Um envio de pedido insere N linhas.
 -- nome_item é denormalizado para preservar histórico mesmo
 -- se o produto for deletado depois.
 -- -------------------------------------------------------------
 CREATE TABLE pedido (
   id_pedido    INT            NOT NULL AUTO_INCREMENT,
-  id_mesa      INT            NOT NULL,
+  id_comanda      INT            NOT NULL,
   id_empresa   INT            NOT NULL DEFAULT 1,
   id_item      INT,                                     -- ref. a produto.id_produto (sem FK)
   nome_item    VARCHAR(150)   NOT NULL,
@@ -180,7 +180,7 @@ CREATE TABLE pedido (
   id_usuario   INT            DEFAULT NULL,             -- quem anotou o pedido
   nome_usuario VARCHAR(100)   DEFAULT NULL,             -- denormalizado para histórico
   PRIMARY KEY (id_pedido),
-  CONSTRAINT fk_pedido_mesa FOREIGN KEY (id_mesa) REFERENCES mesa (id_mesa) ON DELETE CASCADE
+  CONSTRAINT fk_pedido_comanda FOREIGN KEY (id_comanda) REFERENCES comanda (id_comanda) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------------
@@ -191,8 +191,8 @@ CREATE TABLE pedido (
 -- -------------------------------------------------------------
 CREATE TABLE vendas (
   id_venda       INT            NOT NULL AUTO_INCREMENT,
-  id_mesa        INT,
-  numero_mesa    INT,
+  id_comanda        INT,
+  numero_comanda    INT,
   total          DECIMAL(10,2)  NOT NULL DEFAULT 0.00,
   data_venda     DATE           NOT NULL,
   hora_venda     TIME           NOT NULL,
@@ -436,8 +436,8 @@ empresa          (sem FK — base de tudo)
   │     └── produto_insumo  (FK: produto_insumo.id_produto → produto.id_produto, CASCADE)
   ├── CAIXA
   │     └── vendas          (FK: vendas.ID_CAIXA → CAIXA.ID_CAIXA)
-  ├── mesa
-  │     └── pedido          (FK: pedido.id_mesa → mesa.id_mesa, CASCADE)
+  ├── comanda
+  │     └── pedido          (FK: pedido.id_comanda → comanda.id_comanda, CASCADE)
   ├── funcionario
   └── insumo
         ├── estoque             (FK: estoque.id_insumo → insumo.id_insumo, CASCADE — saldo atual 1:1)
@@ -449,8 +449,8 @@ empresa          (sem FK — base de tudo)
 
 ## §8 — Observações importantes
 
-- **MySQL 8 recomendado** — necessário para suporte ao tipo `JSON` na tabela `mesa`. MySQL 5.7 é o mínimo.
-- **`mesa.pedidos`** é um campo JSON auxiliar para o frontend. Os pedidos reais ficam em `pedido`.
+- **MySQL 8 recomendado** — necessário para suporte ao tipo `JSON` na tabela `comanda`. MySQL 5.7 é o mínimo.
+- **`comanda.pedidos`** é um campo JSON auxiliar para o frontend. Os pedidos reais ficam em `pedido`.
 - **`pedido.nome_item`** é denormalizado: preserva o nome do produto mesmo se ele for deletado.
 - **`estoque.quantidade`** é a fonte da verdade para o saldo atual de cada insumo. Nunca atualize diretamente: sempre em transação junto com um registro em `movimentacao_estoque`. A tabela `insumo` guarda apenas dados cadastrais (nome, unidade, custo).
 - **`produto_insumo`** é a ficha técnica: define o quanto de cada insumo é consumido por 1 unidade vendida de um produto.
@@ -535,5 +535,100 @@ INSERT INTO produto_insumo (id_produto, id_insumo, quantidade, id_empresa) VALUE
 ```
 
 > **Nota**: A cada venda do produto "Hot Dog Simples", o sistema deduzirá automaticamente os insumos acima do estoque via `POST /api/pedidos` (transação com `UPDATE estoque SET quantidade = GREATEST(0, quantidade - ?)`).
+
+---
+
+## §11 — Migration: renomear `mesa` → `comanda` (banco já em produção)
+
+> Execute este bloco **apenas se o seu banco ainda possui a tabela `mesa` e a coluna `id_mesa`**.  
+> Se você criou o banco do zero a partir do §2 após maio/2026, as tabelas já têm o nome correto — **ignore esta seção**.
+
+O script abaixo:
+1. Remove a FK que liga `pedido.id_mesa → mesa.id_mesa`
+2. Renomeia a coluna `pedido.id_mesa` para `pedido.id_comanda`
+3. Renomeia a tabela `mesa` para `comanda` e sua PK `id_mesa` → `id_comanda`
+4. Renomeia as colunas `vendas.id_mesa` e `vendas.numero_mesa` para `id_comanda` / `numero_comanda`
+5. Recria a FK com o novo nome
+
+```sql
+USE atlas_db;
+
+-- ============================================================
+--  ATLAS — Migration v2.2.0: mesa → comanda
+--  Pré-requisito: banco criado antes de Maio/2026
+--  Tempo estimado: < 5 segundos (tabelas pequenas)
+-- ============================================================
+
+-- Desabilitar verificação de FK temporariamente para evitar
+-- erros de dependência durante o rename das colunas
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- -------------------------------------------------------------
+-- PASSO 1: Remover a FK antiga em pedido (nome original)
+-- Caso o nome da constraint seja diferente no seu banco,
+-- consulte com: SHOW CREATE TABLE pedido;
+-- -------------------------------------------------------------
+ALTER TABLE pedido
+  DROP FOREIGN KEY fk_pedido_mesa;
+
+-- -------------------------------------------------------------
+-- PASSO 2: Renomear coluna id_mesa → id_comanda em pedido
+-- -------------------------------------------------------------
+ALTER TABLE pedido
+  CHANGE COLUMN id_mesa id_comanda INT NOT NULL;
+
+-- -------------------------------------------------------------
+-- PASSO 3: Renomear a tabela mesa → comanda
+-- -------------------------------------------------------------
+RENAME TABLE mesa TO comanda;
+
+-- -------------------------------------------------------------
+-- PASSO 4: Renomear a PK id_mesa → id_comanda dentro de comanda
+-- (o nome da coluna, não apenas o índice)
+-- -------------------------------------------------------------
+ALTER TABLE comanda
+  CHANGE COLUMN id_mesa id_comanda INT NOT NULL AUTO_INCREMENT;
+
+-- -------------------------------------------------------------
+-- PASSO 5: Renomear colunas em vendas
+-- -------------------------------------------------------------
+ALTER TABLE vendas
+  CHANGE COLUMN id_mesa     id_comanda     INT,
+  CHANGE COLUMN numero_mesa numero_comanda INT;
+
+-- -------------------------------------------------------------
+-- PASSO 6: Recriar a FK com novo nome
+-- -------------------------------------------------------------
+ALTER TABLE pedido
+  ADD CONSTRAINT fk_pedido_comanda
+    FOREIGN KEY (id_comanda) REFERENCES comanda (id_comanda)
+    ON DELETE CASCADE;
+
+-- Reabilitar verificação de FK
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- -------------------------------------------------------------
+-- VERIFICAÇÃO — execute estas queries para confirmar
+-- -------------------------------------------------------------
+-- Deve listar a tabela "comanda" (não mais "mesa"):
+SHOW TABLES LIKE 'comanda';
+
+-- Deve mostrar id_comanda como PK:
+DESCRIBE comanda;
+
+-- Deve mostrar id_comanda (sem id_mesa):
+DESCRIBE pedido;
+
+-- Deve mostrar id_comanda e numero_comanda (sem as colunas antigas):
+DESCRIBE vendas;
+
+-- Deve mostrar a FK fk_pedido_comanda:
+SELECT CONSTRAINT_NAME, TABLE_NAME, REFERENCED_TABLE_NAME
+FROM information_schema.REFERENTIAL_CONSTRAINTS
+WHERE CONSTRAINT_SCHEMA = 'atlas_db'
+  AND REFERENCED_TABLE_NAME = 'comanda';
+```
+
+> **Atenção:** Se o nome da sua FK for diferente de `fk_pedido_mesa`, descubra o nome correto antes com `SHOW CREATE TABLE pedido;` e substitua no PASSO 1.
 
 ---

@@ -1,43 +1,43 @@
-<div class="row">
+﻿<div class="row">
   <div class="col-xl-12">
-    <app-card cardTitle="Mesas" [options]="false" [buttonh]="true" buttonTitle="Adicionar mesa" [buttonAction]="abrirModalAdicionarMesa.bind(this)">
+    <app-card cardTitle="Comandas" [options]="false" [buttonh]="true" buttonTitle="Adicionar comanda" [buttonAction]="abrirModalAdicionarComanda.bind(this)">
       <div class="row">
-        <div *ngFor="let mesa of mesasPaginadas" class="col-md-4 mb-4">
-          <div class="mesa-card">
+        <div *ngFor="let comanda of comandasPaginadas" class="col-md-4 mb-4">
+          <div class="comanda-card">
 
             <!-- Cabeçalho colorido -->
-            <div class="mesa-card__header">
-              <div class="mesa-card__number">
-                <i class="feather icon-grid me-2"></i>Mesa {{ mesa.numero }}
+            <div class="comanda-card__header">
+              <div class="comanda-card__number">
+                <i class="feather icon-grid me-2"></i>Comanda {{ comanda.numero }}
               </div>
-              <button class="mesa-card__delete" (click)="excluirMesa(mesa.id_mesa)" title="Excluir mesa">
+              <button class="comanda-card__delete" (click)="excluirComanda(comanda.id_comanda)" title="Excluir comanda">
                 <i class="feather icon-trash-2"></i>
               </button>
             </div>
 
             <!-- Corpo -->
-            <div class="mesa-card__body">
-              <div class="mesa-card__info-row">
-                <span class="mesa-card__name"><i class="feather icon-user me-1"></i>{{ mesa.nome }}</span>
-                <span class="mesa-card__order-badge">{{ mesa.ordem_type }}</span>
+            <div class="comanda-card__body">
+              <div class="comanda-card__info-row">
+                <span class="comanda-card__name"><i class="feather icon-user me-1"></i>{{ comanda.nome }}</span>
+                <span class="comanda-card__order-badge">{{ comanda.ordem_type }}</span>
               </div>
 
-              <div class="mesa-card__total-box">
-                <span class="mesa-card__total-label">Consumo total</span>
-                <span class="mesa-card__total-value">{{ mesa.totalConsumo | currency: 'BRL' }}</span>
+              <div class="comanda-card__total-box">
+                <span class="comanda-card__total-label">Consumo total</span>
+                <span class="comanda-card__total-value">{{ comanda.totalConsumo | currency: 'BRL' }}</span>
               </div>
 
               <!-- Ações -->
-              <div class="mesa-card__actions">
-                <button class="mesa-action-btn mesa-action-btn--purple" (click)="abrirModalAdicionarPedido(mesa)">
+              <div class="comanda-card__actions">
+                <button class="comanda-action-btn comanda-action-btn--purple" (click)="abrirModalAdicionarPedido(comanda)">
                   <i class="feather icon-plus-circle"></i>
                   <span>Pedido</span>
                 </button>
-                <button class="mesa-action-btn mesa-action-btn--red" (click)="finalizarMesa(mesa.id_mesa.toString())">
+                <button class="comanda-action-btn comanda-action-btn--red" (click)="finalizarComanda(comanda.id_comanda.toString())">
                   <i class="feather icon-check-circle"></i>
                   <span>Finalizar</span>
                 </button>
-                <button class="mesa-action-btn mesa-action-btn--teal" (click)="abrirModalDetalhes(mesa)">
+                <button class="comanda-action-btn comanda-action-btn--teal" (click)="abrirModalDetalhes(comanda)">
                   <i class="feather icon-eye"></i>
                   <span>Detalhes</span>
                 </button>
@@ -51,26 +51,26 @@
   </div>
 </div>
 
-<!-- Formulário para Adicionar Mesa -->
+<!-- Formulário para Adicionar Comanda -->
 <div *ngIf="mostrarFormulario">
   <div class="card">
     <div class="card-body">
-      <h5 class="card-title">Adicionar Mesa</h5>
+      <h5 class="card-title">Adicionar Comanda</h5>
 
-      <form (ngSubmit)="adicionarMesa()">
+      <form (ngSubmit)="adicionarComanda()">
         <div class="form-group">
           <label for="numero">Número</label>
-          <input id="numero" type="number" [(ngModel)]="novaMesa.numero" name="numero" class="form-control" required />
+          <input id="numero" type="number" [(ngModel)]="novaComanda.numero" name="numero" class="form-control" required />
         </div>
 
         <div class="form-group">
-          <label for="nome">Nome da Mesa</label>
-          <input id="nome" type="text" [(ngModel)]="novaMesa.nome" name="nome" class="form-control" required />
+          <label for="nome">Nome da Comanda</label>
+          <input id="nome" type="text" [(ngModel)]="novaComanda.nome" name="nome" class="form-control" required />
         </div>
 
         <div class="form-group">
           <label for="ordem_type">Tipo</label>
-          <select id="ordem_type" [(ngModel)]="novaMesa.ordem_type" name="ordem_type" class="form-control" required>
+          <select id="ordem_type" [(ngModel)]="novaComanda.ordem_type" name="ordem_type" class="form-control" required>
             <option value="Pedido">Pedido</option>
             <option value="Retirada">Retirada</option>
             <option value="Entrega">Entrega</option>
@@ -78,25 +78,25 @@
         </div>
 
        <!-- Campo Endereço Exibido Apenas se Ordem for Entrega -->
-       <div class="form-group" *ngIf="novaMesa.ordem_type === 'Entrega'">
+       <div class="form-group" *ngIf="novaComanda.ordem_type === 'Entrega'">
         <label for="endereco">Endereço</label>
-        <input id="endereco" type="text" [(ngModel)]="novaMesa.endereco" name="endereco" class="form-control" required />
+        <input id="endereco" type="text" [(ngModel)]="novaComanda.endereco" name="endereco" class="form-control" required />
       </div>
 
         <div class="form-group">
           <label for="capacidade">Capacidade</label>
-          <input id="capacidade" type="number" [(ngModel)]="novaMesa.capacidade" name="capacidade" class="form-control" required />
+          <input id="capacidade" type="number" [(ngModel)]="novaComanda.capacidade" name="capacidade" class="form-control" required />
         </div>
 
         <div class="form-group">
           <label for="status">Status</label>
-          <select id="status" [(ngModel)]="novaMesa.status" name="status" class="form-control" required>
+          <select id="status" [(ngModel)]="novaComanda.status" name="status" class="form-control" required>
             <option value="Aberta">Aberta</option>
             <option value="Finalizada">Finalizada</option>
           </select>
         </div>
         
-        <button type="submit" class="btn btn-primary" [disabled]="!novaMesa.numero || !novaMesa.capacidade">Salvar Mesa</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!novaComanda.numero || !novaComanda.capacidade">Salvar Comanda</button>
         <button type="button" class="btn btn-secondary" (click)="toggleFormulario()">Cancelar</button>
       </form>
     </div>
@@ -105,8 +105,8 @@
 
 
 
-<!-- ===== MODAL ADICIONAR MESA ===== -->
-<div class="atlas-modal" *ngIf="mostrarModalMesa">
+<!-- ===== MODAL ADICIONAR COMANDA ===== -->
+<div class="atlas-modal" *ngIf="mostrarModalComanda">
   <div class="modal-dialog modal-dialog-centered" style="max-width:480px;">
     <div class="atlas-modal-content">
 
@@ -118,7 +118,7 @@
           </div>
           <div>
             <p class="mb-0 modal-header-label">Cadastro</p>
-            <h5 class="mb-0 text-white fw-bold">Adicionar Mesa</h5>
+            <h5 class="mb-0 text-white fw-bold">Adicionar Comanda</h5>
           </div>
         </div>
         <button type="button" (click)="fecharModals()" class="modal-close-btn">&times;</button>
@@ -131,32 +131,32 @@
 
             <div class="col-md-4">
               <label class="field-label">Número</label>
-              <input id="numero" type="number" [(ngModel)]="novaMesa.numero" name="numero" required class="field-input" />
+              <input id="numero" type="number" [(ngModel)]="novaComanda.numero" name="numero" required class="field-input" />
             </div>
 
             <div class="col-md-8">
-              <label class="field-label">Nome da Mesa</label>
-              <input id="nome" type="text" [(ngModel)]="novaMesa.nome" name="nome" required class="field-input" />
+              <label class="field-label">Nome da Comanda</label>
+              <input id="nome" type="text" [(ngModel)]="novaComanda.nome" name="nome" required class="field-input" />
             </div>
 
             <div class="col-12">
               <label class="field-label">Tipo de Ordem</label>
               <div class="d-flex gap-2">
                 <label *ngFor="let tipo of ['Pedido','Retirada','Entrega']" style="flex:1; cursor:pointer;">
-                  <input type="radio" [(ngModel)]="novaMesa.ordem_type" name="ordem_type" [value]="tipo" style="display:none;" />
-                  <div class="tipo-btn" [class.tipo-btn--active]="novaMesa.ordem_type === tipo">{{ tipo }}</div>
+                  <input type="radio" [(ngModel)]="novaComanda.ordem_type" name="ordem_type" [value]="tipo" style="display:none;" />
+                  <div class="tipo-btn" [class.tipo-btn--active]="novaComanda.ordem_type === tipo">{{ tipo }}</div>
                 </label>
               </div>
             </div>
 
-            <div class="col-12" *ngIf="novaMesa.ordem_type === 'Entrega'">
+            <div class="col-12" *ngIf="novaComanda.ordem_type === 'Entrega'">
               <label class="field-label"><i class="feather icon-map-pin me-1"></i>Endereço</label>
-              <input id="endereco" type="text" [(ngModel)]="novaMesa.endereco" name="endereco" required class="field-input" />
+              <input id="endereco" type="text" [(ngModel)]="novaComanda.endereco" name="endereco" required class="field-input" />
             </div>
 
             <div class="col-12">
               <label class="field-label">Status</label>
-              <select id="status" [(ngModel)]="novaMesa.status" name="status" required class="field-input">
+              <select id="status" [(ngModel)]="novaComanda.status" name="status" required class="field-input">
                 <option value="Aberta">Aberta</option>
                 <option value="Finalizada">Finalizada</option>
               </select>
@@ -169,15 +169,15 @@
       <!-- Footer -->
       <div class="modal-footer-custom">
         <button (click)="fecharModals()" class="btn-modal-cancel">Cancelar</button>
-        <button [disabled]="!novaMesa.numero" (click)="adicionarMesa()" class="btn-modal-primary btn-modal-primary--blue">
-          <i class="feather icon-check me-1"></i>Salvar Mesa
+        <button [disabled]="!novaComanda.numero" (click)="adicionarComanda()" class="btn-modal-primary btn-modal-primary--blue">
+          <i class="feather icon-check me-1"></i>Salvar Comanda
         </button>
       </div>
 
     </div>
   </div>
 </div>
-<div class="atlas-backdrop" *ngIf="mostrarModalMesa"></div>
+<div class="atlas-backdrop" *ngIf="mostrarModalComanda"></div>
 
 <!-- ===== MODAL ADICIONAR PEDIDO ===== -->
 <div class="atlas-modal" *ngIf="mostrarModal">
@@ -192,7 +192,7 @@
           </div>
           <div>
             <p class="mb-0 modal-header-label">Novo Pedido</p>
-            <h5 class="mb-0 text-white fw-bold">Mesa {{ mesaSelecionada?.numero }}</h5>
+            <h5 class="mb-0 text-white fw-bold">Comanda {{ comandaSelecionada?.numero }}</h5>
           </div>
         </div>
         <button type="button" (click)="fecharModal()" class="modal-close-btn">&times;</button>
@@ -325,8 +325,8 @@
           <div class="col-md-6" *ngIf="!produtoFichaAberta">
             <p class="modal-section-label"><i class="feather icon-clipboard me-1"></i>Pedido Atual</p>
 
-            <div class="order-list-scroll" *ngIf="mesaSelecionada?.pedidos && mesaSelecionada.pedidos.length > 0">
-              <div *ngFor="let pedido of mesaSelecionada.pedidos; let i = index" class="list-row order-item"
+            <div class="order-list-scroll" *ngIf="comandaSelecionada?.pedidos && comandaSelecionada.pedidos.length > 0">
+              <div *ngFor="let pedido of comandaSelecionada.pedidos; let i = index" class="list-row order-item"
                    (click)="editarIngredientesDoPedido(pedido)">
                 <div style="flex:1;" class="order-item__info">
                   <p class="list-row__name">
@@ -346,7 +346,7 @@
               </div>
             </div>
 
-            <div *ngIf="!mesaSelecionada?.pedidos || mesaSelecionada.pedidos.length === 0" class="empty-state">
+            <div *ngIf="!comandaSelecionada?.pedidos || comandaSelecionada.pedidos.length === 0" class="empty-state">
               <i class="feather icon-shopping-cart empty-state__icon"></i>
               Nenhum item adicionado
             </div>
@@ -377,7 +377,7 @@
 </div>
 <div class="atlas-backdrop" *ngIf="mostrarModal"></div>
 
-<!-- ===== MODAL DETALHES DA MESA ===== -->
+<!-- ===== MODAL DETALHES DA COMANDA ===== -->
 <div class="atlas-modal" *ngIf="mostrarModalDetalhes">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="atlas-modal-content">
@@ -390,7 +390,7 @@
           </div>
           <div>
             <p class="mb-0 modal-header-label">Histórico</p>
-            <h5 class="mb-0 text-white fw-bold">Mesa {{ mesaSelecionada?.numero }}</h5>
+            <h5 class="mb-0 text-white fw-bold">Comanda {{ comandaSelecionada?.numero }}</h5>
           </div>
         </div>
         <button type="button" (click)="fecharModals()" class="modal-close-btn">&times;</button>
@@ -399,10 +399,10 @@
       <!-- Body -->
       <div class="modal-body-custom" style="max-height:60vh; overflow-y:auto;">
 
-        <div *ngIf="mesaSelecionada?.pedidos && mesaSelecionada.pedidos.length > 0">
+        <div *ngIf="comandaSelecionada?.pedidos && comandaSelecionada.pedidos.length > 0">
           <p class="modal-section-label">Histórico de Pedidos</p>
 
-          <div *ngFor="let pedido of mesaSelecionada.pedidos; let i = index" class="pedido-card">
+          <div *ngFor="let pedido of comandaSelecionada.pedidos; let i = index" class="pedido-card">
 
             <div class="d-flex align-items-start justify-content-between mb-2">
               <div>
@@ -431,9 +431,9 @@
           </div>
         </div>
 
-        <div *ngIf="!mesaSelecionada?.pedidos || mesaSelecionada.pedidos.length === 0" class="empty-state-full">
+        <div *ngIf="!comandaSelecionada?.pedidos || comandaSelecionada.pedidos.length === 0" class="empty-state-full">
           <i class="feather icon-inbox empty-state-full__icon"></i>
-          <p>Nenhum pedido registrado para esta mesa.</p>
+          <p>Nenhum pedido registrado para esta comanda.</p>
         </div>
 
       </div>
@@ -441,11 +441,11 @@
       <!-- Footer -->
       <div class="modal-footer-custom modal-footer-custom--space-between">
         <div class="modal-teal-total">
-          <p>Total da Mesa</p>
-          <p>{{ mesaSelecionada?.totalConsumo | currency: 'BRL' }}</p>
+          <p>Total da Comanda</p>
+          <p>{{ comandaSelecionada?.totalConsumo | currency: 'BRL' }}</p>
         </div>
         <div class="d-flex gap-2">
-          <button (click)="imprimirHistoricoMesa()" class="btn-modal-outline btn-modal-outline--teal">
+          <button (click)="imprimirHistoricoComanda()" class="btn-modal-outline btn-modal-outline--teal">
             <i class="feather icon-printer me-1"></i>Imprimir
           </button>
           <button (click)="fecharModals()" class="btn-modal-cancel">Fechar</button>

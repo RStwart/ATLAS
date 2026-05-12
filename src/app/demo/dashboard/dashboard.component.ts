@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { VendasService } from '../../services/vendas.service';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { Venda } from '../../interfaces/vendas.interface';
@@ -87,8 +87,8 @@ export default class DashboardComponent implements OnInit {
 
     const grupos = new Map<string, Venda[]>();
     vendasAtivas.forEach(v => {
-      // Chave: mesa + data + hora + movimento — identifica a mesma operação
-      const key = `${v.numero_mesa}_${v.data_venda}_${v.hora_venda}_${v.movimento ?? ''}`;
+      // Chave: comanda + data + hora + movimento — identifica a mesma operação
+      const key = `${v.numero_comanda}_${v.data_venda}_${v.hora_venda}_${v.movimento ?? ''}`;
       if (!grupos.has(key)) grupos.set(key, []);
       grupos.get(key)!.push(v);
     });
@@ -204,8 +204,8 @@ export default class DashboardComponent implements OnInit {
           : 'NA';
   
         const subvenda = {
-          id_mesa: this.vendaSelecionada.id_mesa,
-          numero_mesa: this.vendaSelecionada.numero_mesa,
+          id_comanda: this.vendaSelecionada.id_comanda,
+          numero_comanda: this.vendaSelecionada.numero_comanda,
           total: div.valor,
           nota: div.nota || '000',
           status_venda: 'FINALIZADA',

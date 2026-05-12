@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const { exec } = require('child_process');
 const path = require('path');
 
@@ -8,7 +8,7 @@ const filePath = path.resolve(__dirname, 'ticket.txt');
 // Conteúdo do ticket
 const content = `
 ***************************************
-*           PEDIDO MESA       *
+*           PEDIDO COMANDA       *
 ***************************************
 * 1X X-BACON EGG                   
 * 1X X-DOG ESPECIAL                

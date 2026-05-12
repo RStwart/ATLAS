@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 
 export interface NavigationItem {
   id: string;
@@ -170,10 +170,10 @@ const NavigationItems = [
       //   icon: 'feather icon-server'
       // },
       {
-        id: 'Mesa',
-        title: 'Mesas',
+        id: 'Comanda',
+        title: 'Comandas',
         type: 'item',
-        url: '/tables/mesa',
+        url: '/tables/comanda',
         classes: 'nav-item',
         icon: 'feather icon-grid'
       },

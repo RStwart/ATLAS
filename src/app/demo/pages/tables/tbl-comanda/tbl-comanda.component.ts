@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
-import { MesaService } from 'src/app/services/mesa.service';
+﻿import { Component, OnInit } from '@angular/core';
+import { ComandaService } from 'src/app/services/comanda.service';
 import { ProdutoService } from 'src/app/services/produto.service';
-import { Mesa } from 'src/app/interfaces/mesa.interface';
+import { Comanda } from 'src/app/interfaces/comanda.interface';
 import { Produto } from 'src/app/interfaces/produto.interface';
 import { ToastrService } from 'ngx-toastr';
 import { Pedido } from 'src/app/interfaces/pedidos.interface';  // Importe a interface Pedido
@@ -12,25 +12,25 @@ import { InsumoService } from 'src/app/services/insumo.service';
 
 
 @Component({
-  selector: 'app-tbl-mesas',
-  templateUrl: './tbl-mesa.component.html',
-  styleUrls: ['./tbl-mesa.component.scss'],
+  selector: 'app-tbl-comandas',
+  templateUrl: './tbl-comanda.component.html',
+  styleUrls: ['./tbl-comanda.component.scss'],
 })
-export class TblMesasComponent implements OnInit {
-  mesas: Mesa[] = [];
+export class TblComandasComponent implements OnInit {
+  comandas: Comanda[] = [];
   produtos: Produto[] = [];
   
   mostrarModal: boolean = false;
-  mostrarModalMesa: boolean = false;
+  mostrarModalComanda: boolean = false;
   mostrarModalDetalhes: boolean = false;
   
-  mesaSelecionada: Mesa | null = null;
+  comandaSelecionada: Comanda | null = null;
   erro: string | null = null;
   filtroProduto: string = '';
   observacao: string = ''; // Variável para armazenar a observação
 
-  novaMesa: Mesa = {
-    id_mesa: 0,
+  novaComanda: Comanda = {
+    id_comanda: 0,
     numero: 0,
     status: 'Aberta',
     capacidade: 1,
@@ -41,13 +41,13 @@ export class TblMesasComponent implements OnInit {
     endereco:'',
   };
 
-  mostrarFormulario = false; // Controle de exibição do formulário de adicionar mesa
+  mostrarFormulario = false; // Controle de exibição do formulário de adicionar comanda
   
-  mesaEmEdicao: Mesa | null = null;
+  comandaEmEdicao: Comanda | null = null;
   currentPage: number = 1;
   itemsPerPage: number = 6;
   totalPages: number = 0;
-  mesasPaginadas: Mesa[] = [];
+  comandasPaginadas: Comanda[] = [];
   pages: number[] = [];
   limiteProdutos: number = 7; // ou qualquer valor que você queira
 
@@ -84,7 +84,7 @@ export class TblMesasComponent implements OnInit {
   }
 
   constructor(
-    private mesaService: MesaService,
+    private comandaService: ComandaService,
     private produtoService: ProdutoService,
     private pedidoService: PedidoService, // Injetando o PedidoService
     private insumoService: InsumoService,
@@ -93,7 +93,7 @@ export class TblMesasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.carregarMesas();
+    this.carregarComandas();
     this.carregarProdutos();
   }
 
@@ -107,9 +107,9 @@ export class TblMesasComponent implements OnInit {
   }
 
   calcularTotalPedido(): number {
-    if (!this.mesaSelecionada?.pedidos || !Array.isArray(this.mesaSelecionada.pedidos)) return 0;
+    if (!this.comandaSelecionada?.pedidos || !Array.isArray(this.comandaSelecionada.pedidos)) return 0;
     let total = 0;
-    this.mesaSelecionada.pedidos.forEach(pedido => {
+    this.comandaSelecionada.pedidos.forEach(pedido => {
       let precoUnitario = Number(pedido.preco) || 0;
 
       // Se a ficha deste produto está aberta, usa os acréscimos em tempo real
@@ -129,7 +129,7 @@ export class TblMesasComponent implements OnInit {
     return total;
   }
 
-  // Toggle para exibir/ocultar o formulário de adicionar mesa
+  // Toggle para exibir/ocultar o formulário de adicionar comanda
   toggleFormulario(): void {
     this.mostrarFormulario = !this.mostrarFormulario;
     if (!this.mostrarFormulario) {
@@ -139,8 +139,8 @@ export class TblMesasComponent implements OnInit {
 
   // Limpa os campos do formulário quando fechado
   limparFormulario(): void {
-    this.novaMesa = {
-      id_mesa: 0,
+    this.novaComanda = {
+      id_comanda: 0,
       numero: 0,
       status: 'Aberta',
       capacidade: 0,
@@ -166,31 +166,31 @@ export class TblMesasComponent implements OnInit {
   }
 
 
-  abrirModalAdicionarMesa(): void {
+  abrirModalAdicionarComanda(): void {
 
-    this.mostrarModalMesa = true;
-    console.log("MODAL ABERTO",this.mostrarModalMesa)
+    this.mostrarModalComanda = true;
+    console.log("MODAL ABERTO",this.mostrarModalComanda)
 
   }
 
 
-  abrirModalAdicionarPedido(mesa: Mesa): void {
-    this.mesaSelecionada = { ...mesa }; // Faz uma cópia da mesa
+  abrirModalAdicionarPedido(comanda: Comanda): void {
+    this.comandaSelecionada = { ...comanda }; // Faz uma cópia da comanda
     
     // Garantir que pedidos seja sempre um array
-    if (!this.mesaSelecionada.pedidos) {
-      this.mesaSelecionada.pedidos = [];
+    if (!this.comandaSelecionada.pedidos) {
+      this.comandaSelecionada.pedidos = [];
     }
     
-    console.log('Mesa Selecionada:', this.mesaSelecionada); // Verifique a mesa selecionada
+    console.log('Comanda Selecionada:', this.comandaSelecionada); // Verifique a comanda selecionada
     this.mostrarModal = true;
     this.mostrarModalDetalhes = false; // Certifique-se de que o modal de detalhes esteja fechado
-    this.mostrarModalMesa = false;
+    this.mostrarModalComanda = false;
   }
 
   fecharModal(): void {
     this.mostrarModal = false;
-    this.mesaSelecionada = null;
+    this.comandaSelecionada = null;
     this.filtroProduto = '';
     this.produtoFichaAberta = null;
     this.fichaIngredientes = [];
@@ -209,10 +209,10 @@ export class TblMesasComponent implements OnInit {
   }
 
   adicionarProdutoAPedido(produto: Produto): void {
-    if (this.mesaSelecionada) {
-      if (!Array.isArray(this.mesaSelecionada.pedidos)) this.mesaSelecionada.pedidos = [];
+    if (this.comandaSelecionada) {
+      if (!Array.isArray(this.comandaSelecionada.pedidos)) this.comandaSelecionada.pedidos = [];
       const itemId = `item_${++this.nextItemId}`;
-      this.mesaSelecionada.pedidos.push({ id_produto: produto.id_produto, nome: produto.nome, preco: produto.preco, quantidade: 1, itemId });
+      this.comandaSelecionada.pedidos.push({ id_produto: produto.id_produto, nome: produto.nome, preco: produto.preco, quantidade: 1, itemId });
       this.toastr.success('Produto adicionado!', 'Sucesso');
     }
   }
@@ -339,7 +339,7 @@ export class TblMesasComponent implements OnInit {
   }
 
   confirmarAdicionarProduto(): void {
-    if (!this.produtoFichaAberta || !this.mesaSelecionada) return;
+    if (!this.produtoFichaAberta || !this.comandaSelecionada) return;
     const produto = this.produtoFichaAberta;
     const isEdicao = this.modoEdicaoFicha;
     const remover = this.fichaIngredientes.filter(i => i.qtdCustom === 0).map(i => i.id_insumo);
@@ -351,9 +351,9 @@ export class TblMesasComponent implements OnInit {
       .map(a => ({ id_insumo: a.id_insumo, quantidade: a.qtd, preco_acrescimo: a.preco_acrescimo, nome: a.nome }));
     let itemId: string;
     if (!isEdicao) {
-      if (!Array.isArray(this.mesaSelecionada.pedidos)) this.mesaSelecionada.pedidos = [];
+      if (!Array.isArray(this.comandaSelecionada.pedidos)) this.comandaSelecionada.pedidos = [];
       itemId = `item_${++this.nextItemId}`;
-      this.mesaSelecionada.pedidos.push({ id_produto: produto.id_produto, nome: produto.nome, preco: produto.preco, quantidade: 1, itemId });
+      this.comandaSelecionada.pedidos.push({ id_produto: produto.id_produto, nome: produto.nome, preco: produto.preco, quantidade: 1, itemId });
     } else {
       itemId = this.itemIdFichaEditando!;
     }
@@ -368,22 +368,22 @@ export class TblMesasComponent implements OnInit {
 
   // Funções para manipulação da quantidade
   incrementarQuantidade(itemId: string): void {
-    if (this.mesaSelecionada) {
-      const item = this.mesaSelecionada.pedidos.find((pedido: any) => pedido.itemId === itemId);
+    if (this.comandaSelecionada) {
+      const item = this.comandaSelecionada.pedidos.find((pedido: any) => pedido.itemId === itemId);
       if (item) { item.quantidade += 1; }
     }
   }
 
   decrementarQuantidade(itemId: string): void {
-    if (this.mesaSelecionada) {
-      const item = this.mesaSelecionada.pedidos.find((pedido: any) => pedido.itemId === itemId);
+    if (this.comandaSelecionada) {
+      const item = this.comandaSelecionada.pedidos.find((pedido: any) => pedido.itemId === itemId);
       if (item && item.quantidade > 1) { item.quantidade -= 1; }
     }
   }
 
   removerProdutoDoPedido(index: number, itemId: string): void {
-    if (this.mesaSelecionada) {
-      this.mesaSelecionada.pedidos.splice(index, 1);
+    if (this.comandaSelecionada) {
+      this.comandaSelecionada.pedidos.splice(index, 1);
       delete this.modificacoesPorItem[itemId];
       this.toastr.info('Produto removido do pedido.', 'Removido');
     }
@@ -392,15 +392,15 @@ export class TblMesasComponent implements OnInit {
   
   finalizarPedido(): void {
 
-    if (this.mesaSelecionada) {
+    if (this.comandaSelecionada) {
       // Calcular o total do pedido
       const totalPedido = this.calcularTotalPedido();
 
-      console.log('ITEM ENVIADOS', this.mesaSelecionada.pedidos);
+      console.log('ITEM ENVIADOS', this.comandaSelecionada.pedidos);
   
       // Criar a string personalizada para os itens do pedido
       // O preço enviado já inclui o valor dos acréscimos do item
-      const itensFormatados = this.mesaSelecionada.pedidos.map((pedido: any) => {
+      const itensFormatados = this.comandaSelecionada.pedidos.map((pedido: any) => {
         const precoFinal = this.calcularPrecoItem(pedido);
         return `${pedido.id_produto}|${pedido.nome}|${pedido.quantidade}|${precoFinal}`;
       }).join('; ');
@@ -421,16 +421,16 @@ export class TblMesasComponent implements OnInit {
       // Criar o objeto do pedido
       const pedido: Pedido = {
         id_pedido: 0,  // Este ID será gerado pelo backend
-        id_mesa: this.mesaSelecionada.id_mesa,
+        id_comanda: this.comandaSelecionada.id_comanda,
         data: dataHorapedido,
         status: 'Solicitado',  // Status do pedido
         total: totalPedido,  // O total calculado do pedido
         item: itensFormatados, // Enviando a string formatada
         observacao: this.observacao || '',  // Adicionando a observação
-        numero: this.mesaSelecionada.numero,
-        nome_pe: this.mesaSelecionada.nome,
-        endereco_pe: this.mesaSelecionada.endereco,
-        ordem_type_pe: this.mesaSelecionada.ordem_type,
+        numero: this.comandaSelecionada.numero,
+        nome_pe: this.comandaSelecionada.nome,
+        endereco_pe: this.comandaSelecionada.endereco,
+        ordem_type_pe: this.comandaSelecionada.ordem_type,
       };
   
       const modificacoes = Object.entries(this.modificacoesPorItem)
@@ -452,14 +452,14 @@ export class TblMesasComponent implements OnInit {
         (response) => {
           this.toastr.success('Pedido finalizado e adicionado com sucesso!', 'Sucesso');
   
-          // Atualizar o totalConsumido da mesa
-          const novoTotalConsumo = parseFloat(String(this.mesaSelecionada.totalConsumo || '0')) + totalPedido;
+          // Atualizar o totalConsumido da comanda
+          const novoTotalConsumo = parseFloat(String(this.comandaSelecionada.totalConsumo || '0')) + totalPedido;
   
-          // Atualizar a mesa com o novo total consumido
-          this.mesaSelecionada.totalConsumo = parseFloat(novoTotalConsumo.toFixed(2));
+          // Atualizar a comanda com o novo total consumido
+          this.comandaSelecionada.totalConsumo = parseFloat(novoTotalConsumo.toFixed(2));
   
           // Agora, faça a chamada para atualizar o total no backend
-          this.mesaService.atualizarTotalConsumo(this.mesaSelecionada.id_mesa.toString(), novoTotalConsumo).subscribe(
+          this.comandaService.atualizarTotalConsumo(this.comandaSelecionada.id_comanda.toString(), novoTotalConsumo).subscribe(
             (updateResponse) => {
               console.log('Total de consumo atualizado com sucesso:', updateResponse);
             },
@@ -496,33 +496,33 @@ export class TblMesasComponent implements OnInit {
   
   
 
-  carregarMesas(): void {
-    this.mesaService.getMesas().subscribe(
-      (response: Mesa[]) => {
-        this.mesas = response;
+  carregarComandas(): void {
+    this.comandaService.getComandas().subscribe(
+      (response: Comanda[]) => {
+        this.comandas = response;
 
-        this.mesas.forEach(mesa => {
+        this.comandas.forEach(comanda => {
           // Garantindo que o valor de total_consumido seja um número, caso precise.
-          if (!mesa.totalConsumo) {
-            mesa.totalConsumo = 0; // Definindo um valor padrão caso seja null ou undefined
+          if (!comanda.totalConsumo) {
+            comanda.totalConsumo = 0; // Definindo um valor padrão caso seja null ou undefined
           }
         });
 
         this.atualizarPaginacao();
-        this.toastr.success('Mesas carregadas com sucesso!', 'Sucesso');
+        this.toastr.success('Comandas carregadas com sucesso!', 'Sucesso');
       },
       (error) => {
-        this.erro = 'Erro ao carregar mesas';
-        console.error('Erro ao carregar mesas:', error);
-        this.toastr.error('Erro ao carregar mesas', 'Erro');
+        this.erro = 'Erro ao carregar comandas';
+        console.error('Erro ao carregar comandas:', error);
+        this.toastr.error('Erro ao carregar comandas', 'Erro');
       }
     );
   }
 
   atualizarPaginacao(): void {
-    this.totalPages = Math.ceil(this.mesas.length / this.itemsPerPage);
+    this.totalPages = Math.ceil(this.comandas.length / this.itemsPerPage);
     this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
-    this.mesasPaginadas = this.mesas.slice(
+    this.comandasPaginadas = this.comandas.slice(
       (this.currentPage - 1) * this.itemsPerPage,
       this.currentPage * this.itemsPerPage
     );
@@ -534,40 +534,40 @@ export class TblMesasComponent implements OnInit {
     this.atualizarPaginacao();
   }
 
-  excluirMesa(id: number): void {
-    if (confirm('Tem certeza que deseja excluir esta mesa?')) {
-      this.mesaService.deleteMesa(id.toString()).subscribe(
+  excluirComanda(id: number): void {
+    if (confirm('Tem certeza que deseja excluir esta comanda?')) {
+      this.comandaService.deleteComanda(id.toString()).subscribe(
         () => {
-          this.mesas = this.mesas.filter((mesa) => mesa.id_mesa !== id);
+          this.comandas = this.comandas.filter((comanda) => comanda.id_comanda !== id);
           this.atualizarPaginacao();
-          this.toastr.success('Mesa deletada com sucesso!', 'Sucesso');
+          this.toastr.success('Comanda deletada com sucesso!', 'Sucesso');
         },
         (error) => {
-          console.error('Erro ao deletar mesa:', error);
-          this.toastr.error('Erro ao deletar mesa', 'Erro');
+          console.error('Erro ao deletar comanda:', error);
+          this.toastr.error('Erro ao deletar comanda', 'Erro');
         }
       );
     }
   }
 
-  editarMesa(mesa: Mesa): void {
-    this.mesaEmEdicao = { ...mesa };
+  editarComanda(comanda: Comanda): void {
+    this.comandaEmEdicao = { ...comanda };
     this.mostrarFormulario = true;
   }
 
-  adicionarMesa(): void {
-    if (this.novaMesa.numero) {
-      this.mesaService.addMesa(this.novaMesa).subscribe(
+  adicionarComanda(): void {
+    if (this.novaComanda.numero) {
+      this.comandaService.addComanda(this.novaComanda).subscribe(
         (response) => {
-          this.mesas.push(response); // Adiciona a nova mesa à lista
+          this.comandas.push(response); // Adiciona a nova comanda à lista
           this.atualizarPaginacao();
-          this.toastr.success('Mesa adicionada com sucesso!', 'Sucesso');
+          this.toastr.success('Comanda adicionada com sucesso!', 'Sucesso');
           this.toggleFormulario(); // Fecha o formulário após adicionar
-          this.mostrarModalMesa = false;
+          this.mostrarModalComanda = false;
         },
         (error) => {
-          this.toastr.error('Erro ao adicionar mesa', 'Erro');
-          console.error('Erro ao adicionar mesa:', error);
+          this.toastr.error('Erro ao adicionar comanda', 'Erro');
+          console.error('Erro ao adicionar comanda:', error);
         }
       );
     } else {
@@ -581,13 +581,13 @@ export class TblMesasComponent implements OnInit {
   }
 
 
-  imprimirHistoricoMesa(): void {
-    if (!this.mesaSelecionada || !this.mesaSelecionada.pedidos || this.mesaSelecionada.pedidos.length === 0) {
-      alert('Nenhum pedido encontrado para esta mesa!');
+  imprimirHistoricoComanda(): void {
+    if (!this.comandaSelecionada || !this.comandaSelecionada.pedidos || this.comandaSelecionada.pedidos.length === 0) {
+      alert('Nenhum pedido encontrado para esta comanda!');
       return;
     }
   
-    this.pedidoService.imprimirHistoricoMesa(this.mesaSelecionada.numero, this.mesaSelecionada.pedidos, this.mesaSelecionada.nome , this.mesaSelecionada.endereco).subscribe({
+    this.pedidoService.imprimirHistoricoComanda(this.comandaSelecionada.numero, this.comandaSelecionada.pedidos, this.comandaSelecionada.nome , this.comandaSelecionada.endereco).subscribe({
       next: (response) => {
         console.log('Histórico de pedidos impresso com sucesso!', response);
         alert('Histórico de pedidos impresso com sucesso!');
@@ -601,12 +601,12 @@ export class TblMesasComponent implements OnInit {
   
 
 
-  carregarHistoricoPedidos(id_mesa: number): void {
-    this.pedidoService.getHistoricoPedidosPorMesa(id_mesa).subscribe(
+  carregarHistoricoPedidos(id_comanda: number): void {
+    this.pedidoService.getHistoricoPedidosPorComanda(id_comanda).subscribe(
       (pedidos: any) => {
         console.log('Pedidos carregados:', pedidos);
   
-        let totalMesa = 0;  // Inicializa o total da mesa como 0
+        let totalComanda = 0;  // Inicializa o total da comanda como 0
   
         if (pedidos && pedidos.length > 0) {
           pedidos.forEach(pedido => {
@@ -648,22 +648,22 @@ export class TblMesasComponent implements OnInit {
             // Atribui o total calculado para cada pedido
             pedido.totalPedido = totalPedido;
   
-            // Adiciona o total do pedido ao total da mesa
-            totalMesa += totalPedido;
+            // Adiciona o total do pedido ao total da comanda
+            totalComanda += totalPedido;
   
             // Log para verificar a estrutura do pedido
             console.log('Pedido após conversão:', pedido);
           });
   
-          // Atualiza a mesaSelecionada com os pedidos carregados
-          this.mesaSelecionada.pedidos = pedidos;
-          this.mesaSelecionada.totalMesa = totalMesa;  // Atualiza o total da mesa
-          console.log('Pedidos selecionados:', this.mesaSelecionada.pedidos);
-          console.log('Total da Mesa:', totalMesa);
+          // Atualiza a comandaSelecionada com os pedidos carregados
+          this.comandaSelecionada.pedidos = pedidos;
+          this.comandaSelecionada.totalComanda = totalComanda;  // Atualiza o total da comanda
+          console.log('Pedidos selecionados:', this.comandaSelecionada.pedidos);
+          console.log('Total da Comanda:', totalComanda);
         } else {
-          console.log('Nenhum pedido encontrado para essa mesa');
-          this.mesaSelecionada.pedidos = [];
-          this.mesaSelecionada.totalMesa = 0;  // Caso não haja pedidos, o total da mesa é 0
+          console.log('Nenhum pedido encontrado para essa comanda');
+          this.comandaSelecionada.pedidos = [];
+          this.comandaSelecionada.totalComanda = 0;  // Caso não haja pedidos, o total da comanda é 0
         }
       },
       (error) => {
@@ -675,40 +675,40 @@ export class TblMesasComponent implements OnInit {
 
 
 
-  abrirModalDetalhes(mesa: Mesa): void {
-    this.mesaSelecionada = { ...mesa }; // Faz uma cópia da mesa
-    console.log('Detalhes da Mesa Selecionada:', this.mesaSelecionada); // Verifique a mesa selecionada
+  abrirModalDetalhes(comanda: Comanda): void {
+    this.comandaSelecionada = { ...comanda }; // Faz uma cópia da comanda
+    console.log('Detalhes da Comanda Selecionada:', this.comandaSelecionada); // Verifique a comanda selecionada
     
     // Garantir que pedidos seja sempre um array
-    if (!Array.isArray(this.mesaSelecionada.pedidos)) {
-      this.mesaSelecionada.pedidos = [];
+    if (!Array.isArray(this.comandaSelecionada.pedidos)) {
+      this.comandaSelecionada.pedidos = [];
     }
   
     this.mostrarModalDetalhes = true;  // Mostra o modal de detalhes
     this.mostrarModal = false; // Fecha o modal de adicionar pedido
-    this.mostrarModalMesa = false;
+    this.mostrarModalComanda = false;
     
-    this.carregarHistoricoPedidos(this.mesaSelecionada.id_mesa);
+    this.carregarHistoricoPedidos(this.comandaSelecionada.id_comanda);
   }
   
 
   fecharModals() {
     this.mostrarModalDetalhes = false;  // Garantir que o modal de detalhes seja fechado
     this.mostrarModal = false;  // Se você também está controlando outros modais, defina como necessário
-    this.mostrarModalMesa = false;
+    this.mostrarModalComanda = false;
   }
 
 
-  finalizarMesa(idMesa: string): void {
-    const confirmar = window.confirm('Você tem certeza que deseja finalizar a mesa?');
+  finalizarComanda(idComanda: string): void {
+    const confirmar = window.confirm('Você tem certeza que deseja finalizar a comanda?');
   
     if (confirmar) {
-      // Finaliza a mesa, chamando o serviço de atualização de status
-      this.mesaService.atualizarStatusMesa(idMesa).subscribe((response) => {
-        console.log('Mesa finalizada com sucesso', response);
+      // Finaliza a comanda, chamando o serviço de atualização de status
+      this.comandaService.atualizarStatusComanda(idComanda).subscribe((response) => {
+        console.log('Comanda finalizada com sucesso', response);
   
-        // Após finalizar a mesa, cria a venda
-        this.mesaService.getMesaById(idMesa).subscribe((mesa) => {
+        // Após finalizar a comanda, cria a venda
+        this.comandaService.getComandaById(idComanda).subscribe((comanda) => {
           
           // Obtém a data e hora atual no horário local
           const dataAtual = new Date();
@@ -720,12 +720,12 @@ export class TblMesasComponent implements OnInit {
           const hora_venda = dataAtual.toLocaleTimeString('pt-BR', { hour12: false }); // Exemplo: '10:16:07'
 
   
-          // Cria a venda com os dados da mesa
+          // Cria a venda com os dados da comanda
           const venda: Venda = {
             id_venda: 0, // Gerar o ID conforme a lógica da sua API
-            id_mesa: mesa.id_mesa,
-            numero_mesa: mesa.numero,
-            total: mesa.totalConsumo, // Assume que o total de consumo já está na mesa
+            id_comanda: comanda.id_comanda,
+            numero_comanda: comanda.numero,
+            total: comanda.totalConsumo, // Assume que o total de consumo já está na comanda
             data_venda: data_venda, // Passa a data separada
             hora_venda: hora_venda, // Passa a hora separada
             nota: '000',  // Ajuste conforme necessário
@@ -752,10 +752,10 @@ export class TblMesasComponent implements OnInit {
 
 
       }, (error) => {
-        console.error('Erro ao finalizar mesa', error);
+        console.error('Erro ao finalizar comanda', error);
       });
     } else {
-      console.log('Finalização da mesa cancelada');
+      console.log('Finalização da comanda cancelada');
     }
 
 

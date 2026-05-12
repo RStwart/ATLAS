@@ -1,4 +1,4 @@
-# ATLAS — Ficha Técnica do Projeto
+﻿# ATLAS — Ficha Técnica do Projeto
 
 > Sistema de gerenciamento para estabelecimentos de alimentação (restaurantes, lanchonetes, delivery).
 
@@ -24,7 +24,7 @@ O ATLAS é uma aplicação **full-stack** dividida em dois projetos independente
 - **Frontend** — Single Page Application (SPA) construída com **Angular 18**
 - **Backend** — API REST construída com **Node.js + Express**
 
-O sistema gerencia mesas, pedidos, produtos, funcionários, vendas e caixa, além de integrar pagamento via **PIX (MercadoPago)** e impressão de tickets diretamente via Notepad (Windows).
+O sistema gerencia comandas, pedidos, produtos, funcionários, vendas e caixa, além de integrar pagamento via **PIX (MercadoPago)** e impressão de tickets diretamente via Notepad (Windows).
 
 A partir da **versão 2.1.0**, o ATLAS é uma plataforma **SaaS multi-tenant**: múltiplas empresas podem usar o mesmo sistema de forma isolada, cada uma com seus próprios dados, controlados pela coluna `id_empresa` em todas as tabelas.
 
@@ -100,13 +100,13 @@ ATLAS/
         ├── interceptors/
         │   └── auth.interceptor.ts # Injeta Bearer token e redireciona em 401
         ├── interfaces/           # Contratos de tipos TypeScript
-        │   ├── mesa.interface.ts
+        │   ├── comanda.interface.ts
         │   ├── pedidos.interface.ts
         │   ├── produto.interface.ts
         │   └── vendas.interface.ts
         ├── services/             # Camada de comunicação com a API
         │   ├── auth.service.ts
-        │   ├── mesa.service.ts
+        │   ├── comanda.service.ts
         │   ├── pedidos.service.ts
         │   ├── produto.service.ts
         │   ├── vendas.service.ts
@@ -126,7 +126,7 @@ ATLAS/
                 ├── authentication/   # Login e cadastro
                 ├── form-elements/    # Formulários
                 └── tables/           # Módulo de tabelas (principal)
-                    ├── tbl-mesa/         # Gestão de mesas e pedidos
+                    ├── tbl-comanda/         # Gestão de comandas e pedidos
                     ├── tbl-pedidos/      # Visualização de todos os pedidos
                     ├── tbl-produtos/     # Cadastro de produtos
                     ├── tbl-funcionarios/ # Cadastro de funcionários
@@ -146,13 +146,13 @@ O banco utilizado é **MySQL**. A conexão é configurada via pool com variávei
 | `empresa`     | Cadastro de empresas (tenants) do sistema SaaS    |
 | `USUARIOS`    | Usuários do sistema com email, senha (hash bcrypt), role e `id_empresa` |
 | `produto`     | Catálogo de produtos com imagem, preço, estoque, categoria e `id_empresa` |
-| `mesa`        | Controle de mesas/ordens ativas (local, retirada, entrega) e `id_empresa` |
-| `pedido`      | Itens individuais de cada pedido vinculados a uma mesa |
+| `comanda`        | Controle de comandas/ordens ativas (local, retirada, entrega) e `id_empresa` |
+| `pedido`      | Itens individuais de cada pedido vinculados a uma comanda |
 | `vendas`      | Registro de vendas finalizadas, vinculadas a um caixa e `id_empresa` |
 | `CAIXA`       | Controle de abertura e fechamento do caixa diário e `id_empresa` |
 | `funcionario` | Dados dos funcionários (cargo, salário, contato) e `id_empresa` |
 
-> **Multi-tenancy:** todas as tabelas (exceto `pedido`, herdado via `mesa`) possuem a coluna `id_empresa` que garante isolamento total de dados entre clientes. Os scripts completos de criação e migração estão no arquivo `banco.md`.
+> **Multi-tenancy:** todas as tabelas (exceto `pedido`, herdado via `comanda`) possuem a coluna `id_empresa` que garante isolamento total de dados entre clientes. Os scripts completos de criação e migração estão no arquivo `banco.md`.
 
 ### Variáveis de Ambiente (`.env` no servidor)
 
@@ -204,8 +204,8 @@ Todas as rotas protegidas do backend passam pelo middleware `autenticarTenant`, 
 
 | Role          | Acesso                                                    |
 |---------------|-----------------------------------------------------------|
-| `ADMIN`       | Todas as telas: dashboard, produtos, funcionários, mesas, pedidos, gráficos |
-| `FUNCIONARIO` | Somente mesas e pedidos (`/tables/*`)                     |
+| `ADMIN`       | Todas as telas: dashboard, produtos, funcionários, comandas, pedidos, gráficos |
+| `FUNCIONARIO` | Somente comandas e pedidos (`/tables/*`)                     |
 
 ---
 
@@ -218,7 +218,7 @@ Todas as rotas protegidas do backend passam pelo middleware `autenticarTenant`, 
 | `/auth/signup`        | AuthSignupComponent      | Público         |
 | `/home`               | LandingpageComponent     | Público         |
 | `/dashboard`          | DashboardComponent       | ADMIN           |
-| `/tables/mesa`        | TblMesasComponent        | ADMIN, FUNCIONARIO |
+| `/tables/comanda`        | TblComandasComponent        | ADMIN, FUNCIONARIO |
 | `/tables/pedidos`     | TblPedidosComponent      | ADMIN, FUNCIONARIO |
 | `/tables/produtos`    | TblProdutosComponent     | ADMIN, FUNCIONARIO |
 | `/tables/funcionarios`| TblFuncionariosComponent | ADMIN, FUNCIONARIO |
@@ -247,16 +247,16 @@ Todas as rotas protegidas do backend passam pelo middleware `autenticarTenant`, 
 | PUT    | `/api/produtos/:id`           | Atualiza produto (com imagem)     | Sim  |
 | DELETE | `/api/produtos/:id`           | Remove produto                    | Sim  |
 
-### Mesas
+### Comandas
 | Método | Rota                              | Descrição                              | Auth |
 |--------|-----------------------------------|----------------------------------------|------|
-| GET    | `/api/mesas`                      | Lista mesas ativas da empresa          | Sim  |
-| GET    | `/api/mesas/:id`                  | Retorna uma mesa pelo ID               | Sim  |
-| POST   | `/api/mesas`                      | Cria nova mesa/ordem                   | Sim  |
-| PUT    | `/api/mesas/:id`                  | Atualiza dados da mesa                 | Sim  |
-| PUT    | `/api/mesas/:id/status`           | Marca mesa como "Finalizada"           | Sim  |
-| DELETE | `/api/mesas/:id`                  | Remove mesa                            | Sim  |
-| GET    | `/api/mesas/:id/historico-pedidos`| Histórico de pedidos de uma mesa       | Sim  |
+| GET    | `/api/comandas`                      | Lista comandas ativas da empresa          | Sim  |
+| GET    | `/api/comandas/:id`                  | Retorna uma comanda pelo ID               | Sim  |
+| POST   | `/api/comandas`                      | Cria nova comanda/ordem                   | Sim  |
+| PUT    | `/api/comandas/:id`                  | Atualiza dados da comanda                 | Sim  |
+| PUT    | `/api/comandas/:id/status`           | Marca comanda como "Finalizada"           | Sim  |
+| DELETE | `/api/comandas/:id`                  | Remove comanda                            | Sim  |
+| GET    | `/api/comandas/:id/historico-pedidos`| Histórico de pedidos de uma comanda       | Sim  |
 
 ### Pedidos
 | Método | Rota               | Descrição                             | Auth |
@@ -294,7 +294,7 @@ Todas as rotas protegidas do backend passam pelo middleware `autenticarTenant`, 
 |--------|-------------------------------|----------------------------------------------|
 | POST   | `/api/pix`                    | Gera pagamento PIX via MercadoPago           |
 | POST   | `/api/imprimir-pedido`        | Imprime ticket de pedido via Notepad (Windows) |
-| POST   | `/api/imprimir-historico-mesa`| Imprime histórico completo de uma mesa       |
+| POST   | `/api/imprimir-historico-comanda`| Imprime histórico completo de uma comanda       |
 
 ### Health Check
 | Método | Rota           | Descrição                     |
@@ -306,10 +306,10 @@ Todas as rotas protegidas do backend passam pelo middleware `autenticarTenant`, 
 
 ## Interfaces TypeScript
 
-### `Mesa`
+### `Comanda`
 ```typescript
-interface Mesa {
-  id_mesa: number;
+interface Comanda {
+  id_comanda: number;
   numero: number;
   capacidade: number;
   status: 'Aberta' | 'Finalizada';
@@ -317,7 +317,7 @@ interface Mesa {
   garcom?: string;
   horaAbertura?: string;
   totalConsumo: number;
-  totalMesa?: number;
+  totalComanda?: number;
   nome: string;
   endereco: string;
   ordem_type: 'Pedido' | 'Retirada' | 'Entrega';
@@ -336,7 +336,7 @@ interface Produto {
 
 interface Pedido {
   id_pedido: number;
-  id_mesa: number;
+  id_comanda: number;
   numero: number;
   data: string;
   status: 'Solicitado' | 'Em preparo' | 'Finalizado';
@@ -367,8 +367,8 @@ interface Produto {
 ```typescript
 interface Venda {
   id_venda: number;
-  id_mesa: number;
-  numero_mesa: number;
+  id_comanda: number;
+  numero_comanda: number;
   total: number;
   data_venda: string;
   hora_venda: string;
@@ -387,8 +387,8 @@ interface Venda {
 | Serviço              | Responsabilidade                                              |
 |----------------------|---------------------------------------------------------------|
 | `AuthService`        | Login via API                                                 |
-| `MesaService`        | CRUD de mesas, atualização de status e total de consumo       |
-| `PedidoService`      | CRUD de pedidos, histórico por mesa, impressão de tickets     |
+| `ComandaService`     | CRUD de comandas, atualização de status e total de consumo    |
+| `PedidoService`      | CRUD de pedidos, histórico por comanda, impressão de tickets  |
 | `ProdutoService`     | CRUD de produtos, upload de imagem, filtro por categoria      |
 | `VendasService`      | Registro de vendas, listagem e gerenciamento de caixa         |
 | `FuncionarioService` | CRUD de funcionários                                          |
@@ -409,7 +409,7 @@ http://192.168.99.106:5000/api
 | `AdminComponent`         | Layout                 | Container do painel administrativo (com sidenav/navbar) |
 | `GuestComponent`         | Layout                 | Container de páginas públicas                      |
 | `DashboardComponent`     | `/dashboard`           | Resumo de vendas, caixa aberto/fechado, totais por pagamento |
-| `TblMesasComponent`      | `/tables/mesa`         | Gestão completa de mesas: abertura, pedidos, fechamento, pagamento |
+| `TblComandasComponent`   | `/tables/comanda`      | Gestão completa de comandas: abertura, pedidos, fechamento, pagamento |
 | `TblPedidosComponent`    | `/tables/pedidos`      | Visualização e gerenciamento global de pedidos     |
 | `TblProdutosComponent`   | `/tables/produtos`     | Cadastro, edição e remoção de produtos com imagem  |
 | `TblFuncionariosComponent`| `/tables/funcionarios`| Cadastro e visualização de funcionários            |
@@ -419,17 +419,17 @@ http://192.168.99.106:5000/api
 
 ---
 
-## Fluxo de Operação Principal (Mesa)
+## Fluxo de Operação Principal (Comanda)
 
 ```
-1. Abrir mesa  →  POST /api/mesas
+1. Abrir comanda  →  POST /api/comandas
 2. Selecionar produto e adicionar pedido  →  POST /api/pedidos
 3. Imprimir ticket do pedido  →  POST /api/imprimir-pedido
-4. [Opcional] Imprimir histórico da mesa  →  POST /api/imprimir-historico-mesa
+4. [Opcional] Imprimir histórico da comanda  →  POST /api/imprimir-historico-comanda
 5. Fechar conta: selecionar pagamento (Dinheiro / Cartão / PIX)
      - PIX  →  POST /api/pix  (MercadoPago gera QR code)
 6. Registrar venda  →  POST /api/vendas
-7. Finalizar mesa  →  PUT /api/mesas/:id/status
+7. Finalizar comanda  →  PUT /api/comandas/:id/status
 ```
 
 ---
@@ -450,7 +450,7 @@ Fechamento: POST /api/caixa/fechar → registra totais por tipo de pagamento
 A impressão é realizada **exclusivamente em Windows** usando o Notepad:
 
 ```
-exec(`notepad /p "ticket_temp_<id_mesa>.txt"`)
+exec(`notepad /p "ticket_temp_<id_comanda>.txt"`)
 ```
 
 - Um arquivo `.txt` temporário é gerado no diretório `server/`

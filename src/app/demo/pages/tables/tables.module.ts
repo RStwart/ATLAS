@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+﻿import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TablesRoutingModule } from './tables-routing.module';
@@ -7,7 +7,7 @@ import { TblInsumosComponent } from './tbl-insumos/tbl-insumos.component';
 import { TblMovimentacoesComponent } from './tbl-movimentacoes/tbl-movimentacoes.component';
 import { CardComponent } from 'src/app/theme/shared/components/card/card.component';  // Importar o CardComponent diretamente
 import { TblFuncionariosComponent } from './tbl-funcionarios/tbl-funcionarios.component';
-import { TblMesasComponent } from './tbl-mesa/tbl-mesa.component';
+import { TblComandasComponent } from './tbl-comanda/tbl-comanda.component';
 import { TblPedidosComponent } from './tbl-pedidos/tbl-pedidos.component';
 import { TblCaixasComponent } from './tbl-caixas/tbl-caixas.component';
 
@@ -18,7 +18,7 @@ import { TblCaixasComponent } from './tbl-caixas/tbl-caixas.component';
     TblInsumosComponent,      // Declare o componente TblInsumosComponent
     TblMovimentacoesComponent, // Declare o componente TblMovimentacoesComponent
     TblFuncionariosComponent, // Declare o componente TblFuncionariosComponent
-    TblMesasComponent,        // Declare o componente TblMesasComponent
+    TblComandasComponent,        // Declare o componente TblComandasComponent
     TblPedidosComponent,      // Declare o componente TblPedidosComponent
     TblCaixasComponent        // Declare o componente TblCaixasComponent
   ],
