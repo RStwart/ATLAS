@@ -457,6 +457,13 @@ export class TblComandasComponent implements OnInit {
   
           // Atualizar a comanda com o novo total consumido
           this.comandaSelecionada.totalConsumo = parseFloat(novoTotalConsumo.toFixed(2));
+
+          // Sincronizar o array principal de comandas para refletir na tela sem F5
+          const idx = this.comandas.findIndex(c => c.id_comanda === this.comandaSelecionada!.id_comanda);
+          if (idx !== -1) {
+            this.comandas[idx].totalConsumo = this.comandaSelecionada.totalConsumo;
+            this.atualizarPaginacao();
+          }
   
           // Agora, faça a chamada para atualizar o total no backend
           this.comandaService.atualizarTotalConsumo(this.comandaSelecionada.id_comanda.toString(), novoTotalConsumo).subscribe(

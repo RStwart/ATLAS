@@ -9,6 +9,10 @@
   overflow: hidden;
   min-width: 100%;
   min-height: 100vh;
+  background-image: url('/assets/images/login_backgraund.png');
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
 
   a,
   p > a {
