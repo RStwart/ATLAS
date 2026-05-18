@@ -610,72 +610,60 @@ export class TblComandasComponent implements OnInit {
 
   carregarHistoricoPedidos(id_comanda: number): void {
     this.pedidoService.getHistoricoPedidosPorComanda(id_comanda).subscribe(
-      (pedidos: any) => {
-        console.log('Pedidos carregados:', pedidos);
-  
-        let totalComanda = 0;  // Inicializa o total da comanda como 0
-  
+      (pedidos: any[]) => {
         if (pedidos && pedidos.length > 0) {
-          pedidos.forEach(pedido => {
-            let totalPedido = 0;  // Inicializa o total do pedido como 0
-  
-            try {
-              // Verifica se o item existe e faz a conversão corretamente
-              const produtosString = pedido.item;  // String com os produtos
-  
-              if (produtosString && typeof produtosString === 'string') {
-                // Converte a string de produtos em um array de objetos de produtos
-                pedido.itens = produtosString.split(';').map((produtoStr: string) => {
-                  // Remove qualquer espaço extra usando trim()
-                  const [id, nome, quantidade, preco] = produtoStr.split('|').map((campo) => campo.trim());
-    
-                  // Verifica se a quantidade e o preço são válidos
-                  const quantidadeValida = !isNaN(parseInt(quantidade, 10)) ? parseInt(quantidade, 10) : 0;
-                  const precoValido = !isNaN(parseFloat(preco)) ? parseFloat(preco) : 0;
-    
-                  // Calcular o total do item (preço * quantidade)
-                  totalPedido += precoValido * quantidadeValida;
-  
-                  return {
-                    id: id || 'ID desconhecido',  // ID do produto (adicionado)
-                    nome: nome || 'Produto desconhecido',  // Nome do produto
-                    quantidade: quantidadeValida,
-                    preco: precoValido,
-                  };
-                });
-                console.log('Itens do pedido após conversão:', pedido.itens);
-              } else {
-                pedido.itens = [];  // Se não houver itens válidos, cria um array vazio
-              }
-            } catch (e) {
-              pedido.itens = [];
-              console.error('Erro ao converter pedido.item:', e);
-            }
-  
-            // Atribui o total calculado para cada pedido
-            pedido.totalPedido = totalPedido;
-  
-            // Adiciona o total do pedido ao total da comanda
-            totalComanda += totalPedido;
-  
-            // Log para verificar a estrutura do pedido
-            console.log('Pedido após conversão:', pedido);
-          });
-  
-          // Atualiza a comandaSelecionada com os pedidos carregados
+          let totalComanda = 0;
+          pedidos.forEach(pedido => { totalComanda += pedido.total || 0; });
           this.comandaSelecionada.pedidos = pedidos;
-          this.comandaSelecionada.totalComanda = totalComanda;  // Atualiza o total da comanda
-          console.log('Pedidos selecionados:', this.comandaSelecionada.pedidos);
-          console.log('Total da Comanda:', totalComanda);
+          this.comandaSelecionada.totalComanda = totalComanda;
         } else {
-          console.log('Nenhum pedido encontrado para essa comanda');
           this.comandaSelecionada.pedidos = [];
-          this.comandaSelecionada.totalComanda = 0;  // Caso não haja pedidos, o total da comanda é 0
+          this.comandaSelecionada.totalComanda = 0;
         }
       },
       (error) => {
         console.error('Erro ao carregar histórico de pedidos:', error);
         this.toastr.error('Erro ao carregar histórico de pedidos', 'Erro');
+      }
+    );
+  }
+
+  removerPedido(pedido: any): void {
+    if (!confirm('Tem certeza que deseja remover este item do pedido?')) return;
+
+    this.pedidoService.deletePedido(pedido.id_pedido.toString()).subscribe(
+      () => {
+        this.comandaSelecionada.pedidos = this.comandaSelecionada.pedidos.filter(
+          (p: any) => p.id_pedido !== pedido.id_pedido
+        );
+
+        const novoTotalComanda = parseFloat(
+          this.comandaSelecionada.pedidos.reduce((sum: number, p: any) => sum + (p.total || 0), 0).toFixed(2)
+        );
+        this.comandaSelecionada.totalComanda = novoTotalComanda;
+
+        const novoTotalConsumo = Math.max(
+          0,
+          parseFloat(((this.comandaSelecionada.totalConsumo || 0) - (pedido.total || 0)).toFixed(2))
+        );
+        this.comandaSelecionada.totalConsumo = novoTotalConsumo;
+
+        const idx = this.comandas.findIndex(c => c.id_comanda === this.comandaSelecionada!.id_comanda);
+        if (idx !== -1) {
+          this.comandas[idx].totalConsumo = novoTotalConsumo;
+          this.atualizarPaginacao();
+        }
+
+        this.comandaService.atualizarTotalConsumo(
+          this.comandaSelecionada.id_comanda.toString(),
+          novoTotalConsumo
+        ).subscribe();
+
+        this.toastr.success('Pedido removido com sucesso!', 'Sucesso');
+      },
+      (error) => {
+        console.error('Erro ao remover pedido:', error);
+        this.toastr.error('Erro ao remover pedido', 'Erro');
       }
     );
   }
