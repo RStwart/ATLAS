@@ -1,32 +1,65 @@
 ﻿<div class="row">
   <div class="col-xl-12">
     <app-card cardTitle="Pedidos" [options]="false">
-      <div class="row">
-        <!-- Loop pelos pedidos -->
-        <div *ngFor="let pedido of pedidosPaginados" class="col-md-4 mb-4">
-          <div class="card product-card p-3 position-relative" [ngClass]="getStatusClass(pedido.status)" (click)="alterarStatus(pedido)">
-            <!-- Botão Cancelar -->
-            <button class="btn btn-danger btn-cancelar" (click)="cancelarPedido(pedido, $event)">❌</button>
-            <div class="card-body text-center">
-              <h5 class="card-title fw-bold">Comanda: {{ pedido.numero }}</h5>
-          
-              <!-- Lista de produtos do pedido -->
-              <ul class="list-unstyled">
-                <li *ngFor="let produto of pedido.produtos">
-                  <h5 class="card-title fw-bold">{{ produto.quantidade }} - {{ produto.nome }} - R$ {{ produto.preco.toFixed(2) }}</h5>
-                </li>
-              </ul>
 
-              <h5 class="card-title fw-bold">OBSERVAÇÕES: {{ pedido.observacao }}</h5>
-
-              <!-- Botão Finalizar -->
-              <div class="mt-3">
-                <button class="btn btn-primary btn-lg" (click)="finalizarPedido(pedido, $event)">Finalizar Pedido</button>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Filtro de status -->
+      <div class="d-flex gap-2 mb-3 flex-wrap">
+        <button class="btn btn-sm" [ngClass]="filtroStatus === null ? 'btn-primary' : 'btn-outline-secondary'" (click)="setFiltro(null)">Todos</button>
+        <button class="btn btn-sm" [ngClass]="filtroStatus === 'Solicitado' ? 'btn-warning' : 'btn-outline-warning'" (click)="setFiltro('Solicitado')">Solicitado</button>
+        <button class="btn btn-sm" [ngClass]="filtroStatus === 'Em preparo' ? 'btn-primary' : 'btn-outline-primary'" (click)="setFiltro('Em preparo')">Em preparo</button>
+        <button class="btn btn-sm" [ngClass]="filtroStatus === 'Finalizado' ? 'btn-success' : 'btn-outline-success'" (click)="setFiltro('Finalizado')">Finalizado</button>
       </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Comanda</th>
+              <th>Cliente</th>
+              <th>Tipo</th>
+              <th>Itens</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Data</th>
+              <th class="text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pedido of pedidosPaginados">
+              <td class="text-muted" style="font-size:0.82rem">{{ pedido.id_pedido }}</td>
+              <td><strong>{{ pedido.numero || pedido.id_comanda }}</strong></td>
+              <td>{{ pedido.nome_pe || '—' }}</td>
+              <td>
+                <span class="badge-tipo" [ngClass]="getTipoClass(pedido.ordem_type_pe)">{{ pedido.ordem_type_pe || '—' }}</span>
+              </td>
+              <td>{{ pedido.produtos?.length || 0 }}</td>
+              <td>R$ {{ pedido.total?.toFixed(2) || '0.00' }}</td>
+              <td>
+                <span class="badge-status" [ngClass]="getStatusBadge(pedido.status)">{{ pedido.status }}</span>
+              </td>
+              <td style="font-size:0.82rem">{{ pedido.data | date:'dd/MM/yy HH:mm' }}</td>
+              <td>
+                <div class="d-flex gap-1 justify-content-center">
+                  <button class="btn btn-sm btn-outline-secondary" (click)="abrirDetalhes(pedido)" title="Ver detalhes">
+                    <i class="feather icon-eye"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-warning" (click)="alterarStatus(pedido)" title="Alterar status">
+                    <i class="feather icon-refresh-cw"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="cancelarPedido(pedido, $event)" title="Cancelar pedido">
+                    <i class="feather icon-trash-2"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="pedidosPaginados.length === 0">
+              <td colspan="9" class="text-center text-muted py-4">Nenhum pedido encontrado.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
     </app-card>
   </div>
 </div>
@@ -45,3 +78,64 @@
     </li>
   </ul>
 </nav>
+
+<!-- Modal de detalhes -->
+<div class="modal-overlay" *ngIf="pedidoSelecionado" (click)="fecharDetalhes()">
+  <div class="modal-detalhes" (click)="$event.stopPropagation()">
+    <div class="modal-detalhes__header">
+      <h5 class="mb-0">Pedido #{{ pedidoSelecionado.id_pedido }} &mdash; Comanda {{ pedidoSelecionado.numero }}</h5>
+      <button class="btn-fechar" (click)="fecharDetalhes()"><i class="feather icon-x"></i></button>
+    </div>
+    <div class="modal-detalhes__body">
+      <div class="row mb-2">
+        <div class="col-sm-6 mb-1"><span class="info-label">Cliente</span> {{ pedidoSelecionado.nome_pe || '—' }}</div>
+        <div class="col-sm-6 mb-1"><span class="info-label">Endereço</span> {{ pedidoSelecionado.endereco_pe || '—' }}</div>
+      </div>
+      <div class="row mb-2">
+        <div class="col-sm-6 mb-1"><span class="info-label">Tipo</span> {{ pedidoSelecionado.ordem_type_pe }}</div>
+        <div class="col-sm-6 mb-1"><span class="info-label">Status</span>
+          <span class="badge-status ms-1" [ngClass]="getStatusBadge(pedidoSelecionado.status)">{{ pedidoSelecionado.status }}</span>
+        </div>
+      </div>
+      <div class="row mb-2">
+        <div class="col-sm-6 mb-1"><span class="info-label">Data</span> {{ pedidoSelecionado.data | date:'dd/MM/yyyy HH:mm' }}</div>
+        <div class="col-sm-6 mb-1"><span class="info-label">Total</span> R$ {{ pedidoSelecionado.total?.toFixed(2) || '0.00' }}</div>
+      </div>
+      <div class="mb-3" *ngIf="pedidoSelecionado.observacao">
+        <span class="info-label">Observações</span> {{ pedidoSelecionado.observacao }}
+      </div>
+
+      <h6 class="mt-3 mb-2 fw-bold">Itens do Pedido</h6>
+      <table class="table table-sm table-bordered">
+        <thead class="table-light">
+          <tr>
+            <th>Produto</th>
+            <th class="text-center">Qtd</th>
+            <th class="text-end">Preço Unit.</th>
+            <th class="text-end">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of pedidoSelecionado.produtos">
+            <td>{{ item.nome }}</td>
+            <td class="text-center">{{ item.quantidade }}</td>
+            <td class="text-end">R$ {{ item.preco.toFixed(2) }}</td>
+            <td class="text-end">R$ {{ (item.preco * item.quantidade).toFixed(2) }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="text-end fw-bold">Total</td>
+            <td class="text-end fw-bold">R$ {{ pedidoSelecionado.total?.toFixed(2) || '0.00' }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="modal-detalhes__footer">
+      <button class="btn btn-outline-warning me-2" (click)="alterarStatus(pedidoSelecionado)">
+        <i class="feather icon-refresh-cw me-1"></i> Alterar Status
+      </button>
+      <button class="btn btn-outline-secondary" (click)="fecharDetalhes()">Fechar</button>
+    </div>
+  </div>
+</div>

@@ -1,34 +1,86 @@
-/* Botão "❌" no canto superior direito */
-.btn-cancelar {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 1.2rem;
+/* ── Badges de Status ── */
+.badge-status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  &.status-solicitado  { background: #fff3cd; color: #856404; }
+  &.status-preparo     { background: #cfe2ff; color: #084298; }
+  &.status-finalizado  { background: #d1e7dd; color: #0a3622; }
+}
+
+/* ── Badges de Tipo ── */
+.badge-tipo {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.73rem;
+  font-weight: 500;
+  &.tipo-entrega  { background: #f8d7da; color: #842029; }
+  &.tipo-retirada { background: #e2d9f3; color: #432874; }
+  &.tipo-pedido   { background: #e9ecef; color: #495057; }
+}
+
+/* ── Modal Overlay ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-detalhes {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  &__body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  &__footer {
+    padding: 14px 20px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+.btn-fechar {
+  background: none;
   border: none;
-  background: transparent;
-  color: white;
-  font-weight: bold;
+  font-size: 1.2rem;
   cursor: pointer;
-  transition: transform 0.2s ease-in-out;
+  color: #6c757d;
+  line-height: 1;
+  &:hover { color: #343a40; }
 }
 
-/* Efeito de hover no botão "❌" */
-.btn-cancelar:hover {
-  transform: scale(1.2);
-  color: red;
+.info-label {
+  display: inline-block;
+  font-weight: 600;
+  margin-right: 4px;
+  color: #495057;
+  &::after { content: ':'; }
 }
-
-
-/* Ajusta os cards para ficarem mais bonitos */
-.product-card {
-  border-radius: 15px;
-  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-}
-
-/* Efeito ao passar o mouse no card */
-.product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-}
-
 

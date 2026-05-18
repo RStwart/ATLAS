@@ -16,10 +16,12 @@ export class TblPedidosComponent implements OnInit {
   pedidos: Pedido[] = [];
   pedidosComProdutos: PedidoComProdutos[] = [];
   pedidosPaginados: PedidoComProdutos[] = [];
+  pedidoSelecionado: PedidoComProdutos | null = null;
+  filtroStatus: string | null = null;
   erro: string | null = null;
-  
+
   currentPage: number = 1;
-  itemsPerPage: number = 6;
+  itemsPerPage: number = 10;
   totalPages: number = 0;
   pages: number[] = [];
 
@@ -101,13 +103,15 @@ export class TblPedidosComponent implements OnInit {
   
 
   atualizarPaginacao(): void {
-    this.totalPages = Math.ceil(this.pedidosComProdutos.length / this.itemsPerPage);
+    const base = this.filtroStatus
+      ? this.pedidosComProdutos.filter(p => p.status === this.filtroStatus)
+      : this.pedidosComProdutos;
+    this.totalPages = Math.ceil(base.length / this.itemsPerPage);
     this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
-    this.pedidosPaginados = this.pedidosComProdutos.slice(
+    this.pedidosPaginados = base.slice(
       (this.currentPage - 1) * this.itemsPerPage,
       this.currentPage * this.itemsPerPage
     );
-    console.log('Pedidos paginados:', this.pedidosPaginados);
   }
 
   changePage(page: number): void {
@@ -183,12 +187,11 @@ export class TblPedidosComponent implements OnInit {
   }
 
   cancelarPedido(pedido: Pedido, event: Event): void {
-    event.stopPropagation(); // Impede a alteração do status pelo clique no card
-
+    event.stopPropagation();
     if (confirm('Tem certeza que deseja cancelar este pedido?')) {
       this.pedidoService.deletePedido(pedido.id_pedido.toString()).subscribe(
         () => {
-          this.pedidos = this.pedidos.filter(p => p.id_pedido !== pedido.id_pedido);
+          this.pedidosComProdutos = this.pedidosComProdutos.filter(p => p.id_pedido !== pedido.id_pedido);
           this.atualizarPaginacao();
           this.toastr.success('Pedido cancelado com sucesso!', 'Sucesso');
         },
@@ -198,10 +201,32 @@ export class TblPedidosComponent implements OnInit {
         }
       );
     }
+  }
 
-    setTimeout(() => {
-      window.location.reload();
-    }, 800);
-    
+  abrirDetalhes(pedido: PedidoComProdutos): void {
+    this.pedidoSelecionado = pedido;
+  }
+
+  fecharDetalhes(): void {
+    this.pedidoSelecionado = null;
+  }
+
+  setFiltro(status: string | null): void {
+    this.filtroStatus = status;
+    this.currentPage = 1;
+    this.atualizarPaginacao();
+  }
+
+  getStatusBadge(status: string): string {
+    if (status === 'Solicitado') return 'status-solicitado';
+    if (status === 'Em preparo') return 'status-preparo';
+    if (status === 'Finalizado') return 'status-finalizado';
+    return '';
+  }
+
+  getTipoClass(tipo: string): string {
+    if (tipo === 'Entrega') return 'tipo-entrega';
+    if (tipo === 'Retirada') return 'tipo-retirada';
+    return 'tipo-pedido';
   }
 }
