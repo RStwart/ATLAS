@@ -2,10 +2,8 @@
   <div class="m-header" [style.display]="this.headerStyle">
     <a class="mobile-menu" id="mobile-collapse1" href="javascript:" (click)="this.NavCollapsedMob.emit()"><span></span></a>
     <a [routerLink]="['/dashboard']" class="b-brand">
-      <div class="b-bg">
-        <i class="feather icon-trending-up"></i>
-      </div>
-      <span class="b-title">Datta Able</span>
+      <img src="assets/images/ICONE_ATLAS_PNG.png" alt="ATLAS" style="width:38px; height:38px; object-fit:contain; border-radius:8px;">
+      <span class="b-title">ATLAS</span>
     </a>
   </div>
   <a class="mobile-menu" [ngClass]="{ on: this.menuClass }" id="mobile-header" href="javascript:" (click)="toggleMobOption()">

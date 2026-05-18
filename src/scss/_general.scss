@@ -171,9 +171,6 @@ p.text-muted {
       float: right;
       padding: 0;
       position: absolute;
-      @media only screen and (max-width: 575px) {
-        display: none;
-      }
 
       .dropdown-menu {
         margin-top: 0;
