@@ -752,12 +752,18 @@ export class TblComandasComponent implements OnInit {
     } else {
       console.log('Finalização da comanda cancelada');
     }
-
-
-
   }
-  
 
+  getHeaderClass(ordemType: string): string {
+    if (ordemType === 'Entrega') return 'comanda-card__header--entrega';
+    if (ordemType === 'Retirada') return 'comanda-card__header--retirada';
+    return 'comanda-card__header--pedido';
+  }
 
+  getBadgeClass(ordemType: string): string {
+    if (ordemType === 'Entrega') return 'comanda-card__order-badge--entrega';
+    if (ordemType === 'Retirada') return 'comanda-card__order-badge--retirada';
+    return 'comanda-card__order-badge--pedido';
+  }
 
 }

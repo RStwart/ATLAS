@@ -128,6 +128,7 @@ CREATE TABLE IF NOT EXISTS pedido (
   nome_item    VARCHAR(150)   NOT NULL,
   preco        DECIMAL(10,2)  NOT NULL DEFAULT 0.00,
   quantidade   INT            NOT NULL DEFAULT 1,
+  status       VARCHAR(20)    NOT NULL DEFAULT 'Solicitado',
   observacao   TEXT,
   data_pedido  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   impresso     TINYINT(1)     NOT NULL DEFAULT 0,

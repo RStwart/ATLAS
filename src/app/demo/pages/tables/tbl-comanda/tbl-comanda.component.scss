@@ -233,6 +233,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+
+    &--pedido  { background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); }
+    &--entrega { background: linear-gradient(135deg, #f97316 0%, #c2410c 100%); }
+    &--retirada { background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%); }
   }
 
   &__number {
@@ -299,6 +303,10 @@
     color: #1a73e8;
     white-space: nowrap;
     flex-shrink: 0;
+
+    &--pedido  { background: #e8f0fe; color: #1a73e8; }
+    &--entrega { background: #fff4ed; color: #c2410c; }
+    &--retirada { background: #f3e8ff; color: #6d28d9; }
   }
 
   &__total-box {

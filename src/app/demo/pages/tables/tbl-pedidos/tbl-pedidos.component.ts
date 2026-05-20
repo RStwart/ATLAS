@@ -33,64 +33,25 @@ export class TblPedidosComponent implements OnInit {
 
   carregarPedidos() {
     this.pedidoService.getPedidos().subscribe(
-      (pedidos) => {
-        console.log('Pedidos recebidos:', pedidos); // Verifique a estrutura completa aqui.
-  
-        if (pedidos && pedidos.length > 0) {
-          // Mapeando os pedidos para incluir a lista de produtos de forma organizada
-          this.pedidosComProdutos = pedidos.map((pedido: Pedido) => {
-            try {
-              const produtosString = pedido.item;  // String com os produtos
-              const numeroComanda = (pedido as any).num_comanda;  // Acessa num_comanda com casting
-  
-              console.log('Número da Comanda:', numeroComanda); // Verifica o número da comanda
-  
-              if (produtosString && typeof produtosString === 'string') {
-                // Converte a string de produtos em um array de objetos de produtos
-                const produtos = produtosString.split(';').map((produtoStr: string) => {
-                  // Remove qualquer espaço extra usando trim()
-                  const [id, nome, quantidade, preco] = produtoStr.split('|').map((campo) => campo.trim());
-  
-                  // Verifica se a quantidade e o preço são válidos
-                  const quantidadeValida = !isNaN(parseInt(quantidade, 10)) ? parseInt(quantidade, 10) : 0;
-                  const precoValido = !isNaN(parseFloat(preco)) ? parseFloat(preco) : 0;
-  
-                  return {
-                    id: id || 'ID desconhecido',  // ID do produto
-                    nome: nome || 'Produto desconhecido',  // Nome do produto
-                    quantidade: quantidadeValida,
-                    preco: precoValido,
-                  };
-                });
-  
-                // Retorna o pedido com a lista de produtos e o número da comanda
-                return {
-                  ...pedido,
-                  produtos,
-                  numero: numeroComanda, // Aqui, você associa o número da comanda corretamente no pedido
-                };
-              } else {
-                return {
-                  ...pedido,
-                  produtos: [], // Se não houver produtos válidos
-                };
-              }
-  
-            } catch (e) {
-              console.error('Erro ao converter pedido.item:', e);
-              return {
-                ...pedido,
-                produtos: [], // Caso ocorra um erro, retorna o pedido sem produtos
-              };
+      (pedidos: any[]) => {
+        this.pedidosComProdutos = (pedidos || []).map((pedido: any) => {
+          let produtos: any[] = [];
+          try {
+            if (Array.isArray(pedido.itens)) {
+              produtos = pedido.itens;
+            } else if (typeof pedido.itens === 'string') {
+              produtos = JSON.parse(pedido.itens);
             }
-          });
-  
-          // Atualiza a paginação após carregar os pedidos
-          this.atualizarPaginacao();
-          console.log('Pedidos com produtos:', this.pedidosComProdutos); // Verifique se a estrutura final está correta.
-        } else {
-          console.log('Nenhum pedido encontrado!');
-        }
+          } catch (e) {
+            console.error('Erro ao processar itens do pedido:', e);
+          }
+          return {
+            ...pedido,
+            produtos,
+            total: Number(pedido.total) || 0,
+          } as PedidoComProdutos;
+        });
+        this.atualizarPaginacao();
       },
       (error) => {
         console.error('Erro ao carregar pedidos:', error);

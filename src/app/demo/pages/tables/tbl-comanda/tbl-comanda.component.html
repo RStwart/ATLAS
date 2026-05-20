@@ -6,7 +6,7 @@
           <div class="comanda-card">
 
             <!-- Cabeçalho colorido -->
-            <div class="comanda-card__header">
+            <div class="comanda-card__header" [ngClass]="getHeaderClass(comanda.ordem_type)">
               <div class="comanda-card__number">
                 <i class="feather icon-grid me-2"></i>Comanda {{ comanda.numero }}
               </div>
@@ -19,7 +19,7 @@
             <div class="comanda-card__body">
               <div class="comanda-card__info-row">
                 <span class="comanda-card__name"><i class="feather icon-user me-1"></i>{{ comanda.nome }}</span>
-                <span class="comanda-card__order-badge">{{ comanda.ordem_type }}</span>
+                <span class="comanda-card__order-badge" [ngClass]="getBadgeClass(comanda.ordem_type)">{{ comanda.ordem_type }}</span>
               </div>
 
               <div class="comanda-card__total-box">

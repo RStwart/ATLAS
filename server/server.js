@@ -672,8 +672,8 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
 
       // Inserir cada item como um registro separado na tabela pedido
       for (const itemData of itens) {
-        const query = `INSERT INTO pedido (id_comanda, id_empresa, id_item, nome_item, preco, quantidade, observacao, data_pedido, id_usuario, nome_usuario) 
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const query = `INSERT INTO pedido (id_comanda, id_empresa, id_item, nome_item, preco, quantidade, status, observacao, data_pedido, id_usuario, nome_usuario) 
+                       VALUES (?, ?, ?, ?, ?, ?, 'Solicitado', ?, ?, ?, ?)`;
         
         const values = [
           id_comanda,
@@ -808,14 +808,44 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
 });
 
 app.get('/api/pedidos', autenticarTenant, (req, res) => {
-  db.query('SELECT * FROM pedido WHERE id_empresa = ? ORDER BY data_pedido DESC', [req.id_empresa], (err, results) => {
+  const query = `
+    SELECT
+      MIN(p.id_pedido)                                       AS id_pedido,
+      p.id_comanda,
+      c.numero,
+      MIN(p.data_pedido)                                     AS data,
+      MAX(p.status)                                          AS status,
+      ROUND(SUM(p.preco * p.quantidade), 2)                  AS total,
+      c.nome                                                 AS nome_pe,
+      c.endereco                                             AS endereco_pe,
+      c.ordem_type                                           AS ordem_type_pe,
+      MIN(p.observacao)                                      AS observacao,
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'id',         p.id_item,
+        'nome',       p.nome_item,
+        'quantidade', CAST(p.quantidade AS SIGNED),
+        'preco',      CAST(p.preco AS DECIMAL(10,2))
+      ))                                                     AS itens,
+      COUNT(*)                                               AS qtd_itens,
+      DATE_FORMAT(MIN(p.data_pedido), '%Y-%m-%d %H:%i:%S')   AS grupo_data
+    FROM pedido p
+    JOIN comanda c ON c.id_comanda = p.id_comanda AND c.id_empresa = p.id_empresa
+    WHERE p.id_empresa = ?
+    GROUP BY p.id_comanda,
+             DATE_FORMAT(p.data_pedido, '%Y-%m-%d %H:%i:%S'),
+             c.numero, c.nome, c.endereco, c.ordem_type
+    ORDER BY MIN(p.data_pedido) DESC
+  `;
+  db.query(query, [req.id_empresa], (err, results) => {
     if (err) {
       console.error('Erro ao consultar os pedidos:', err);
-      res.status(500).json({ error: 'Erro ao obter pedidos', details: err });
-    } else {
-      console.log('Pedidos encontrados:', results);
-      res.json(results);
+      return res.status(500).json({ error: 'Erro ao obter pedidos', details: err });
     }
+    const pedidos = results.map(row => ({
+      ...row,
+      itens: typeof row.itens === 'string' ? JSON.parse(row.itens) : (row.itens || [])
+    }));
+    res.json(pedidos);
   });
 });
 
@@ -925,46 +955,79 @@ app.get('/api/pedidos/:id', autenticarTenant, (req, res) => {
 });
 
 
-// Rota PUT para atualizar um pedido
+// Rota PUT para atualizar um pedido (atualiza todo o grupo de itens)
 app.put('/api/pedidos/:id', autenticarTenant, (req, res) => {
   const { id } = req.params;
-  const { impresso } = req.body;
+  const { status, impresso } = req.body;
 
-  const query = `
-    UPDATE pedido
-    SET impresso = ?
-    WHERE id_pedido = ? AND id_empresa = ?
-  `;
-  const values = [impresso ? 1 : 0, id, req.id_empresa];
+  // Localiza o grupo (id_comanda + segundo exato) do pedido
+  db.query(
+    `SELECT id_comanda, DATE_FORMAT(data_pedido, '%Y-%m-%d %H:%i:%S') AS grupo
+     FROM pedido WHERE id_pedido = ? AND id_empresa = ?`,
+    [id, req.id_empresa],
+    (err, rows) => {
+      if (err || rows.length === 0)
+        return res.status(404).json({ error: 'Pedido não encontrado' });
 
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error('Erro ao atualizar pedido:', err);
-      res.status(500).json({ error: 'Erro ao atualizar pedido' });
-    } else if (result.affectedRows === 0) {
-      res.status(404).json({ error: 'Pedido não encontrado' });
-    } else {
-      console.log('Pedido atualizado com sucesso:', id);
-      res.json({ message: 'Pedido atualizado com sucesso' });
+      const { id_comanda, grupo } = rows[0];
+      const updates = [];
+      const values = [];
+
+      if (status !== undefined) { updates.push('status = ?'); values.push(status); }
+      if (impresso !== undefined) { updates.push('impresso = ?'); values.push(impresso ? 1 : 0); }
+
+      if (updates.length === 0) return res.json({ message: 'Nada para atualizar' });
+
+      values.push(id_comanda, grupo, req.id_empresa);
+      const updateQuery = `UPDATE pedido SET ${updates.join(', ')}
+                           WHERE id_comanda = ?
+                             AND DATE_FORMAT(data_pedido, '%Y-%m-%d %H:%i:%S') = ?
+                             AND id_empresa = ?`;
+
+      db.query(updateQuery, values, (err2, result) => {
+        if (err2) {
+          console.error('Erro ao atualizar pedido:', err2);
+          return res.status(500).json({ error: 'Erro ao atualizar pedido' });
+        }
+        console.log('Pedido atualizado com sucesso, grupo:', grupo);
+        res.json({ message: 'Pedido atualizado com sucesso' });
+      });
     }
-  });
+  );
 });
 
 
-// Rota DELETE para excluir um pedido
+// Rota DELETE para excluir um pedido (exclui todo o grupo de itens)
 app.delete('/api/pedidos/:id', autenticarTenant, (req, res) => {
   const { id } = req.params;
-  db.query('DELETE FROM pedido WHERE id_pedido = ? AND id_empresa = ?', [id, req.id_empresa], (err, result) => {
-    if (err) {
-      console.error('Erro ao deletar pedido:', err);
-      res.status(500).json({ error: 'Erro ao deletar pedido' });
-    } else if (result.affectedRows === 0) {
-      res.status(404).json({ error: 'Pedido não encontrado' });
-    } else {
-      console.log('Pedido deletado com sucesso:', id);
-      res.json({ message: 'Pedido deletado com sucesso' });
+
+  // Localiza o grupo (id_comanda + segundo exato) do pedido
+  db.query(
+    `SELECT id_comanda, DATE_FORMAT(data_pedido, '%Y-%m-%d %H:%i:%S') AS grupo
+     FROM pedido WHERE id_pedido = ? AND id_empresa = ?`,
+    [id, req.id_empresa],
+    (err, rows) => {
+      if (err || rows.length === 0)
+        return res.status(404).json({ error: 'Pedido não encontrado' });
+
+      const { id_comanda, grupo } = rows[0];
+      db.query(
+        `DELETE FROM pedido
+         WHERE id_comanda = ?
+           AND DATE_FORMAT(data_pedido, '%Y-%m-%d %H:%i:%S') = ?
+           AND id_empresa = ?`,
+        [id_comanda, grupo, req.id_empresa],
+        (err2, result) => {
+          if (err2) {
+            console.error('Erro ao deletar pedido:', err2);
+            return res.status(500).json({ error: 'Erro ao deletar pedido' });
+          }
+          console.log('Pedido cancelado com sucesso, grupo:', grupo);
+          res.json({ message: 'Pedido cancelado com sucesso' });
+        }
+      );
     }
-  });
+  );
 });
 
 
@@ -1729,6 +1792,22 @@ async function aplicarMigracoesDB() {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
       console.log('[migração] Tabela pedido_modificacao criada com sucesso.');
+    }
+
+    // ── Migração 6: coluna status na tabela pedido ────────────────────────
+    const [[colStatusPedido]] = await conn.execute(`
+      SELECT COUNT(*) AS cnt
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME   = 'pedido'
+        AND COLUMN_NAME  = 'status'
+    `);
+    if (colStatusPedido.cnt === 0) {
+      console.log('[migração] Adicionando coluna status na tabela pedido...');
+      await conn.execute(
+        `ALTER TABLE pedido ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'Solicitado' AFTER quantidade`
+      );
+      console.log('[migração] Coluna status adicionada com sucesso.');
     }
 
   } catch (err) {
