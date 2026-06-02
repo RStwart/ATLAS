@@ -1,23 +1,36 @@
-<div class="auth-wrapper">
+<div class="auth-wrapper copa-wrapper">
+
+  <!-- Orbs decorativas temáticas -->
+  <span class="copa-orb copa-orb--1"></span>
+  <span class="copa-orb copa-orb--2"></span>
+  <span class="copa-orb copa-orb--3"></span>
+  <span class="copa-orb copa-orb--4"></span>
+
+  <!-- Bolas de futebol flutuantes -->
+  <span class="copa-ball copa-ball--1">⚽</span>
+  <span class="copa-ball copa-ball--2">⚽</span>
+  <span class="copa-ball copa-ball--3">⚽</span>
+
   <div class="auth-content">
-    <div class="auth-bg">
-      <span class="r"></span>
-      <span class="r s"></span>
-      <span class="r s"></span>
-      <span class="r"></span>
-    </div>
-    <div class="card">
+    <div class="card copa-card">
       <div class="card-body text-center">
-        <div class="mb-4">
-          <i class="feather icon-unlock auth-icon"></i>
+
+        <!-- Cabeçalho Copa -->
+        <div class="copa-header mb-3">
+          <span class="copa-flag">🇧🇷</span>
+          <span class="copa-badge">⚽ Copa do Mundo 2026</span>
         </div>
-        <h3 class="mb-4">Login</h3>
+
+        <div class="copa-lock mb-3">
+          <i class="feather icon-unlock"></i>
+        </div>
+
+        <h3 class="copa-title mb-4">Login</h3>
 
         <!-- ALERTAS SUCESSO/ERRO -->
         <div *ngIf="sucesso" class="alert alert-success">
           {{ sucesso }}
         </div>
-
         <div *ngIf="erro" class="alert alert-danger">
           {{ erro }}
         </div>
@@ -26,7 +39,7 @@
         <div class="input-group mb-3">
           <input
             type="email"
-            class="form-control"
+            class="form-control copa-input"
             placeholder="Email"
             [(ngModel)]="email"
             required
@@ -37,7 +50,7 @@
         <div class="input-group mb-4">
           <input
             type="password"
-            class="form-control"
+            class="form-control copa-input"
             placeholder="Senha"
             [(ngModel)]="senha"
             required
@@ -53,18 +66,24 @@
         </div>
 
         <!-- Botão Login -->
-        <button class="btn btn-primary mb-4" (click)="onLogin()">Login</button>
+        <button class="btn copa-btn-login mb-4" (click)="onLogin()">
+          ⚽ Entrar
+        </button>
 
-        <!-- Links -->
-        <p class="mb-2 text-muted">
-          Esqueceu a senha?
-          <a [routerLink]="['/auth/reset-password']">Redefinir</a>
-        </p>
-        <p class="mb-0 text-muted">
-          Ainda não tem uma conta?
-          <a [routerLink]="['/auth/signup']">Cadastre-se</a>
-        </p>
+        <!-- Logo + rodapé -->
+        <div class="copa-card-footer">
+          <div class="copa-card-logo">
+            <img src="assets/images/ICONE_ATLAS_PNG.png" alt="Logo" />
+            <div class="copa-card-logo-text">
+              <span class="copa-card-logo-name">NETWHALE</span>
+              <span class="copa-card-logo-sub">SOLUTIONS</span>
+            </div>
+          </div>
+          <p class="copa-footer-text">Acesso restrito a colaboradores autorizados</p>
+        </div>
+
       </div>
     </div>
   </div>
+
 </div>

@@ -218,7 +218,7 @@ Todas as rotas protegidas do backend passam pelo middleware `autenticarTenant`, 
 | `/auth/signup`        | AuthSignupComponent      | Público         |
 | `/home`               | LandingpageComponent     | Público         |
 | `/dashboard`          | DashboardComponent       | ADMIN           |
-| `/tables/comanda`        | TblComandasComponent        | ADMIN, FUNCIONARIO |
+| `/tables/comanda`        | TblComandasComponent  | ADMIN, FUNCIONARIO |
 | `/tables/pedidos`     | TblPedidosComponent      | ADMIN, FUNCIONARIO |
 | `/tables/produtos`    | TblProdutosComponent     | ADMIN, FUNCIONARIO |
 | `/tables/funcionarios`| TblFuncionariosComponent | ADMIN, FUNCIONARIO |
