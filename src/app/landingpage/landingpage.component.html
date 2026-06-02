@@ -1,295 +1,324 @@
-
-<!-- <div class="promo-bar">
-  <span>DESTAQUE DE PROMOÇÃO</span>
-</div> -->
-
-<header class="header">
-  <div class="logo">COLOR PRINT.</div>
-  <nav class="nav">
-    <a href="#">LOJA</a>
-    <a href="#">PROMOÇÕES</a>
-    <a href="#">SOBRE</a>
-    <a href="#">CONTATO</a>
-    <a href="#">About Us</a>
-  </nav>
-  <div class="search-cart">
-    <!-- <span class="icon"> carrinho 🛒</span> -->
+<!-- ===== HEADER ===== -->
+<header class="menu-header">
+  <div class="header-inner">
+    <div class="header-logo">
+      <span class="logo-icon">🍔</span>
+      <span class="logo-text">ATLAS</span>
+    </div>
+    <button class="cart-btn" (click)="toggleCarrinho()">
+      <span class="cart-icon">🛒</span>
+      <span class="cart-label">Carrinho</span>
+      <span class="cart-badge" *ngIf="totalItensCarrinho > 0">{{ totalItensCarrinho }}</span>
+    </button>
   </div>
 </header>
 
-<section class="banner fade-in">
-  <img src="assets/images/banner.jpg" alt="Banner" class="banner-bg" />
-  <div class="highlight-card">
-    <img src="assets/images/card.jpg" alt="Produto em destaque" />
-    <h4>Signal DL</h4>
-    <p>R$ 129,00</p>
-
-    <button class="btn-pulse">ADICIONAR CARRINHO</button>
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>Bem-vindo ao nosso Cardápio!</h1>
+    <p>Peça agora e receba em casa com muito sabor</p>
   </div>
 </section>
 
-
-<div class="container">
-  <h2 class="text-center my-4">Lanches</h2>
-
-  <div class="row">
-    <div
-      class="col-md-4 mb-4"
-      *ngFor="let produto of lanches"
-    >
-      <div class="card h-100 shadow-sm">
-        <img
-          [src]="produto.imagemUrl || 'https://via.placeholder.com/150'"
-          class="card-img-top"
-          alt="{{ produto.nome }}"
-        />
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">{{ produto.nome }}</h5>
-          <p class="card-text text-muted">
-            {{ produto.descricao }}
-          </p>
-          <div class="mt-auto">
-            <strong class="d-block text-success">
-              R$ {{ produto.preco | number: '1.2-2' }}
-            </strong>
-            <button class="btn btn-primary mt-2 w-100" (click)="adicionar(produto)">Adicionar</button>
-          </div>
-        </div>
-      </div>
-    </div>
+<!-- ===== CATEGORIA NAV (sticky) ===== -->
+<nav class="category-nav" *ngIf="categorias.length > 0">
+  <div class="category-nav-inner">
+    <button
+      *ngFor="let cat of categorias"
+      class="cat-btn"
+      [class.active]="categoriaAtiva === cat.nome"
+      [style.border-color]="categoriaAtiva === cat.nome ? cat.cor : 'transparent'"
+      [style.color]="categoriaAtiva === cat.nome ? cat.cor : ''"
+      (click)="scrollToCategory(cat.nome)">
+      {{ cat.nome }}
+    </button>
   </div>
+</nav>
 
-  <h2 class="text-center my-4">Hot-Dogs</h2>
-
-  <div class="row">
-    <div
-      class="col-md-4 mb-4"
-      *ngFor="let produto of dogs"
-    >
-      <div class="card h-100 shadow-sm">
-        <img
-          [src]="produto.imagemUrl || 'https://via.placeholder.com/150'"
-          class="card-img-top"
-          alt="{{ produto.nome }}"
-        />
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">{{ produto.nome }}</h5>
-          <p class="card-text text-muted">
-            {{ produto.descricao }}
-          </p>
-          <div class="mt-auto">
-            <strong class="d-block text-success">
-              R$ {{ produto.preco | number: '1.2-2' }}
-            </strong>
-            <button class="btn btn-primary mt-2 w-100" (click)="adicionar(produto)">Adicionar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  
-  <h2 class="text-center my-4">Bebidas</h2>
-
-  <div class="row">
-    <div
-      class="col-md-4 mb-4"
-      *ngFor="let produto of bebidas"
-    >
-      <div class="card h-100 shadow-sm">
-        <img
-          [src]="produto.imagemUrl || 'https://via.placeholder.com/150'"
-          class="card-img-top"
-          alt="{{ produto.nome }}"
-        />
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">{{ produto.nome }}</h5>
-          <p class="card-text text-muted">
-            {{ produto.descricao }}
-          </p>
-          <div class="mt-auto">
-            <strong class="d-block text-success">
-              R$ {{ produto.preco | number: '1.2-2' }}
-            </strong>
-            <button class="btn btn-primary mt-2 w-100" (click)="adicionar(produto)">Adicionar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+<!-- ===== CARREGANDO ===== -->
+<div class="loading-state" *ngIf="carregando">
+  <div class="spinner"></div>
+  <p>Carregando cardápio...</p>
 </div>
 
-<section class="highlight-offer fade-in">
-  <div class="offer-text">
-    <h2>CARTÃO DE VISITA 20% OFF</h2>
-    <p>Exclusive</p>
-    <button class="buy-button btn-pulse">comprar agora</button>
-  </div>
-  <div class="offer-image">
-    <img src="assets/images/produto4.jpg" alt="Cartão de visita em promoção" />
-  </div>
-</section>
+<!-- ===== ERRO ===== -->
+<div class="error-state" *ngIf="erro && !carregando">
+  <p>⚠️ {{ erro }}</p>
+</div>
 
+<!-- ===== MENU PRINCIPAL ===== -->
+<main class="menu-main" *ngIf="!carregando">
 
-<footer class="site-footer">
-  <div class="footer-content">
-    <div class="footer-column">
-      <h4>LOJA</h4>
-      <ul>
-        <li><a href="#">All products</a></li>
-        <li><a href="#">Best Sellers</a></li>
-      </ul>
+  <div class="empty-state" *ngIf="categorias.length === 0">
+    <p>Nenhuma categoria cadastrada ainda.</p>
+  </div>
+
+  <section
+    *ngFor="let cat of categorias"
+    class="category-section"
+    [id]="'cat-' + cat.nome">
+
+    <div class="category-header">
+      <span class="category-dot" [style.background]="cat.cor"></span>
+      <h2 class="category-title">{{ cat.nome }}</h2>
     </div>
-    <div class="footer-column">
-      <h4>POLITICAS</h4>
-      <ul>
-        <li><a href="#">Entregas</a></li>
-        <li><a href="#">Pedidos por demandas</a></li>
-        <li><a href="#">Orçamentos</a></li>
-      </ul>
+
+    <div class="products-grid" *ngIf="getProdutosDaCategoria(cat.id_categoria).length > 0; else semProdutos">
+      <div
+        class="product-card"
+        *ngFor="let produto of getProdutosDaCategoria(cat.id_categoria)"
+        (click)="abrirModalProduto(produto)">
+
+        <div class="product-info">
+          <h4 class="product-name">{{ produto.nome }}</h4>
+          <p class="product-desc">{{ produto.descricao }}</p>
+          <span class="product-price">R$ {{ produto.preco | number:'1.2-2' }}</span>
+        </div>
+
+        <div class="product-img-wrap">
+          <img
+            [src]="produto.imagemUrl || 'assets/images/no-image.png'"
+            [alt]="produto.nome"
+            onerror="this.src='assets/images/no-image.png'"
+          />
+          <button class="add-btn-card" (click)="$event.stopPropagation(); abrirModalProduto(produto)">+</button>
+        </div>
+      </div>
     </div>
-    <div class="footer-column">
-      <h4>CONTACT</h4>
-      <p>Rua Lourenço Dias, 640,<br/> Sala 6 , Araras - SP</p>
+
+    <ng-template #semProdutos>
+      <p class="no-products">Nenhum produto nesta categoria.</p>
+    </ng-template>
+
+  </section>
+</main>
+
+<!-- ===== MODAL DO PRODUTO (personalização) ===== -->
+<div class="produto-modal-backdrop" *ngIf="modalAberto" (click)="fecharModalProduto()"></div>
+
+<div class="produto-modal" *ngIf="modalAberto && produtoModal">
+
+  <button class="produto-modal-close" (click)="fecharModalProduto()">✕</button>
+
+  <!-- Imagem do produto -->
+  <div class="produto-modal-img">
+    <img
+      [src]="produtoModal.imagemUrl || 'assets/images/no-image.png'"
+      [alt]="produtoModal.nome"
+      onerror="this.src='assets/images/no-image.png'"
+    />
+  </div>
+
+  <div class="produto-modal-body">
+    <h2 class="produto-modal-nome">{{ produtoModal.nome }}</h2>
+    <p class="produto-modal-desc">{{ produtoModal.descricao }}</p>
+    <span class="produto-modal-preco-base">R$ {{ produtoModal.preco | number:'1.2-2' }}</span>
+
+    <!-- Ingredientes (ficha técnica) -->
+    <div class="modal-section" *ngIf="carregandoFicha">
+      <div class="mini-spinner"></div>
     </div>
-    <div class="footer-column">
-      <h4>SOCIAL</h4>
-      <ul>
-        <li><a href="#">Instagram</a></li>
-        <li><a href="#">Facebook</a></li>
-        <li><a href="#">X</a></li>
-        <li><a href="#">Tik Tok</a></li>
-      </ul>
-    </div>
-    <div class="footer-column">
-      <h4>ORÇAMENTOS</h4>
-      <p>Faça seu orçamento online</p>
-      <form>
-        <input type="email" placeholder="Email Address *" required />
-        <label>
-          <input type="checkbox" />
-          Yes, subscribe me to your newsletter.
+
+    <div class="modal-section" *ngIf="!carregandoFicha && ingredientesModal.length > 0">
+      <h3 class="modal-section-title">🥗 Composição</h3>
+      <p class="modal-section-sub">Desmarque o que não quiser</p>
+      <div class="ingredientes-list">
+        <label
+          *ngFor="let ing of ingredientesModal"
+          class="ingrediente-item"
+          [class.removido]="ing.removido"
+          (click)="toggleIngrediente(ing)">
+          <span class="check-circle" [class.checked]="!ing.removido">
+            <span *ngIf="!ing.removido">✓</span>
+            <span *ngIf="ing.removido">✕</span>
+          </span>
+          <span class="ing-nome">{{ ing.nome_insumo }}</span>
+          <span class="ing-qtd">{{ ing.quantidade }} {{ ing.unidade }}</span>
         </label>
-        <button type="submit">SIGN UP</button>
-      </form>
+      </div>
+    </div>
+
+    <!-- Acréscimos -->
+    <div class="modal-section" *ngIf="!carregandoFicha && acrescimosModal.length > 0">
+      <h3 class="modal-section-title">➕ Acréscimos</h3>
+      <p class="modal-section-sub">Adicione ingredientes extras</p>
+      <div class="acrescimos-list">
+        <div *ngFor="let ac of acrescimosModal" class="acrescimo-item" [class.selecionado]="ac.quantidade > 0">
+          <div class="ac-info">
+            <span class="ac-nome">{{ ac.nome }}</span>
+            <span class="ac-preco">+ R$ {{ ac.preco_acrescimo | number:'1.2-2' }}</span>
+          </div>
+          <div class="ac-controls">
+            <button (click)="setQuantidadeAcrescimo(ac, -1)" [disabled]="ac.quantidade === 0">−</button>
+            <span>{{ ac.quantidade }}</span>
+            <button (click)="setQuantidadeAcrescimo(ac, 1)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Observação -->
+    <div class="modal-section">
+      <h3 class="modal-section-title">📝 Observação</h3>
+      <textarea
+        class="obs-input"
+        [(ngModel)]="observacaoModal"
+        placeholder="Ex: sem molho, bem passado..."
+        rows="2">
+      </textarea>
+    </div>
+
+    <!-- Rodapé: quantidade + adicionar -->
+    <div class="produto-modal-footer">
+      <div class="qty-selector">
+        <button (click)="quantidadeModal = quantidadeModal > 1 ? quantidadeModal - 1 : 1">−</button>
+        <span>{{ quantidadeModal }}</span>
+        <button (click)="quantidadeModal = quantidadeModal + 1">+</button>
+      </div>
+      <button class="btn-add-modal" (click)="adicionarAoCarrinho()">
+        Adicionar · R$ {{ precoModalCalculado | number:'1.2-2' }}
+      </button>
     </div>
   </div>
-  <div class="footer-bottom">
-    <h2>COLOR PRINT.</h2>
-    <p>© 2035 by Ramirez Stwart</p>
-  </div>
-</footer>
+</div>
 
-<!-- Carrinho Flutuante -->
-<div class="cart-float" [class.open]="carrinhoAberto">
-  <div class="cart-header">
-    <h5>Seu Carrinho 🛒</h5>
+<!-- ===== CARRINHO LATERAL ===== -->
+<div class="cart-overlay" [class.visible]="carrinhoAberto" (click)="toggleCarrinho()"></div>
+
+<aside class="cart-panel" [class.open]="carrinhoAberto">
+  <div class="cart-panel-header">
+    <h3>🛒 Seu Carrinho</h3>
     <button class="close-btn" (click)="toggleCarrinho()">✕</button>
   </div>
 
-  <div class="cart-body" *ngIf="carrinho.length > 0; else vazio">
-    <div *ngFor="let item of carrinho" class="cart-item">
-      <div class="cart-item-info">
-        <strong>{{ item.nome }}</strong>
-        <div class="quantity-controls">
-          <button (click)="decrementarQuantidade(item)">−</button>
-          <span>{{ item.quantidade }}</span>
-          <button (click)="incrementarQuantidade(item)">+</button>
+  <div class="cart-panel-body">
+    <div *ngIf="carrinho.length > 0; else carrinhoVazio">
+      <div *ngFor="let item of carrinho" class="cart-item">
+        <div class="cart-item-img">
+          <img [src]="item.imagemUrl || 'assets/images/no-image.png'" [alt]="item.nome" onerror="this.src='assets/images/no-image.png'"/>
         </div>
-        <p>R$ {{ item.preco * item.quantidade | number:'1.2-2' }}</p>
+        <div class="cart-item-info">
+          <span class="cart-item-name">{{ item.nome }}</span>
+          <div class="cart-item-mods" *ngIf="item.removidos.length > 0 || item.extras.length > 0">
+            <span *ngFor="let r of item.removidos" class="mod-tag remover">
+              sem {{ ingredienteNome(r) }}
+            </span>
+            <span *ngFor="let e of item.extras" class="mod-tag extra">
+              + {{ e.nome }}
+            </span>
+          </div>
+          <span class="cart-item-obs" *ngIf="item.observacao">{{ item.observacao }}</span>
+          <div class="cart-item-controls">
+            <button (click)="decrementarItem(item)">−</button>
+            <span>{{ item.quantidade }}</span>
+            <button (click)="incrementarItem(item)">+</button>
+          </div>
+        </div>
+        <div class="cart-item-right">
+          <span class="cart-item-price">R$ {{ item.precoFinal | number:'1.2-2' }}</span>
+          <button class="remove-btn" (click)="removerDoCarrinho(item)">🗑</button>
+        </div>
       </div>
-      <button class="remove-btn" (click)="removerDoCarrinho(item)">❌</button>
+
+      <div class="cart-total">
+        <span>Total</span>
+        <strong>R$ {{ calcularTotalCarrinho() | number:'1.2-2' }}</strong>
+      </div>
+
+      <button class="btn-finalizar" (click)="abrirModal()">Finalizar Pedido</button>
     </div>
-    <div class="cart-total">
-      <strong>Total: R$ {{ calcularTotal() | number:'1.2-2' }}</strong>
-    </div>
+
+    <ng-template #carrinhoVazio>
+      <div class="cart-empty">
+        <span>🛒</span>
+        <p>Seu carrinho está vazio</p>
+        <small>Toque em um item do cardápio para adicionar</small>
+      </div>
+    </ng-template>
   </div>
+</aside>
 
-  <ng-template #vazio>
-    <p class="text-muted text-center mt-3">Carrinho vazio.</p>
-  </ng-template>
-
-  <button class="btn btn-success mt-3 w-100" (click)="abrirModal()">Finalizar Pedido</button>
-</div>
-
-<!-- Botão flutuante -->
-<button class="cart-toggle" (click)="toggleCarrinho()">
- Carrinho 🛒 <span *ngIf="carrinho.length > 0">{{ carrinho.length }}</span>
+<!-- ===== BOTÃO FLUTUANTE ===== -->
+<button class="fab-cart" (click)="toggleCarrinho()" *ngIf="totalItensCarrinho > 0">
+  🛒 Ver carrinho
+  <span class="fab-badge">{{ totalItensCarrinho }}</span>
+  <span class="fab-total">R$ {{ calcularTotalCarrinho() | number:'1.2-2' }}</span>
 </button>
 
-
-
-<div class="modal-backdrop" *ngIf="mostrarModal">
-  <div class="modal-content">
+<!-- ===== MODAL FINALIZAR PEDIDO ===== -->
+<div class="modal-backdrop" *ngIf="mostrarModal" (click)="fecharModal()"></div>
+<div class="modal-content" *ngIf="mostrarModal">
+  <div class="modal-header">
     <h3>Finalizar Pedido</h3>
-    <form (ngSubmit)="finalizarPedido()" #formulario="ngForm">
-      <div class="mb-3">
-        <label>Nome:</label>
-        <input type="text" class="form-control" [(ngModel)]="dadosCliente.nome" name="nome" required />
-      </div>
-
-      <div class="mb-3">
-        <label>Telefone:</label>
-        <input type="tel" class="form-control" [(ngModel)]="dadosCliente.telefone" name="telefone" required />
-      </div>
-
-      <div class="mb-3">
-        <label>CPF:</label>
-        <input type="text" class="form-control" [(ngModel)]="dadosCliente.cpf" name="cpf" required />
-      </div>
-
-      <div class="mb-3">
-        <label>Tipo de Pedido:</label>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="tipoEntrega" [(ngModel)]="dadosCliente.tipoEntrega" value="Entrega" required />
-          <label class="form-check-label">Entrega</label>
-        </div>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="tipoEntrega" [(ngModel)]="dadosCliente.tipoEntrega" value="Retirada" />
-          <label class="form-check-label">Retirada</label>
-        </div>
-      </div>
-
-      <div class="mb-3" *ngIf="dadosCliente.tipoEntrega === 'Entrega'">
-        <label>Endereço:</label>
-        <textarea class="form-control" [(ngModel)]="dadosCliente.endereco" name="endereco" required></textarea>
-      </div>
-
-
-      <div class="mb-3">
-        <label>Forma de pagamento:</label>
-        <select class="form-control" [(ngModel)]="dadosCliente.pagamento" name="pagamento" required>
-          <option value="" disabled selected>Selecione...</option>
-          <option value="Pix">Pix</option>
-          <option value="Dinheiro">Dinheiro</option>
-          <option value="Cartão Crédito">Cartão Crédito</option>
-          <option value="Cartão Débito">Cartão Débito</option>
-        </select>
-      </div>
-
-      <div class="mb-3" *ngIf="dadosCliente.pagamento === 'Dinheiro'">
-        <label>Troco para quanto?</label>
-        <input type="number" class="form-control" [(ngModel)]="dadosCliente.troco" name="troco" placeholder="Ex: 50.00" />
-      </div>
-
-      <div class="mb-3">
-        <label>Observações</label>
-        <textarea class="form-control" [(ngModel)]="dadosCliente.observacao" name="observacao" rows="3" placeholder="Ex: Sem maionese, entregar no portão..."></textarea>
-      </div>
-
-      <div class="mb-3 text-center">
-        <strong>Total do Pedido:</strong>
-        <span style="font-size: 1.2rem;">R$ {{ calcularTotalCarrinho() | number:'1.2-2' }}</span>
-      </div>
-
-      <button type="submit" class="btn btn-success w-100 mt-3">Finalizar Pedido</button>
-      <button  class="btn btn-danger w-100 mt-3" (click)="fecharModal()">Cancelar Pedido</button>
-    </form>
-
+    <button class="close-btn" (click)="fecharModal()">✕</button>
   </div>
+
+  <form (ngSubmit)="finalizarPedido()" #formulario="ngForm" class="modal-form">
+    <div class="form-group">
+      <label>Nome</label>
+      <input type="text" class="form-control" [(ngModel)]="dadosCliente.nome" name="nome" placeholder="Seu nome completo" required />
+    </div>
+    <div class="form-group">
+      <label>Telefone</label>
+      <input type="tel" class="form-control" [(ngModel)]="dadosCliente.telefone" name="telefone" placeholder="(00) 00000-0000" required />
+    </div>
+    <div class="form-group">
+      <label>CPF</label>
+      <input type="text" class="form-control" [(ngModel)]="dadosCliente.cpf" name="cpf" placeholder="000.000.000-00" />
+    </div>
+    <div class="form-group">
+      <label>Tipo de Pedido</label>
+      <div class="delivery-options">
+        <label class="delivery-option" [class.selected]="dadosCliente.tipoEntrega === 'Entrega'">
+          <input type="radio" name="tipoEntrega" [(ngModel)]="dadosCliente.tipoEntrega" value="Entrega" (change)="atualizarTipoEntrega()" required />
+          🛵 Entrega
+        </label>
+        <label class="delivery-option" [class.selected]="dadosCliente.tipoEntrega === 'Retirada'">
+          <input type="radio" name="tipoEntrega" [(ngModel)]="dadosCliente.tipoEntrega" value="Retirada" (change)="atualizarTipoEntrega()" />
+          🏃 Retirada
+        </label>
+      </div>
+    </div>
+    <div class="form-group" *ngIf="dadosCliente.tipoEntrega === 'Entrega'">
+      <label>Endereço de Entrega</label>
+      <textarea class="form-control" [(ngModel)]="dadosCliente.endereco" name="endereco" rows="2" placeholder="Rua, número, bairro..." required></textarea>
+    </div>
+    <div class="form-group">
+      <label>Forma de Pagamento</label>
+      <select class="form-control" [(ngModel)]="dadosCliente.pagamento" name="pagamento" required>
+        <option value="" disabled selected>Selecione...</option>
+        <option value="Pix">Pix</option>
+        <option value="Dinheiro">Dinheiro</option>
+        <option value="Cartão Crédito">Cartão de Crédito</option>
+        <option value="Cartão Débito">Cartão de Débito</option>
+      </select>
+    </div>
+    <div class="form-group" *ngIf="dadosCliente.pagamento === 'Dinheiro'">
+      <label>Troco para quanto?</label>
+      <input type="number" class="form-control" [(ngModel)]="dadosCliente.troco" name="troco" placeholder="Ex: 50,00" />
+    </div>
+    <div class="form-group">
+      <label>Observações gerais</label>
+      <textarea class="form-control" [(ngModel)]="dadosCliente.observacao" name="observacao" rows="2" placeholder="Entregar no portão..."></textarea>
+    </div>
+
+    <!-- Resumo dos itens -->
+    <div class="pedido-resumo">
+      <h4>Resumo</h4>
+      <div *ngFor="let item of carrinho" class="resumo-item">
+        <span>{{ item.quantidade }}x {{ item.nome }}</span>
+        <span>R$ {{ item.precoFinal | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    <div class="modal-total">
+      <span>Total</span>
+      <strong>R$ {{ calcularTotalCarrinho() | number:'1.2-2' }}</strong>
+    </div>
+
+    <button type="submit" class="btn-confirmar">✅ Confirmar Pedido</button>
+    <button type="button" class="btn-cancelar" (click)="fecharModal()">Cancelar</button>
+  </form>
 </div>
-
-
 

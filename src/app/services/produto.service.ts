@@ -13,6 +13,23 @@ export class ProdutoService {
 
   constructor(private http: HttpClient) {}
 
+  // Métodos públicos do cardápio (sem autenticação)
+  getCardapioPublicoCategorias(idEmpresa: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/cardapio/${idEmpresa}/categorias`);
+  }
+
+  getCardapioPublicoProdutos(idEmpresa: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/cardapio/${idEmpresa}/produtos`);
+  }
+
+  getCardapioPublicoFichaTecnica(idEmpresa: number, idProduto: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/cardapio/${idEmpresa}/produtos/${idProduto}/ficha-tecnica`);
+  }
+
+  getCardapioPublicoAcrescimos(idEmpresa: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/cardapio/${idEmpresa}/acrescimos`);
+  }
+
   // Método para obter todos os produtos
   getProdutos(): Observable<any> {
     return this.http.get(`${this.apiUrl}/produtos`);

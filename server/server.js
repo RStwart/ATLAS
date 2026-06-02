@@ -301,6 +301,66 @@ app.post('/api/imprimir-historico-comanda', autenticarTenant, (req, res) => {
 });
 
 
+// ===== ROTAS PÚBLICAS DO CARDÁPIO (sem autenticação) =====
+
+app.get('/api/cardapio/:idEmpresa/categorias', (req, res) => {
+  const { idEmpresa } = req.params;
+  db.query(
+    'SELECT id_categoria, nome, cor FROM categoria WHERE id_empresa = ? ORDER BY nome',
+    [idEmpresa],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: 'Erro ao buscar categorias' });
+      res.json(results);
+    }
+  );
+});
+
+app.get('/api/cardapio/:idEmpresa/produtos', (req, res) => {
+  const { idEmpresa } = req.params;
+  db.query(
+    'SELECT id_produto, nome, descricao, preco, imagem, categoria FROM produto WHERE id_empresa = ?',
+    [idEmpresa],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: 'Erro ao buscar produtos' });
+      res.json(results);
+    }
+  );
+});
+
+app.get('/api/cardapio/:idEmpresa/produtos/:idProduto/ficha-tecnica', async (req, res) => {
+  const { idEmpresa, idProduto } = req.params;
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT pi.id, pi.id_produto, pi.id_insumo, pi.quantidade,
+              i.nome AS nome_insumo, i.unidade
+       FROM produto_insumo pi
+       JOIN insumo i ON i.id_insumo = pi.id_insumo
+       WHERE pi.id_produto = ? AND pi.id_empresa = ?
+       ORDER BY i.nome`,
+      [idProduto, idEmpresa]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar ficha técnica' });
+  }
+});
+
+app.get('/api/cardapio/:idEmpresa/acrescimos', async (req, res) => {
+  const { idEmpresa } = req.params;
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT id_insumo, nome, unidade, preco_acrescimo
+       FROM insumo
+       WHERE id_empresa = ? AND is_acrescimo = 1 AND estoque > 0
+       ORDER BY nome`,
+      [idEmpresa]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar acréscimos' });
+  }
+});
+
 // Rota GET para obter todos os produtos
 app.get('/api/produtos', autenticarTenant, (req, res) => {
   db.query('SELECT id_produto, nome, descricao, preco, quantidade_estoque, imagem, categoria FROM produto WHERE id_empresa = ?', [req.id_empresa], (err, results) => {
