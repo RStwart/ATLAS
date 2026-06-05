@@ -162,3 +162,148 @@ pre code {
   bottom: 50px;
   opacity: 1;
 }
+
+// ── Sidebar Menu – Tema Copa do Brasil ────────────────────────────────────────
+
+// Área do logo (topo da sidebar)
+.navbar-brand.header-logo {
+  background: #0a3d1f !important;
+  border-bottom: 1px solid rgba(245, 200, 0, 0.25);
+}
+
+.pcoded-navbar {
+  background: linear-gradient(180deg, #0a3d1f 0%, #0d5228 50%, #0a6b2e 100%);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+
+  // Linha decorativa amarela na borda direita
+  border-right: 3px solid #f5c800;
+
+  // Logo área
+  .b-title {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: #f5c800;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  }
+
+  // Label de seção (NAVIGATION, TABELAS…)
+  .pcoded-menu-caption {
+    label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      color: rgba(245, 200, 0, 0.55);
+      text-transform: uppercase;
+      padding-left: 4px;
+    }
+  }
+
+  // Itens do menu
+  .pcoded-inner-navbar {
+    padding: 0 12px;
+
+    app-nav-item > li.nav-item,
+    > app-nav-group > app-nav-item > li.nav-item {
+      border-radius: 10px;
+      margin-bottom: 2px;
+      overflow: hidden;
+    }
+
+    li > a {
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin: 2px 0;
+      transition: background 0.2s ease, color 0.2s ease;
+      color: rgba(220, 240, 220, 0.85);
+
+      > .pcoded-micon {
+        font-size: 1rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+        transition: background 0.2s ease, color 0.2s ease;
+
+        i {
+          color: rgba(220, 240, 220, 0.75);
+        }
+      }
+
+      > .pcoded-mtext {
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      &:hover {
+        background: rgba(245, 200, 0, 0.1);
+        color: #f5c800;
+
+        > .pcoded-micon {
+          background: rgba(245, 200, 0, 0.15);
+
+          i {
+            color: #f5c800;
+          }
+        }
+      }
+    }
+
+    // Item ativo
+    li.nav-item.active > a,
+    li.active > a {
+      background: linear-gradient(135deg, rgba(245, 200, 0, 0.2) 0%, rgba(245, 200, 0, 0.08) 100%);
+      color: #f5c800;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+      border-left: 3px solid #f5c800;
+      padding-left: 11px;
+
+      > .pcoded-micon {
+        background: linear-gradient(135deg, #f5c800 0%, #e6a800 100%);
+
+        i {
+          color: #0a3d1f;
+        }
+      }
+
+      > .pcoded-mtext {
+        font-weight: 700;
+        color: #f5c800;
+      }
+    }
+
+    .nav-link:hover,
+    .nav-link:focus {
+      color: #f5c800;
+    }
+  }
+
+  // Badge de versão
+  .version label {
+    background: rgba(245, 200, 0, 0.15);
+    color: #f5c800;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    border-radius: 20px;
+    padding: 4px 14px;
+    border: 1px solid rgba(245, 200, 0, 0.4);
+  }
+
+  // Hamburger / mobile-menu
+  .mobile-menu span,
+  .mobile-menu span::before,
+  .mobile-menu span::after {
+    background-color: rgba(245, 200, 0, 0.8);
+  }
+}
+
+// Collapsed state – manter fundo coerente
+.pcoded-navbar.navbar-collapsed {
+  background: linear-gradient(180deg, #0a3d1f 0%, #0d5228 50%, #0a6b2e 100%);
+  border-right: 3px solid #f5c800;
+}
