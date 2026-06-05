@@ -51,60 +51,6 @@
   </div>
 </div>
 
-<!-- Formulário para Adicionar Comanda -->
-<div *ngIf="mostrarFormulario">
-  <div class="card">
-    <div class="card-body">
-      <h5 class="card-title">Adicionar Comanda</h5>
-
-      <form (ngSubmit)="adicionarComanda()">
-        <div class="form-group">
-          <label for="numero">Número</label>
-          <input id="numero" type="number" [(ngModel)]="novaComanda.numero" name="numero" class="form-control" required />
-        </div>
-
-        <div class="form-group">
-          <label for="nome">Nome da Comanda</label>
-          <input id="nome" type="text" [(ngModel)]="novaComanda.nome" name="nome" class="form-control" required />
-        </div>
-
-        <div class="form-group">
-          <label for="ordem_type">Tipo</label>
-          <select id="ordem_type" [(ngModel)]="novaComanda.ordem_type" name="ordem_type" class="form-control" required>
-            <option value="Pedido">Pedido</option>
-            <option value="Retirada">Retirada</option>
-            <option value="Entrega">Entrega</option>
-          </select>
-        </div>
-
-       <!-- Campo Endereço Exibido Apenas se Ordem for Entrega -->
-       <div class="form-group" *ngIf="novaComanda.ordem_type === 'Entrega'">
-        <label for="endereco">Endereço</label>
-        <input id="endereco" type="text" [(ngModel)]="novaComanda.endereco" name="endereco" class="form-control" required />
-      </div>
-
-        <div class="form-group">
-          <label for="capacidade">Capacidade</label>
-          <input id="capacidade" type="number" [(ngModel)]="novaComanda.capacidade" name="capacidade" class="form-control" required />
-        </div>
-
-        <div class="form-group">
-          <label for="status">Status</label>
-          <select id="status" [(ngModel)]="novaComanda.status" name="status" class="form-control" required>
-            <option value="Aberta">Aberta</option>
-            <option value="Finalizada">Finalizada</option>
-          </select>
-        </div>
-        
-        <button type="submit" class="btn btn-primary" [disabled]="!novaComanda.numero || !novaComanda.capacidade">Salvar Comanda</button>
-        <button type="button" class="btn btn-secondary" (click)="toggleFormulario()">Cancelar</button>
-      </form>
-    </div>
-  </div>
-</div>
-
-
-
 <!-- ===== MODAL ADICIONAR COMANDA ===== -->
 <div class="atlas-modal" *ngIf="mostrarModalComanda">
   <div class="modal-dialog modal-dialog-centered" style="max-width:480px;">
@@ -450,9 +396,6 @@
           <p>{{ comandaSelecionada?.totalComanda | currency: 'BRL' }}</p>
         </div>
         <div class="d-flex gap-2">
-          <button (click)="imprimirHistoricoComanda()" class="btn-modal-outline btn-modal-outline--teal">
-            <i class="feather icon-printer me-1"></i>Imprimir
-          </button>
           <button (click)="fecharModals()" class="btn-modal-cancel">Fechar</button>
         </div>
       </div>

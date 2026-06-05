@@ -476,17 +476,7 @@ export class TblComandasComponent implements OnInit {
             }
           );
   
-          // Agora que o pedido foi adicionado e o total foi atualizado, imprima o pedido
-          this.pedidoService.imprimirPedido(pedido).subscribe(
-            (impressaoResponse) => {
-              console.log('Pedido impresso com sucesso', impressaoResponse);
-              this.fecharModal();
-            },
-            (error) => {
-              console.error('Erro ao imprimir o pedido:', error);
-              this.toastr.error('Erro ao imprimir o pedido', 'Erro');
-            }
-          );
+          this.fecharModal();
         },
         (error) => {
           console.error('Erro ao adicionar o pedido:', error);
@@ -495,9 +485,9 @@ export class TblComandasComponent implements OnInit {
       );
     }
 
-    // setTimeout(() => {
-    //   window.location.reload();
-    // }, 800);
+     setTimeout(() => {
+       window.location.reload();
+     }, 800);
 
   }
   
@@ -559,7 +549,6 @@ export class TblComandasComponent implements OnInit {
 
   editarComanda(comanda: Comanda): void {
     this.comandaEmEdicao = { ...comanda };
-    this.mostrarFormulario = true;
   }
 
   adicionarComanda(): void {
@@ -569,7 +558,6 @@ export class TblComandasComponent implements OnInit {
           this.comandas.push(response); // Adiciona a nova comanda à lista
           this.atualizarPaginacao();
           this.toastr.success('Comanda adicionada com sucesso!', 'Sucesso');
-          this.toggleFormulario(); // Fecha o formulário após adicionar
           this.mostrarModalComanda = false;
         },
         (error) => {
@@ -588,23 +576,7 @@ export class TblComandasComponent implements OnInit {
   }
 
 
-  imprimirHistoricoComanda(): void {
-    if (!this.comandaSelecionada || !this.comandaSelecionada.pedidos || this.comandaSelecionada.pedidos.length === 0) {
-      alert('Nenhum pedido encontrado para esta comanda!');
-      return;
-    }
-  
-    this.pedidoService.imprimirHistoricoComanda(this.comandaSelecionada.numero, this.comandaSelecionada.pedidos, this.comandaSelecionada.nome , this.comandaSelecionada.endereco).subscribe({
-      next: (response) => {
-        console.log('Histórico de pedidos impresso com sucesso!', response);
-        alert('Histórico de pedidos impresso com sucesso!');
-      },
-      error: (error) => {
-        console.error('Erro ao tentar imprimir o histórico de pedidos:', error);
-        alert('Erro ao tentar imprimir o histórico de pedidos.');
-      }
-    });
-  }
+
   
 
 

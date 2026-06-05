@@ -57,15 +57,5 @@ export class PedidoService {
     return this.http.delete(`${this.apiUrl}/pedidos/${idPedido}/produtos/${idProduto}`);
   }
 
-  // Método para imprimir o pedido antes de salvar no banco de dados
-  imprimirPedido(pedido: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/imprimir-pedido`, pedido);
-  }
-
-  // Método para imprimir o histórico de pedidos de uma comanda
-  imprimirHistoricoComanda(comandaId: number, pedidos: any[],nome: string, endereco: string): Observable<any> {
-    const payload = { id_comanda: comandaId, pedidos: pedidos,nome: nome, endereco: endereco };
-    return this.http.post(`${this.apiUrl}/imprimir-historico-comanda`, payload);
-  }
-  
 }
+
