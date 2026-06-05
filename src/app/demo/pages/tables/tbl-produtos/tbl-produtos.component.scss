@@ -347,6 +347,131 @@
   margin-top: 8px;
 }
 
+// Insumo selecionado (badge)
+.insumo-selected-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0fffe;
+  border: 1px solid #0d9488;
+  border-radius: 8px;
+  padding: 10px 12px;
+  height: 42px;
+
+  .insumo-badge-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .insumo-badge-nome {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.88rem;
+  }
+
+  .insumo-badge-unidade {
+    background: #0d9488;
+    color: #fff;
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .insumo-badge-clear {
+    background: transparent;
+    border: none;
+    color: #b91c1c;
+    cursor: pointer;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    &:hover { background: #fee2e2; }
+    i { font-size: 13px; }
+  }
+}
+
+// Caixa de pesquisa
+.insumo-search-wrap {
+  position: relative;
+}
+
+.insumo-search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .insumo-search-icon {
+    position: absolute;
+    left: 11px;
+    color: #6c757d;
+    font-size: 14px;
+    pointer-events: none;
+  }
+}
+
+.insumo-search-input {
+  padding-left: 34px !important;
+}
+
+// Lista de resultados
+.insumo-search-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 9999;
+
+  &--empty {
+    padding: 12px 14px;
+    color: #6c757d;
+    font-size: 0.83rem;
+  }
+}
+
+.insumo-search-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #f1f3f5;
+  padding: 9px 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: #f0fffe; }
+
+  .insumo-search-nome {
+    font-size: 0.87rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .insumo-search-unidade {
+    background: #e2f8f5;
+    color: #0d9488;
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+}
+
 .btn-ficha-add {
   width: 100%;
   height: 42px;

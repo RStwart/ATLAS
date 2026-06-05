@@ -59,6 +59,7 @@ export class TblComandasComponent implements OnInit {
   fichaIngredientes: Array<{
     id_insumo: number; nome_insumo: string; unidade: string;
     quantidade: number; qtdCustom: number; removido: boolean;
+    custo: number; is_acrescimo: boolean; preco_acrescimo: number;
   }> = [];
   acrescimosDisponiveis: Array<{
     id_insumo: number; nome: string; unidade: string; preco_acrescimo: number; qtd: number;
@@ -74,6 +75,7 @@ export class TblComandasComponent implements OnInit {
       remover: number[];
       quantidades: { id_insumo: number; quantidade: number }[];
       acrescimos: { id_insumo: number; quantidade: number; preco_acrescimo: number; nome: string }[];
+      extrasBase: { id_insumo: number; nome: string; quantidade_extra: number; preco_unit: number }[];
     }
   } = {};
 
@@ -103,6 +105,9 @@ export class TblComandasComponent implements OnInit {
     if (mods?.acrescimos) {
       mods.acrescimos.forEach(a => { preco += (Number(a.preco_acrescimo) || 0) * (Number(a.quantidade) || 0); });
     }
+    if (mods?.extrasBase) {
+      mods.extrasBase.forEach(e => { preco += (Number(e.preco_unit) || 0) * (Number(e.quantidade_extra) || 0); });
+    }
     return preco;
   }
 
@@ -117,10 +122,19 @@ export class TblComandasComponent implements OnInit {
         this.acrescimosDisponiveis.forEach(a => {
           if (a.qtd > 0) precoUnitario += (Number(a.preco_acrescimo) || 0) * a.qtd;
         });
+        this.fichaIngredientes.forEach(fi => {
+          if (fi.qtdCustom > fi.quantidade) {
+            const precoUnit = fi.is_acrescimo ? fi.preco_acrescimo : fi.custo;
+            precoUnitario += precoUnit * (fi.qtdCustom - fi.quantidade);
+          }
+        });
       } else {
         const mods = this.modificacoesPorItem[pedido.itemId];
         if (mods?.acrescimos) {
           mods.acrescimos.forEach(a => { precoUnitario += (Number(a.preco_acrescimo) || 0) * (Number(a.quantidade) || 0); });
+        }
+        if (mods?.extrasBase) {
+          mods.extrasBase.forEach(e => { precoUnitario += (Number(e.preco_unit) || 0) * (Number(e.quantidade_extra) || 0); });
         }
       }
 
@@ -229,17 +243,23 @@ export class TblComandasComponent implements OnInit {
     this.filtroAcrescimo = '';
     this.insumoService.getFichaTecnica(produto.id_produto).subscribe(
       itens => {
-        this.fichaIngredientes = itens.map(i => ({
-          id_insumo: i.id_insumo,
-          nome_insumo: i.nome_insumo || '',
-          unidade: i.unidade || '',
-          quantidade: Number(i.quantidade),
-          qtdCustom: Number(i.quantidade),
-          removido: false
-        }));
         const idsBase = new Set(itens.map(i => i.id_insumo));
         this.insumoService.getInsumos().subscribe(
           todos => {
+            this.fichaIngredientes = itens.map(i => {
+              const insumoData = todos.find(t => t.id_insumo === i.id_insumo);
+              return {
+                id_insumo: i.id_insumo,
+                nome_insumo: i.nome_insumo || '',
+                unidade: i.unidade || '',
+                quantidade: Number(i.quantidade),
+                qtdCustom: Number(i.quantidade),
+                removido: false,
+                custo: Number(insumoData?.custo) || 0,
+                is_acrescimo: insumoData?.is_acrescimo || false,
+                preco_acrescimo: Number(insumoData?.preco_acrescimo) || 0
+              };
+            });
             this.acrescimosDisponiveis = todos
               .filter(i => i.is_acrescimo && !idsBase.has(i.id_insumo))
               .map(i => ({
@@ -269,22 +289,26 @@ export class TblComandasComponent implements OnInit {
     this.insumoService.getFichaTecnica(pedido.id_produto).subscribe(
       itens => {
         const mods = this.modificacoesPorItem[pedido.itemId];
-        this.fichaIngredientes = itens.map(i => {
-          const removido = mods ? mods.remover.includes(i.id_insumo) : false;
-          const qtdSalva = mods?.quantidades?.find(q => q.id_insumo === i.id_insumo)?.quantidade;
-          const qtdCustom = removido ? 0 : (qtdSalva !== undefined ? qtdSalva : Number(i.quantidade));
-          return {
-            id_insumo: i.id_insumo,
-            nome_insumo: i.nome_insumo || '',
-            unidade: i.unidade || '',
-            quantidade: Number(i.quantidade),
-            qtdCustom,
-            removido: qtdCustom === 0
-          };
-        });
         const idsBase = new Set(itens.map(i => i.id_insumo));
         this.insumoService.getInsumos().subscribe(
           todos => {
+            this.fichaIngredientes = itens.map(i => {
+              const removido = mods ? mods.remover.includes(i.id_insumo) : false;
+              const qtdSalva = mods?.quantidades?.find(q => q.id_insumo === i.id_insumo)?.quantidade;
+              const qtdCustom = removido ? 0 : (qtdSalva !== undefined ? qtdSalva : Number(i.quantidade));
+              const insumoData = todos.find(t => t.id_insumo === i.id_insumo);
+              return {
+                id_insumo: i.id_insumo,
+                nome_insumo: i.nome_insumo || '',
+                unidade: i.unidade || '',
+                quantidade: Number(i.quantidade),
+                qtdCustom,
+                removido: qtdCustom === 0,
+                custo: Number(insumoData?.custo) || 0,
+                is_acrescimo: insumoData?.is_acrescimo || false,
+                preco_acrescimo: Number(insumoData?.preco_acrescimo) || 0
+              };
+            });
             this.acrescimosDisponiveis = todos
               .filter(i => i.is_acrescimo && !idsBase.has(i.id_insumo))
               .map(i => {
@@ -349,6 +373,14 @@ export class TblComandasComponent implements OnInit {
     const acrescimos = this.acrescimosDisponiveis
       .filter(a => a.qtd > 0)
       .map(a => ({ id_insumo: a.id_insumo, quantidade: a.qtd, preco_acrescimo: a.preco_acrescimo, nome: a.nome }));
+    const extrasBase = this.fichaIngredientes
+      .filter(i => i.qtdCustom > i.quantidade)
+      .map(i => ({
+        id_insumo: i.id_insumo,
+        nome: i.nome_insumo,
+        quantidade_extra: i.qtdCustom - i.quantidade,
+        preco_unit: i.is_acrescimo ? i.preco_acrescimo : i.custo
+      }));
     let itemId: string;
     if (!isEdicao) {
       if (!Array.isArray(this.comandaSelecionada.pedidos)) this.comandaSelecionada.pedidos = [];
@@ -357,8 +389,8 @@ export class TblComandasComponent implements OnInit {
     } else {
       itemId = this.itemIdFichaEditando!;
     }
-    if (remover.length > 0 || quantidades.length > 0 || acrescimos.length > 0) {
-      this.modificacoesPorItem[itemId] = { id_produto: produto.id_produto, remover, quantidades, acrescimos };
+    if (remover.length > 0 || quantidades.length > 0 || acrescimos.length > 0 || extrasBase.length > 0) {
+      this.modificacoesPorItem[itemId] = { id_produto: produto.id_produto, remover, quantidades, acrescimos, extrasBase };
     } else {
       delete this.modificacoesPorItem[itemId];
     }
@@ -437,6 +469,7 @@ export class TblComandasComponent implements OnInit {
         .map(([, mods]) => ({
           id_item: mods.id_produto,
           remover: mods.remover,
+          quantidades: mods.quantidades,
           extra: mods.acrescimos.map(a => ({
             id_insumo: a.id_insumo,
             quantidade: a.quantidade,

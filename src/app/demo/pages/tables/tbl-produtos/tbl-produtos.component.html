@@ -195,14 +195,9 @@
               <textarea id="edit-descricao" class="field-input" rows="3" [(ngModel)]="produtoEmEdicao.descricao" name="edit-descricao" style="resize:none;"></textarea>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-12">
               <label class="field-label">Preço</label>
               <input id="edit-preco" type="number" class="field-input" [(ngModel)]="produtoEmEdicao.preco" name="edit-preco" required />
-            </div>
-
-            <div class="col-md-6">
-              <label class="field-label">Quantidade em Estoque</label>
-              <input id="edit-quantidade" type="number" class="field-input" [(ngModel)]="produtoEmEdicao.quantidade_estoque" name="edit-quantidade" required />
             </div>
 
             <div class="col-12">
@@ -325,26 +320,64 @@
         <div class="ficha-add-section">
           <p class="modal-section-label mt-3 mb-2">Adicionar ingrediente</p>
           <div class="row g-2 align-items-end">
-            <div class="col-6">
+
+            <!-- Pesquisa de insumo -->
+            <div class="col-12">
               <label class="field-label">Insumo</label>
-              <select class="field-input" [(ngModel)]="novoItemFicha.id_insumo" name="fi-insumo">
-                <option [ngValue]="null">Selecione...</option>
-                <option *ngFor="let ins of insumosDisponiveis" [ngValue]="ins.id_insumo">
-                  {{ ins.nome }} ({{ ins.unidade | uppercase }})
-                </option>
-              </select>
+              <div *ngIf="insumoSelecionado; else searchInsumo" class="insumo-selected-badge">
+                <div class="insumo-badge-info">
+                  <span class="insumo-badge-nome">{{ insumoSelecionado.nome }}</span>
+                  <span class="insumo-badge-unidade">{{ insumoSelecionado.unidade | uppercase }}</span>
+                </div>
+                <button type="button" class="insumo-badge-clear" (click)="limparInsumoFicha()" title="Remover seleção">
+                  <i class="feather icon-x"></i>
+                </button>
+              </div>
+              <ng-template #searchInsumo>
+                <div class="insumo-search-wrap">
+                  <div class="insumo-search-input-wrap">
+                    <i class="feather icon-search insumo-search-icon"></i>
+                    <input
+                      type="text"
+                      class="field-input insumo-search-input"
+                      placeholder="Pesquisar insumo..."
+                      [(ngModel)]="filtroInsumo"
+                      name="fi-search"
+                      autocomplete="off"
+                      (focus)="fichaPesquisaAberta = true"
+                      (blur)="fecharPesquisaInsumo()"
+                    />
+                  </div>
+                  <div class="insumo-search-list" *ngIf="fichaPesquisaAberta && insumosFiltered.length > 0">
+                    <button
+                      *ngFor="let ins of insumosFiltered"
+                      type="button"
+                      class="insumo-search-item"
+                      (mousedown)="selecionarInsumoFicha(ins)">
+                      <span class="insumo-search-nome">{{ ins.nome }}</span>
+                      <span class="insumo-search-unidade">{{ ins.unidade | uppercase }}</span>
+                    </button>
+                  </div>
+                  <div class="insumo-search-list insumo-search-list--empty"
+                       *ngIf="fichaPesquisaAberta && filtroInsumo && insumosFiltered.length === 0">
+                    <span>Nenhum insumo encontrado.</span>
+                  </div>
+                </div>
+              </ng-template>
             </div>
-            <div class="col-3">
+
+            <div class="col-7">
               <label class="field-label">Quantidade</label>
               <input type="number" class="field-input" [(ngModel)]="novoItemFicha.quantidade"
                      name="fi-qty" min="0.001" step="0.5" />
             </div>
-            <div class="col-3">
+            <div class="col-5 d-flex align-items-end">
               <button class="btn-ficha-add" [disabled]="!novoItemFicha.id_insumo || novoItemFicha.quantidade <= 0"
                       (click)="adicionarItemFicha()">
                 <i class="feather icon-plus me-1"></i>Adicionar
               </button>
             </div>
+
           </div>
         </div>
 

@@ -770,13 +770,16 @@ app.post('/api/pedidos', autenticarTenant, async (req, res) => {
 
           if (fichaItens.length > 0) {
             const mod = modsMap[String(itemData.id_item)];
-            const removidos = mod && Array.isArray(mod.remover) ? mod.remover.map(Number) : [];
-            const extras    = mod && Array.isArray(mod.extra)   ? mod.extra   : [];
+            const removidos  = mod && Array.isArray(mod.remover)     ? mod.remover.map(Number)     : [];
+            const extras      = mod && Array.isArray(mod.extra)       ? mod.extra                   : [];
+            const quantidades = mod && Array.isArray(mod.quantidades) ? mod.quantidades              : [];
 
             for (const fi of fichaItens) {
               if (removidos.includes(fi.id_insumo)) continue; // item removido pelo cliente
 
-              const qtdBaixa = fi.quantidade * itemData.quantidade;
+              const qtdCustom = quantidades.find(q => Number(q.id_insumo) === fi.id_insumo);
+              const qtdFicha = qtdCustom ? parseFloat(qtdCustom.quantidade) : fi.quantidade;
+              const qtdBaixa = qtdFicha * itemData.quantidade;
               await conn.execute(
                 'UPDATE estoque SET quantidade = GREATEST(0, quantidade - ?) WHERE id_insumo = ? AND id_empresa = ?',
                 [qtdBaixa, fi.id_insumo, req.id_empresa]

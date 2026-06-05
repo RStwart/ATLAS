@@ -211,6 +211,12 @@
                        [class.ficha-ing-row--removido]="ing.qtdCustom === 0">
                     <div class="ficha-ing-row__info">
                       <span class="ficha-ing-row__nome">{{ ing.nome_insumo }}</span>
+                      <span *ngIf="ing.is_acrescimo && ing.preco_acrescimo > 0" class="ficha-acr-row__preco">
+                        +{{ ing.preco_acrescimo | currency:'BRL' }} / un
+                      </span>
+                      <span *ngIf="!ing.is_acrescimo && ing.custo > 0" class="ficha-acr-row__preco ficha-acr-row__preco--custo">
+                        +{{ ing.custo | currency:'BRL' }} / un
+                      </span>
                       <span *ngIf="ing.qtdCustom === 0" class="ficha-ing-row__tag ficha-ing-row__tag--rem">SEM</span>
                     </div>
                     <div class="ficha-ing-row__btns">

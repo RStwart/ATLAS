@@ -51,6 +51,15 @@ export class TblProdutosComponent implements OnInit {
   fichaTecnica: ProdutoInsumo[] = [];
   insumosDisponiveis: any[] = [];
   novoItemFicha = { id_insumo: null as number | null, quantidade: 1 };
+  filtroInsumo: string = '';
+  fichaPesquisaAberta: boolean = false;
+  insumoSelecionado: any = null;
+
+  get insumosFiltered(): any[] {
+    const q = this.filtroInsumo.trim().toLowerCase();
+    if (!q) return this.insumosDisponiveis;
+    return this.insumosDisponiveis.filter(i => i.nome.toLowerCase().includes(q));
+  }
 
   constructor(private ProdutoService: ProdutoService, private insumoService: InsumoService, private toastr: ToastrService) {}
 
@@ -274,6 +283,9 @@ export class TblProdutosComponent implements OnInit {
   abrirFichaTecnica(produto: Produto): void {
     this.produtoFicha = produto;
     this.novoItemFicha = { id_insumo: null, quantidade: 1 };
+    this.filtroInsumo = '';
+    this.insumoSelecionado = null;
+    this.fichaPesquisaAberta = false;
     this.carregarFichaTecnica();
     this.insumoService.getInsumos().subscribe(
       data => { this.insumosDisponiveis = data; },
@@ -291,6 +303,24 @@ export class TblProdutosComponent implements OnInit {
     );
   }
 
+  selecionarInsumoFicha(ins: any): void {
+    this.insumoSelecionado = ins;
+    this.novoItemFicha.id_insumo = ins.id_insumo;
+    this.filtroInsumo = '';
+    this.fichaPesquisaAberta = false;
+  }
+
+  limparInsumoFicha(): void {
+    this.insumoSelecionado = null;
+    this.novoItemFicha.id_insumo = null;
+    this.filtroInsumo = '';
+    this.fichaPesquisaAberta = false;
+  }
+
+  fecharPesquisaInsumo(): void {
+    setTimeout(() => { this.fichaPesquisaAberta = false; }, 200);
+  }
+
   adicionarItemFicha(): void {
     if (!this.produtoFicha || !this.novoItemFicha.id_insumo || this.novoItemFicha.quantidade <= 0) return;
     this.insumoService.addInsumoAoProduto(this.produtoFicha.id_produto, {
@@ -300,6 +330,8 @@ export class TblProdutosComponent implements OnInit {
       () => {
         this.carregarFichaTecnica();
         this.novoItemFicha = { id_insumo: null, quantidade: 1 };
+        this.insumoSelecionado = null;
+        this.filtroInsumo = '';
         this.toastr.success('Ingrediente adicionado!', 'Sucesso');
       },
       () => { this.toastr.error('Erro ao adicionar ingrediente', 'Erro'); }
