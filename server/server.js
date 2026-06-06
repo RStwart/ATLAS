@@ -332,7 +332,7 @@ app.get('/api/cardapio/:idEmpresa/produtos/:idProduto/ficha-tecnica', async (req
   try {
     const [rows] = await db.promise().query(
       `SELECT pi.id, pi.id_produto, pi.id_insumo, pi.quantidade,
-              i.nome AS nome_insumo, i.unidade
+              i.nome AS nome_insumo, i.unidade, i.is_acrescimo, i.preco_acrescimo
        FROM produto_insumo pi
        JOIN insumo i ON i.id_insumo = pi.id_insumo
        WHERE pi.id_produto = ? AND pi.id_empresa = ?
@@ -349,9 +349,18 @@ app.get('/api/cardapio/:idEmpresa/acrescimos', async (req, res) => {
   const { idEmpresa } = req.params;
   try {
     const [rows] = await db.promise().query(
-      `SELECT id_insumo, nome, unidade, preco_acrescimo
-       FROM insumo
-       WHERE id_empresa = ? AND is_acrescimo = 1 AND estoque > 0
+      `SELECT i.id_insumo,
+              i.nome,
+              i.unidade,
+              i.preco_acrescimo,
+              COALESCE(e.quantidade, 0) AS estoque_disponivel
+       FROM insumo i
+       LEFT JOIN estoque e
+         ON e.id_insumo = i.id_insumo
+        AND e.id_empresa = i.id_empresa
+       WHERE i.id_empresa = ?
+         AND i.is_acrescimo = 1
+         AND (e.quantidade IS NULL OR e.quantidade > 0)
        ORDER BY nome`,
       [idEmpresa]
     );

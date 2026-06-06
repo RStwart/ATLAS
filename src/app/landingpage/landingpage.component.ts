@@ -11,9 +11,11 @@ interface Categoria {
 interface IngredienteModal {
   id_insumo: number;
   nome_insumo: string;
-  quantidade: number;
+  quantidade: number | string;
   unidade: string;
   removido: boolean;
+  is_acrescimo?: number | boolean;
+  preco_acrescimo?: number;
 }
 
 interface AcrescimoModal {
@@ -56,6 +58,8 @@ export class LandingpageComponent implements OnInit {
   produtoModal: any = null;
   ingredientesModal: IngredienteModal[] = [];
   acrescimosModal: AcrescimoModal[] = [];
+  acrescimosColapsados = true;
+  buscaAcrescimoModal = '';
   quantidadeModal = 1;
   observacaoModal = '';
   carregandoFicha = false;
@@ -124,12 +128,47 @@ export class LandingpageComponent implements OnInit {
     this.observacaoModal = '';
     this.ingredientesModal = [];
     this.acrescimosModal = this.acrescimosDisponiveis.map(a => ({ ...a, quantidade: 0 }));
+    this.acrescimosColapsados = true;
+    this.buscaAcrescimoModal = '';
     this.modalAberto = true;
     this.carregandoFicha = true;
 
     this.produtoService.getCardapioPublicoFichaTecnica(this.ID_EMPRESA, produto.id_produto).subscribe(
       (ficha: any[]) => {
-        this.ingredientesModal = ficha.map(f => ({ ...f, removido: false }));
+        const ingredientesBase = ficha
+          .map(f => ({
+            ...f,
+            quantidade: Number(f.quantidade),
+            removido: false
+          }));
+
+        const acrescimosDaFicha: AcrescimoModal[] = ficha
+          .filter(f => Number(f.is_acrescimo) === 1)
+          .map(f => ({
+            id_insumo: Number(f.id_insumo),
+            nome: f.nome_insumo,
+            unidade: f.unidade,
+            preco_acrescimo: Number(f.preco_acrescimo) || 0,
+            quantidade: 0
+          }));
+
+        const acrescimosCombinados = [...this.acrescimosDisponiveis, ...acrescimosDaFicha];
+        const acrescimosUnicos = new Map<number, AcrescimoModal>();
+
+        acrescimosCombinados.forEach((a) => {
+          if (!acrescimosUnicos.has(a.id_insumo)) {
+            acrescimosUnicos.set(a.id_insumo, {
+              id_insumo: Number(a.id_insumo),
+              nome: a.nome,
+              unidade: a.unidade,
+              preco_acrescimo: Number(a.preco_acrescimo) || 0,
+              quantidade: 0
+            });
+          }
+        });
+
+        this.ingredientesModal = ingredientesBase;
+        this.acrescimosModal = Array.from(acrescimosUnicos.values());
         this.carregandoFicha = false;
       },
       () => { this.carregandoFicha = false; }
@@ -145,8 +184,52 @@ export class LandingpageComponent implements OnInit {
     ing.removido = !ing.removido;
   }
 
-  setQuantidadeAcrescimo(ac: AcrescimoModal, delta: number): void {
-    ac.quantidade = Math.max(0, ac.quantidade + delta);
+  setQuantidadeAcrescimo(ac: AcrescimoModal, delta: number, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    const atual = Number(ac.quantidade) || 0;
+    ac.quantidade = Math.max(0, atual + delta);
+  }
+
+  toggleAcrescimosColapsados(): void {
+    this.acrescimosColapsados = !this.acrescimosColapsados;
+  }
+
+  get acrescimosVisiveis(): AcrescimoModal[] {
+    const termo = this.buscaAcrescimoModal.trim().toLowerCase();
+    if (termo) {
+      return this.acrescimosModal.filter(a => a.nome.toLowerCase().includes(termo));
+    }
+    return this.acrescimosModal.slice(0, 5);
+  }
+
+  get deveMostrarAvisoBuscaAcrescimos(): boolean {
+    return this.acrescimosModal.length > 5;
+  }
+
+  private formatarNumeroQuantidade(valor: number | string): string {
+    const numero = Number(valor);
+    if (Number.isNaN(numero)) return '0';
+    if (Number.isInteger(numero)) return String(numero);
+    return numero.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+  }
+
+  private normalizarUnidade(unidade?: string): string {
+    const u = (unidade || '').trim().toLowerCase();
+    if (!u) return 'und';
+
+    if (['un', 'und', 'unid', 'unidade', 'unidades'].includes(u)) return 'und';
+    if (u === 'ml') return 'ml';
+    if (u === 'l') return 'l';
+    if (u === 'g') return 'g';
+    if (u === 'kg') return 'kg';
+
+    return unidade as string;
+  }
+
+  formatQuantidadeUnidade(quantidade: number | string, unidade?: string): string {
+    return `${this.formatarNumeroQuantidade(quantidade)} ${this.normalizarUnidade(unidade)}`.trim();
   }
 
   get precoModalCalculado(): number {
@@ -242,6 +325,26 @@ export class LandingpageComponent implements OnInit {
       const el = document.getElementById('cat-' + cat.nome);
       if (el && el.getBoundingClientRect().top <= 130) this.categoriaAtiva = cat.nome;
     }
+  }
+
+  aplicarMascaraTelefone(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let v = input.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length <= 10) {
+      v = v.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+    } else {
+      v = v.replace(/^(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
+    }
+    input.value = v;
+    this.dadosCliente.telefone = v;
+  }
+
+  aplicarMascaraCPF(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let v = input.value.replace(/\D/g, '').slice(0, 11);
+    v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
+    input.value = v;
+    this.dadosCliente.cpf = v;
   }
 
   @HostListener('document:keydown.escape')

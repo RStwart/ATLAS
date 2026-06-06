@@ -23,18 +23,82 @@ export interface Navigation extends NavigationItem {
 
 const NavigationItems = [
   {
-    id: 'navigation',
-    title: 'Navigation',
+    id: 'financeiro',
+    title: 'Financeiro',
     type: 'group',
     icon: 'icon-navigation',
     children: [
       {
         id: 'dashboard',
-        title: 'Dashboard',
+        title: 'Venda',
         type: 'item',
         url: '/dashboard',
         icon: 'feather icon-home',
         classes: 'nav-item'
+      },
+      {
+        id: 'Caixas',
+        title: 'Caixas',
+        type: 'item',
+        url: '/tables/caixas',
+        classes: 'nav-item',
+        icon: 'feather icon-trending-up'
+      }
+    ]
+  },
+  {
+    id: 'operacao',
+    title: 'Operação',
+    type: 'group',
+    icon: 'icon-group',
+    children: [
+      {
+        id: 'Comanda',
+        title: 'Comandas',
+        type: 'item',
+        url: '/tables/comanda',
+        classes: 'nav-item',
+        icon: 'feather icon-grid'
+      },
+      {
+        id: 'Pedido',
+        title: 'Pedidos',
+        type: 'item',
+        url: '/tables/pedidos',
+        classes: 'nav-item',
+        icon: 'feather icon-clipboard'
+      }
+    ]
+  },
+  {
+    id: 'estoque',
+    title: 'Estoque',
+    type: 'group',
+    icon: 'icon-group',
+    children: [
+      {
+        id: 'Produtos',
+        title: 'Produtos',
+        type: 'item',
+        url: '/tables/produtos',
+        classes: 'nav-item',
+        icon: 'feather icon-package'
+      },
+      {
+        id: 'Insumos',
+        title: 'Insumos',
+        type: 'item',
+        url: '/tables/insumos',
+        classes: 'nav-item',
+        icon: 'feather icon-box'
+      },
+      {
+        id: 'Movimentacoes',
+        title: 'Movimentações',
+        type: 'item',
+        url: '/tables/movimentacoes',
+        classes: 'nav-item',
+        icon: 'feather icon-activity'
       }
     ]
   },
@@ -131,70 +195,7 @@ const NavigationItems = [
   //     }
   //   ]
   // },
-  {
-    id: 'TABELAS',
-    title: 'TABELAS',
-    type: 'group',
-    icon: 'icon-group',
-    children: [
-      {
-        id: 'Produtos',
-        title: 'Produtos',
-        type: 'item',
-        url: '/tables/produtos',
-        classes: 'nav-item',
-        icon: 'feather icon-package'
-      },
-      {
-        id: 'Insumos',
-        title: 'Insumos / Estoque',
-        type: 'item',
-        url: '/tables/insumos',
-        classes: 'nav-item',
-        icon: 'feather icon-box'
-      },
-      {
-        id: 'Movimentacoes',
-        title: 'Movimentações',
-        type: 'item',
-        url: '/tables/movimentacoes',
-        classes: 'nav-item',
-        icon: 'feather icon-activity'
-      },
-      // {
-      //   id: 'Funcionarios',
-      //   title: 'Funcionarios',
-      //   type: 'item',
-      //   url: '/tables/funcionarios',
-      //   classes: 'nav-item',
-      //   icon: 'feather icon-server'
-      // },
-      {
-        id: 'Comanda',
-        title: 'Comandas',
-        type: 'item',
-        url: '/tables/comanda',
-        classes: 'nav-item',
-        icon: 'feather icon-grid'
-      },
-      {
-        id: 'Pedido',
-        title: 'Pedidos',
-        type: 'item',
-        url: '/tables/pedidos',
-        classes: 'nav-item',
-        icon: 'feather icon-clipboard'
-      },
-      {
-        id: 'Caixas',
-        title: 'Caixas',
-        type: 'item',
-        url: '/tables/caixas',
-        classes: 'nav-item',
-        icon: 'feather icon-trending-up'
-      }
-    ]
-  },
+
   // {
   //   id: 'pdv',
   //   title: 'pdv',

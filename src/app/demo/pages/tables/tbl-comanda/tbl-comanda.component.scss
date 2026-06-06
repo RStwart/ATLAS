@@ -450,6 +450,7 @@
   padding: 8px 12px;
   border-bottom: 1px solid #f3f4f5;
   transition: background 0.12s;
+  gap: 8px;
 
   &:last-child { border-bottom: none; }
 
@@ -460,16 +461,21 @@
 
   &__info {
     flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow: hidden;
   }
 
   &__nome {
     font-size: 0.85rem;
     font-weight: 600;
     color: #343a40;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__preco {
@@ -479,6 +485,8 @@
     background: #f3e8ff;
     padding: 2px 7px;
     border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
 
     &--free {
       color: #198754;
@@ -497,8 +505,9 @@
   font-size: 0.85rem;
   font-weight: 700;
   color: #343a40;
-  min-width: 22px;
+  min-width: 28px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .ficha-ing-row {
@@ -508,6 +517,7 @@
   padding: 9px 12px;
   border-bottom: 1px solid #f3f4f5;
   transition: background 0.12s;
+  gap: 8px;
 
   &:last-child { border-bottom: none; }
 
@@ -519,16 +529,21 @@
 
   &__info {
     flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow: hidden;
   }
 
   &__nome {
     font-size: 0.85rem;
     font-weight: 600;
     color: #343a40;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__qty {
@@ -541,6 +556,7 @@
     font-weight: 700;
     padding: 2px 6px;
     border-radius: 4px;
+    flex-shrink: 0;
     &--rem   { background: #ffe0e0; color: #e53935; }
     &--extra { background: #e0f7e9; color: #2e7d32; }
     &--ok    { background: #e8f5e9; color: #2e7d32; display: flex; align-items: center; }
@@ -548,9 +564,9 @@
 
   &__btns {
     display: flex;
+    align-items: center;
     gap: 4px;
     flex-shrink: 0;
-    margin-left: 8px;
   }
 }
 
