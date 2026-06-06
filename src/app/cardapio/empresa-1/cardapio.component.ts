@@ -39,11 +39,14 @@ interface ItemCarrinho {
 }
 
 @Component({
-  selector: 'app-landingpage',
-  templateUrl: './landingpage.component.html',
-  styleUrls: ['./landingpage.component.scss']
+  selector: 'app-cardapio-empresa-1',
+  templateUrl: './cardapio.component.html',
+  styleUrls: ['./cardapio.component.scss']
 })
-export class LandingpageComponent implements OnInit {
+export class CardapioComponent implements OnInit {
+  // ── Empresa vinculada a este cardápio (fixo por instância) ──
+  // Para criar o cardápio de outra empresa, duplique esta pasta
+  // e altere apenas este valor.
   readonly ID_EMPRESA = 1;
 
   categorias: Categoria[] = [];

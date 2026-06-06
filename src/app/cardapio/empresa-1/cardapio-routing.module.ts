@@ -1,13 +1,13 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { LandingpageComponent } from './landingpage.component';
+import { CardapioComponent } from './cardapio.component';
 
 const routes: Routes = [
-  { path: '', component: LandingpageComponent }
+  { path: '', component: CardapioComponent }
 ];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule]
 })
-export class LandingpageRoutingModule { }
+export class CardapioRoutingModule { }

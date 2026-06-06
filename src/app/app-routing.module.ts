@@ -63,8 +63,10 @@ const routes: Routes = [
         loadChildren: () => import('./demo/pages/authentication/authentication.module').then((m) => m.AuthenticationModule)
       },
       {
-        path: 'home',
-        loadChildren: () => import('./landingpage/landingpage.module').then(m => m.LandingpageModule)
+        // Cardápio online — Empresa 1
+        // Para adicionar mais empresas, crie novas rotas apontando para suas respectivas pastas
+        path: 'cardapio1',
+        loadChildren: () => import('./cardapio/empresa-1/cardapio.module').then(m => m.CardapioModule)
       }
     ]
   }
