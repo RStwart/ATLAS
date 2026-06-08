@@ -690,6 +690,21 @@ export class TblComandasComponent implements OnInit {
     
     this.carregarHistoricoPedidos(this.comandaSelecionada.id_comanda);
   }
+
+  isComandaOnline(comanda: Comanda | null | undefined): boolean {
+    return String(comanda?.origem || '').toUpperCase() === 'ONLINE';
+  }
+
+  getResumoHorario(comanda: Comanda | null | undefined): string {
+    if (!comanda?.data_abertura && !comanda?.hora_abertura_dt) return '-';
+
+    const data = comanda.data_abertura
+      ? new Date(`${comanda.data_abertura}T00:00:00`).toLocaleDateString('pt-BR')
+      : '';
+    const hora = comanda.hora_abertura_dt ? String(comanda.hora_abertura_dt).slice(0, 5) : '';
+
+    return [data, hora].filter(Boolean).join(' às ');
+  }
   
 
   fecharModals() {
@@ -759,13 +774,15 @@ export class TblComandasComponent implements OnInit {
     }
   }
 
-  getHeaderClass(ordemType: string): string {
+  getHeaderClass(ordemType: string, origem?: string): string {
+    if (String(origem || '').toUpperCase() === 'ONLINE') return 'comanda-card__header--online';
     if (ordemType === 'Entrega') return 'comanda-card__header--entrega';
     if (ordemType === 'Retirada') return 'comanda-card__header--retirada';
     return 'comanda-card__header--pedido';
   }
 
-  getBadgeClass(ordemType: string): string {
+  getBadgeClass(ordemType: string, origem?: string): string {
+    if (String(origem || '').toUpperCase() === 'ONLINE') return 'comanda-card__order-badge--online';
     if (ordemType === 'Entrega') return 'comanda-card__order-badge--entrega';
     if (ordemType === 'Retirada') return 'comanda-card__order-badge--retirada';
     return 'comanda-card__order-badge--pedido';

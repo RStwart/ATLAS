@@ -3,12 +3,13 @@
     <app-card cardTitle="Comandas" [options]="false" [buttonh]="true" buttonTitle="Adicionar comanda" [buttonAction]="abrirModalAdicionarComanda.bind(this)">
       <div class="row">
         <div *ngFor="let comanda of comandasPaginadas" class="col-md-4 mb-4">
-          <div class="comanda-card">
+          <div class="comanda-card" [class.comanda-card--online]="isComandaOnline(comanda)">
 
             <!-- Cabeçalho colorido -->
-            <div class="comanda-card__header" [ngClass]="getHeaderClass(comanda.ordem_type)">
+            <div class="comanda-card__header" [ngClass]="getHeaderClass(comanda.ordem_type, comanda.origem)">
               <div class="comanda-card__number">
                 <i class="feather icon-grid me-2"></i>Comanda {{ comanda.numero }}
+                <span *ngIf="isComandaOnline(comanda)" class="comanda-card__online-tag">ONLINE</span>
               </div>
               <button class="comanda-card__delete" (click)="excluirComanda(comanda.id_comanda)" title="Excluir comanda">
                 <i class="feather icon-trash-2"></i>
@@ -19,7 +20,12 @@
             <div class="comanda-card__body">
               <div class="comanda-card__info-row">
                 <span class="comanda-card__name"><i class="feather icon-user me-1"></i>{{ comanda.nome }}</span>
-                <span class="comanda-card__order-badge" [ngClass]="getBadgeClass(comanda.ordem_type)">{{ comanda.ordem_type }}</span>
+                <span class="comanda-card__order-badge" [ngClass]="getBadgeClass(comanda.ordem_type, comanda.origem)">{{ isComandaOnline(comanda) ? 'Pedido Online' : comanda.ordem_type }}</span>
+              </div>
+
+              <div *ngIf="isComandaOnline(comanda)" class="comanda-card__online-summary">
+                <span><i class="feather icon-phone me-1"></i>{{ comanda.telefone || 'Sem telefone' }}</span>
+                <span><i class="feather icon-clock me-1"></i>{{ getResumoHorario(comanda) }}</span>
               </div>
 
               <div class="comanda-card__total-box">
@@ -350,6 +356,43 @@
 
       <!-- Body -->
       <div class="modal-body-custom" style="max-height:60vh; overflow-y:auto;">
+
+        <div *ngIf="isComandaOnline(comandaSelecionada)" class="online-details-hero">
+          <div class="online-details-hero__header">
+            <div>
+              <p class="online-details-hero__eyebrow">Pedido online</p>
+              <h6 class="online-details-hero__title">Informações enviadas pelo cliente</h6>
+            </div>
+            <span class="online-details-hero__badge">ONLINE</span>
+          </div>
+
+          <div class="online-details-grid">
+            <div class="online-details-item">
+              <span class="online-details-item__label">Nome do cliente</span>
+              <strong>{{ comandaSelecionada?.nome || '-' }}</strong>
+            </div>
+            <div class="online-details-item">
+              <span class="online-details-item__label">Telefone</span>
+              <strong>{{ comandaSelecionada?.telefone || '-' }}</strong>
+            </div>
+            <div class="online-details-item">
+              <span class="online-details-item__label">Endereço</span>
+              <strong>{{ comandaSelecionada?.endereco || '-' }}</strong>
+            </div>
+            <div class="online-details-item">
+              <span class="online-details-item__label">Número do pedido</span>
+              <strong>#{{ comandaSelecionada?.numero }}</strong>
+            </div>
+            <div class="online-details-item">
+              <span class="online-details-item__label">Horário</span>
+              <strong>{{ getResumoHorario(comandaSelecionada) }}</strong>
+            </div>
+            <div class="online-details-item online-details-item--full">
+              <span class="online-details-item__label">Observação</span>
+              <strong>{{ comandaSelecionada?.observacao_online || 'Nenhuma observação informada.' }}</strong>
+            </div>
+          </div>
+        </div>
 
         <div *ngIf="comandaSelecionada?.pedidos && comandaSelecionada.pedidos.length > 0">
           <p class="modal-section-label">Histórico de Pedidos</p>

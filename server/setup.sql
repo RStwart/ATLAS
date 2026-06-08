@@ -107,8 +107,10 @@ CREATE TABLE IF NOT EXISTS comanda (
   garcom           VARCHAR(100),
   totalConsumo     DECIMAL(10,2)  NOT NULL DEFAULT 0.00,
   nome             VARCHAR(150)   NOT NULL DEFAULT 'Sem nome',
+  telefone         VARCHAR(30),
   ordem_type       VARCHAR(20)    NOT NULL DEFAULT 'Pedido',
   endereco         VARCHAR(255),
+  observacao_online TEXT,
   id_empresa       INT            NOT NULL DEFAULT 1,
   data_abertura    DATE,
   hora_abertura_dt TIME,
@@ -250,11 +252,16 @@ CREATE TABLE IF NOT EXISTS movimentacao_estoque (
 -- (execute apenas em bancos já existentes que não têm a coluna)
 -- MySQL 8.0+:
 --   ALTER TABLE comanda ADD COLUMN IF NOT EXISTS origem VARCHAR(20) NOT NULL DEFAULT 'INTERNO';
+--   ALTER TABLE comanda ADD COLUMN IF NOT EXISTS telefone VARCHAR(30);
+--   ALTER TABLE comanda ADD COLUMN IF NOT EXISTS observacao_online TEXT;
 -- MySQL 5.7 / MariaDB — verificar antes:
 --   SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
---   WHERE TABLE_SCHEMA='atlas_db' AND TABLE_NAME='comanda' AND COLUMN_NAME='origem';
+--   WHERE TABLE_SCHEMA='atlas_db' AND TABLE_NAME='comanda'
+--     AND COLUMN_NAME IN ('origem', 'telefone', 'observacao_online');
 -- Se não retornar nenhuma linha, executar:
 --   ALTER TABLE comanda ADD COLUMN origem VARCHAR(20) NOT NULL DEFAULT 'INTERNO';
+--   ALTER TABLE comanda ADD COLUMN telefone VARCHAR(30);
+--   ALTER TABLE comanda ADD COLUMN observacao_online TEXT;
 
 -- ── §3: Dados iniciais ───────────────────────────────────────
 
