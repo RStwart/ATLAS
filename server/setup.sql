@@ -114,6 +114,7 @@ CREATE TABLE IF NOT EXISTS comanda (
   hora_abertura_dt TIME,
   data_fechamento  DATE,
   hora_fechamento  TIME,
+  origem           VARCHAR(20)    NOT NULL DEFAULT 'INTERNO',
   PRIMARY KEY (id_comanda)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -244,6 +245,16 @@ CREATE TABLE IF NOT EXISTS movimentacao_estoque (
   CONSTRAINT fk_mov_insumo
     FOREIGN KEY (id_insumo) REFERENCES insumo (id_insumo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ── §2.1: Migração — adiciona coluna origem na comanda ───────
+-- (execute apenas em bancos já existentes que não têm a coluna)
+-- MySQL 8.0+:
+--   ALTER TABLE comanda ADD COLUMN IF NOT EXISTS origem VARCHAR(20) NOT NULL DEFAULT 'INTERNO';
+-- MySQL 5.7 / MariaDB — verificar antes:
+--   SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+--   WHERE TABLE_SCHEMA='atlas_db' AND TABLE_NAME='comanda' AND COLUMN_NAME='origem';
+-- Se não retornar nenhuma linha, executar:
+--   ALTER TABLE comanda ADD COLUMN origem VARCHAR(20) NOT NULL DEFAULT 'INTERNO';
 
 -- ── §3: Dados iniciais ───────────────────────────────────────
 

@@ -1,0 +1,243 @@
+<div class="landing">
+
+  <!-- ── NAVBAR ── -->
+  <nav class="navbar">
+    <div class="logo">ATLAS<span>.</span></div>
+    <ul class="nav-links">
+      <li><a href="#funcionalidades">Funcionalidades</a></li>
+      <li><a href="#planos">Planos</a></li>
+      <li><a href="#promocoes">Promoções</a></li>
+    </ul>
+    <a routerLink="/auth/login" class="btn-nav">Entrar no sistema</a>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero-text">
+      <span class="badge">🚀 Sistema de Gestão Completo</span>
+      <h1>Gerencie seu negócio com <span>inteligência</span> e eficiência</h1>
+      <p>
+        ATLAS é a plataforma all-in-one para restaurantes, bares e estabelecimentos que querem
+        controlar pedidos, estoque, cardápio digital e muito mais — tudo em um só lugar.
+      </p>
+      <div class="hero-cta">
+        <a href="#planos" class="btn-primary">Ver planos</a>
+        <a href="#funcionalidades" class="btn-outline">Conhecer funcionalidades</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="mock-card">
+        <div class="mock-icon">🍽️</div>
+        <div class="mock-info">
+          <h4>Pedido #0042 — Mesa 5</h4>
+          <p>2 itens · R$ 78,00 · Em preparo</p>
+        </div>
+      </div>
+      <div class="mock-card">
+        <div class="mock-icon">📦</div>
+        <div class="mock-info">
+          <h4>Estoque: Tomate</h4>
+          <p>Qtd: 12 kg · Alerta de reposição</p>
+        </div>
+      </div>
+      <div class="mock-card">
+        <div class="mock-icon">📊</div>
+        <div class="mock-info">
+          <h4>Vendas hoje</h4>
+          <p>R$ 1.240,00 · +18% vs ontem</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FUNCIONALIDADES ── -->
+  <section class="features" id="funcionalidades">
+    <div class="section-title">
+      <h2>Tudo que seu negócio precisa</h2>
+      <p>Ferramentas poderosas reunidas em uma plataforma intuitiva e fácil de usar.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🧾</span>
+        <h3>Gestão de Comandas</h3>
+        <p>Abertura, controle e fechamento de comandas em tempo real. Nunca mais perca um pedido.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📋</span>
+        <h3>Cardápio Digital</h3>
+        <p>Cardápio online personalizado com QR Code. Seus clientes pedem direto pelo celular.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📦</span>
+        <h3>Controle de Estoque</h3>
+        <p>Gerencie insumos, alertas de reposição e histórico de movimentação com facilidade.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">👥</span>
+        <h3>Gestão de Funcionários</h3>
+        <p>Cadastro, controle de acesso por nível (Admin / Funcionário) e registro de atividades.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📊</span>
+        <h3>Dashboard & Relatórios</h3>
+        <p>Visualize vendas, ticket médio, produtos mais vendidos e muito mais em tempo real.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🖨️</span>
+        <h3>Impressão de Pedidos</h3>
+        <p>Integração com impressoras térmicas para impressão automática de pedidos na cozinha.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">💳</span>
+        <h3>Controle de Vendas</h3>
+        <p>Histórico completo de vendas, formas de pagamento e exportação de dados.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔒</span>
+        <h3>Segurança & Acesso</h3>
+        <p>Autenticação segura com JWT e controle de permissões por perfil de usuário.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PLANOS ── -->
+  <section class="pricing" id="planos">
+    <div class="section-title">
+      <h2>Planos e Preços</h2>
+      <p>Escolha o plano ideal para o tamanho do seu negócio. Sem surpresas, sem taxas ocultas.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- BÁSICO -->
+      <div class="plan-card">
+        <p class="plan-name">Básico</p>
+        <div class="plan-price">
+          <span class="currency">R$</span>
+          <span class="amount">150</span>
+          <span class="period">/mês</span>
+        </div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Gestão de comandas</li>
+          <li><span class="check">✓</span> Dashboard básico</li>
+          <li><span class="check">✓</span> Controle de vendas</li>
+          <li><span class="check">✓</span> Até 2 usuários</li>
+          <li><span class="check">✓</span> Suporte por e-mail</li>
+          <li><span class="cross">✗</span> Cardápio digital</li>
+          <li><span class="cross">✗</span> Controle de estoque</li>
+          <li><span class="cross">✗</span> Relatórios avançados</li>
+        </ul>
+        <a href="#promocoes" class="btn-plan btn-outline-plan">Começar agora</a>
+      </div>
+
+      <!-- MEDIUM -->
+      <div class="plan-card featured">
+        <span class="plan-badge">⭐ Mais Popular</span>
+        <p class="plan-name">Medium</p>
+        <div class="plan-price">
+          <span class="currency">R$</span>
+          <span class="amount">350</span>
+          <span class="period">/mês</span>
+        </div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Tudo do plano Básico</li>
+          <li><span class="check">✓</span> Cardápio digital (QR Code)</li>
+          <li><span class="check">✓</span> Controle de estoque</li>
+          <li><span class="check">✓</span> Gestão de funcionários</li>
+          <li><span class="check">✓</span> Relatórios intermediários</li>
+          <li><span class="check">✓</span> Até 5 usuários</li>
+          <li><span class="check">✓</span> Suporte prioritário</li>
+          <li><span class="cross">✗</span> Impressão automática</li>
+        </ul>
+        <a href="#promocoes" class="btn-plan btn-primary">Escolher Medium</a>
+      </div>
+
+      <!-- PREMIUM -->
+      <div class="plan-card">
+        <p class="plan-name">Premium</p>
+        <div class="plan-price">
+          <span class="currency">R$</span>
+          <span class="amount">700</span>
+          <span class="period">/mês</span>
+        </div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Tudo do plano Medium</li>
+          <li><span class="check">✓</span> Impressão automática (cozinha)</li>
+          <li><span class="check">✓</span> Dashboard avançado com gráficos</li>
+          <li><span class="check">✓</span> Relatórios completos + exportação</li>
+          <li><span class="check">✓</span> Usuários ilimitados</li>
+          <li><span class="check">✓</span> Múltiplas empresas</li>
+          <li><span class="check">✓</span> Suporte 24/7 via WhatsApp</li>
+          <li><span class="check">✓</span> Atualizações prioritárias</li>
+        </ul>
+        <a href="#promocoes" class="btn-plan btn-outline-plan">Ir Premium</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PROMOÇÕES / TAXAS ── -->
+  <section class="promo" id="promocoes">
+    <div class="section-title">
+      <h2>🎉 Promoções & Taxas de Implementação</h2>
+      <p>Valores especiais para você começar sem preocupação. Implementação rápida e suporte completo.</p>
+    </div>
+
+    <div class="promo-grid">
+      <div class="promo-card">
+        <div class="promo-icon">⚙️</div>
+        <div class="promo-price">
+          <span class="label">Taxa única de implementação</span>
+          <span class="value">R$ 90</span><span class="once">uma única vez</span>
+        </div>
+        <h3>Configuração & Implantação</h3>
+        <p>
+          Instalação completa do sistema, configuração do servidor, criação do usuário administrador
+          e treinamento inicial da equipe. Tudo pronto para funcionar no mesmo dia.
+        </p>
+      </div>
+
+      <div class="promo-card">
+        <div class="promo-icon">🍽️</div>
+        <div class="promo-price">
+          <span class="label">Módulo adicional</span>
+          <span class="value">R$ 150</span><span class="once">avulso</span>
+        </div>
+        <h3>Cardápio Digital + Estoque</h3>
+        <p>
+          Inclusão do módulo de cardápio online com QR Code personalizado e controle de estoque
+          com alertas de reposição. Disponível como add-on para o plano Básico.
+        </p>
+      </div>
+
+      <div class="promo-card">
+        <div class="promo-icon">📦</div>
+        <div class="promo-price">
+          <span class="label">Pacote completo</span>
+          <span class="value">R$ 240</span><span class="once">implementação + cardápio</span>
+        </div>
+        <h3>Combo Implementação + Cardápio</h3>
+        <p>
+          Taxa de implementação (R$ 90) + módulo de cardápio e estoque (R$ 150) juntos
+          com desconto exclusivo. A melhor forma de começar com tudo pronto.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA FINAL ── -->
+  <section class="cta">
+    <h2>Pronto para transformar seu negócio?</h2>
+    <p>
+      Entre em contato agora, escolha seu plano e comece a usar o ATLAS ainda esta semana.
+      Suporte humanizado do início ao fim.
+    </p>
+    <a routerLink="/auth/login" class="btn-cta">Acessar o sistema</a>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer">
+    <p>© 2025 <span>ATLAS</span> — Sistema de Gestão para Restaurantes e Estabelecimentos. Todos os direitos reservados.</p>
+  </footer>
+
+</div>

@@ -30,6 +30,10 @@ export class ProdutoService {
     return this.http.get(`${this.apiUrl}/cardapio/${idEmpresa}/acrescimos`);
   }
 
+  postCardapioPedido(idEmpresa: number, payload: { cliente: any; itens: any[]; total: number }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/cardapio/${idEmpresa}/pedido`, payload);
+  }
+
   // Método para obter todos os produtos
   getProdutos(): Observable<any> {
     return this.http.get(`${this.apiUrl}/produtos`);

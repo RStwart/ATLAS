@@ -370,6 +370,179 @@ app.get('/api/cardapio/:idEmpresa/acrescimos', async (req, res) => {
   }
 });
 
+app.get('/api/cardapio/:idEmpresa/acrescimos', async (req, res) => {
+  const { idEmpresa } = req.params;
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT i.id_insumo,
+              i.nome,
+              i.unidade,
+              i.preco_acrescimo,
+              COALESCE(e.quantidade, 0) AS estoque_disponivel
+       FROM insumo i
+       LEFT JOIN estoque e
+         ON e.id_insumo = i.id_insumo
+        AND e.id_empresa = i.id_empresa
+       WHERE i.id_empresa = ?
+         AND i.is_acrescimo = 1
+         AND (e.quantidade IS NULL OR e.quantidade > 0)
+       ORDER BY nome`,
+      [idEmpresa]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar acréscimos' });
+  }
+});
+
+// ── Rota POST pública para receber pedidos do cardápio online ──
+// Não requer autenticação JWT — o idEmpresa vem da URL.
+app.post('/api/cardapio/:idEmpresa/pedido', async (req, res) => {
+  const idEmpresa = parseInt(req.params.idEmpresa);
+  const { cliente, itens, total } = req.body;
+
+  if (!idEmpresa || !cliente || !Array.isArray(itens) || itens.length === 0) {
+    return res.status(400).json({ error: 'Dados incompletos' });
+  }
+  if (!cliente.nome || !cliente.tipoEntrega || !cliente.pagamento) {
+    return res.status(400).json({ error: 'Campos obrigatórios ausentes: nome, tipoEntrega, pagamento' });
+  }
+
+  const conn = await db.promise().getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // Próximo número de comanda para esta empresa
+    const [[maxRow]] = await conn.query(
+      'SELECT COALESCE(MAX(numero), 0) + 1 AS proximo FROM comanda WHERE id_empresa = ?',
+      [idEmpresa]
+    );
+    const numero = maxRow.proximo;
+
+    const agora = new Date();
+    const data_abertura = agora.toISOString().split('T')[0];
+    const hora_abertura_dt = agora.toTimeString().split(' ')[0];
+
+    // Cria a comanda marcada como ONLINE
+    const [comandaResult] = await conn.execute(
+      `INSERT INTO comanda
+         (numero, capacidade, status, garcom, totalConsumo, nome, ordem_type, endereco,
+          id_empresa, data_abertura, hora_abertura_dt, origem)
+       VALUES (?, 1, 'Aberta', 'ONLINE', ?, ?, ?, ?, ?, ?, ?, 'ONLINE')`,
+      [
+        numero,
+        parseFloat(total) || 0,
+        cliente.nome,
+        cliente.tipoEntrega,
+        cliente.endereco || '',
+        idEmpresa,
+        data_abertura,
+        hora_abertura_dt
+      ]
+    );
+    const id_comanda = comandaResult.insertId;
+
+    // Insere cada item como pedido + realiza baixa de insumos
+    for (const item of itens) {
+      const [pedidoResult] = await conn.execute(
+        `INSERT INTO pedido
+           (id_comanda, id_empresa, id_item, nome_item, preco, quantidade,
+            status, observacao, data_pedido, id_usuario, nome_usuario)
+         VALUES (?, ?, ?, ?, ?, ?, 'Solicitado', ?, ?, NULL, 'PEDIDO ONLINE')`,
+        [
+          id_comanda,
+          idEmpresa,
+          item.id_produto || null,
+          item.nome,
+          parseFloat(item.preco) || 0,
+          parseInt(item.quantidade) || 1,
+          item.observacao || null,
+          agora
+        ]
+      );
+      const id_pedido = pedidoResult.insertId;
+
+      // Baixa de insumos baseada na ficha técnica do produto
+      if (item.id_produto) {
+        const [fichaItens] = await conn.query(
+          `SELECT pi.id_insumo, pi.quantidade, i.nome AS nome_insumo, i.unidade
+           FROM produto_insumo pi
+           JOIN insumo i ON i.id_insumo = pi.id_insumo
+           WHERE pi.id_produto = ? AND pi.id_empresa = ?`,
+          [item.id_produto, idEmpresa]
+        );
+
+        const removidos = Array.isArray(item.removidos) ? item.removidos.map(Number) : [];
+        const extras    = Array.isArray(item.extras)    ? item.extras                : [];
+
+        // Desconta insumos da ficha (respeitando ingredientes removidos pelo cliente)
+        for (const fi of fichaItens) {
+          if (removidos.includes(Number(fi.id_insumo))) continue;
+
+          const qtdBaixa = fi.quantidade * (parseInt(item.quantidade) || 1);
+          await conn.execute(
+            'UPDATE estoque SET quantidade = GREATEST(0, quantidade - ?) WHERE id_insumo = ? AND id_empresa = ?',
+            [qtdBaixa, fi.id_insumo, idEmpresa]
+          );
+          await conn.execute(
+            `INSERT INTO movimentacao_estoque
+               (id_insumo, tipo, quantidade, origem, id_pedido, id_usuario, nome_usuario, nome_insumo_log, unidade_log, id_empresa)
+             VALUES (?, 'SAIDA', ?, 'VENDA', ?, NULL, 'PEDIDO ONLINE', ?, ?, ?)`,
+            [fi.id_insumo, qtdBaixa, id_pedido, fi.nome_insumo || null, fi.unidade || null, idEmpresa]
+          );
+        }
+
+        // Extras solicitados pelo cliente
+        for (const ex of extras) {
+          if (!ex.id_insumo || !ex.quantidade) continue;
+          const qtdExtra = parseFloat(ex.quantidade) * (parseInt(item.quantidade) || 1);
+
+          await conn.execute(
+            'UPDATE estoque SET quantidade = GREATEST(0, quantidade - ?) WHERE id_insumo = ? AND id_empresa = ?',
+            [qtdExtra, ex.id_insumo, idEmpresa]
+          );
+
+          const [[exInsumo]] = await conn.execute(
+            'SELECT nome, unidade FROM insumo WHERE id_insumo = ? AND id_empresa = ?',
+            [ex.id_insumo, idEmpresa]
+          );
+          await conn.execute(
+            `INSERT INTO movimentacao_estoque
+               (id_insumo, tipo, quantidade, origem, id_pedido, observacao, id_usuario, nome_usuario, nome_insumo_log, unidade_log, id_empresa)
+             VALUES (?, 'SAIDA', ?, 'VENDA', ?, 'extra solicitado', NULL, 'PEDIDO ONLINE', ?, ?, ?)`,
+            [ex.id_insumo, qtdExtra, id_pedido, ex.nome || exInsumo?.nome || null, exInsumo?.unidade || null, idEmpresa]
+          );
+          await conn.execute(
+            `INSERT INTO pedido_modificacao (id_pedido, tipo, id_insumo, nome_insumo, quantidade, preco_acrescimo, id_empresa)
+             VALUES (?, 'EXTRA', ?, ?, ?, ?, ?)`,
+            [id_pedido, ex.id_insumo, ex.nome || exInsumo?.nome || null, parseFloat(ex.quantidade) || 1, parseFloat(ex.preco_acrescimo) || 0, idEmpresa]
+          );
+        }
+
+        // Registra ingredientes removidos no histórico de modificações
+        for (const idRemovido of removidos) {
+          const fichaItem = fichaItens.find(fi => Number(fi.id_insumo) === idRemovido);
+          await conn.execute(
+            `INSERT INTO pedido_modificacao (id_pedido, tipo, id_insumo, nome_insumo, quantidade, preco_acrescimo, id_empresa)
+             VALUES (?, 'REMOVER', ?, ?, ?, 0, ?)`,
+            [id_pedido, idRemovido, fichaItem?.nome_insumo || null, fichaItem?.quantidade || null, idEmpresa]
+          );
+        }
+      }
+    }
+
+    await conn.commit();
+    res.status(201).json({ message: 'Pedido registrado com sucesso', id_comanda, numero });
+
+  } catch (err) {
+    await conn.rollback();
+    console.error('[cardapio/pedido] Erro:', err);
+    res.status(500).json({ error: 'Erro ao registrar pedido', details: err.message });
+  } finally {
+    conn.release();
+  }
+});
+
 // Rota GET para obter todos os produtos
 app.get('/api/produtos', autenticarTenant, (req, res) => {
   db.query('SELECT id_produto, nome, descricao, preco, quantidade_estoque, imagem, categoria FROM produto WHERE id_empresa = ?', [req.id_empresa], (err, results) => {

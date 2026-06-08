@@ -81,6 +81,9 @@ export class CardapioComponent implements OnInit {
   carrinho: ItemCarrinho[] = [];
   carrinhoAberto = false;
   mostrarModal = false;
+  enviandoPedido = false;
+  pedidoConfirmado = false;
+  numeroPedidoConfirmado: number | null = null;
 
   constructor(
     private produtoService: ProdutoService,
@@ -308,12 +311,38 @@ export class CardapioComponent implements OnInit {
   }
 
   finalizarPedido(): void {
-    const pedidoFinal = {
+    if (this.enviandoPedido) return;
+
+    const payload = {
       cliente: { ...this.dadosCliente },
-      itens: this.carrinho,
+      itens: this.carrinho.map(item => ({
+        id_produto: item.id_produto,
+        nome: item.nome,
+        preco: item.preco,
+        quantidade: item.quantidade,
+        observacao: item.observacao,
+        removidos: item.removidos,
+        extras: item.extras
+      })),
       total: this.calcularTotalCarrinho()
     };
-    console.log('Pedido enviado:', pedidoFinal);
+
+    this.enviandoPedido = true;
+
+    this.produtoService.postCardapioPedido(this.ID_EMPRESA, payload).subscribe({
+      next: (resp: any) => {
+        this.enviandoPedido = false;
+        this.pedidoConfirmado = true;
+        this.numeroPedidoConfirmado = resp.numero ?? null;
+        this.carrinho = [];
+        this.fecharModal();
+        this.toastr.success(`Pedido #${resp.numero} registrado com sucesso!`, 'Pedido recebido!', { timeOut: 5000 });
+      },
+      error: () => {
+        this.enviandoPedido = false;
+        this.toastr.error('Não foi possível registrar seu pedido. Tente novamente.', 'Erro ao enviar pedido');
+      }
+    });
   }
 
   scrollToCategory(nome: string): void {

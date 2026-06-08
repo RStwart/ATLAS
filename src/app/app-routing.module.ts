@@ -67,6 +67,11 @@ const routes: Routes = [
         // Para adicionar mais empresas, crie novas rotas apontando para suas respectivas pastas
         path: 'cardapio1',
         loadChildren: () => import('./cardapio/empresa-1/cardapio.module').then(m => m.CardapioModule)
+      },
+      {
+        // Landing page / Portfólio do sistema ATLAS
+        path: 'sobre',
+        loadComponent: () => import('./sobre/sobre.component')
       }
     ]
   }

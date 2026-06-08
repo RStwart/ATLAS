@@ -457,9 +457,22 @@
     </div>
 
     <div class="modal-actions">
-      <button type="submit" class="btn-confirmar" [disabled]="formulario.invalid">✅ Confirmar Pedido</button>
-      <button type="button" class="btn-cancelar" (click)="fecharModal()">Cancelar</button>
+      <button type="submit" class="btn-confirmar" [disabled]="formulario.invalid || enviandoPedido">
+        <span *ngIf="!enviandoPedido">✅ Confirmar Pedido</span>
+        <span *ngIf="enviandoPedido">⏳ Enviando...</span>
+      </button>
+      <button type="button" class="btn-cancelar" (click)="fecharModal()" [disabled]="enviandoPedido">Cancelar</button>
     </div>
   </form>
+</div>
+
+<!-- ===== TELA DE PEDIDO CONFIRMADO ===== -->
+<div class="modal-backdrop" *ngIf="pedidoConfirmado" (click)="pedidoConfirmado = false"></div>
+<div class="modal-content pedido-confirmado-modal" *ngIf="pedidoConfirmado">
+  <div class="confirmado-icon">🎉</div>
+  <h2 class="confirmado-titulo">Pedido recebido!</h2>
+  <p class="confirmado-numero" *ngIf="numeroPedidoConfirmado">Pedido <strong>#{{ numeroPedidoConfirmado }}</strong></p>
+  <p class="confirmado-msg">Seu pedido foi registrado com sucesso. Em breve entraremos em contato!</p>
+  <button class="btn-confirmar" (click)="pedidoConfirmado = false">OK</button>
 </div>
 
