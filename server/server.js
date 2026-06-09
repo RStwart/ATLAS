@@ -423,19 +423,27 @@ app.post('/api/cardapio/:idEmpresa/pedido', async (req, res) => {
     const data_abertura = agora.toISOString().split('T')[0];
     const hora_abertura_dt = agora.toTimeString().split(' ')[0];
     const telefone = cliente.telefone || null;
+    const cpf = cliente.cpf || null;
+    const tipoPagamento = cliente.pagamento || null;
+    const troco = cliente.pagamento === 'Dinheiro' && cliente.troco !== null && cliente.troco !== undefined
+      ? parseFloat(cliente.troco)
+      : null;
     const observacaoOnline = cliente.observacao || null;
 
     // Cria a comanda marcada como ONLINE
     const [comandaResult] = await conn.execute(
       `INSERT INTO comanda
-         (numero, capacidade, status, garcom, totalConsumo, nome, telefone, ordem_type, endereco,
-          observacao_online, id_empresa, data_abertura, hora_abertura_dt, origem)
-       VALUES (?, 1, 'Aberta', 'ONLINE', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ONLINE')`,
+        (numero, capacidade, status, garcom, totalConsumo, nome, telefone, cpf, tipo_pagamento, troco,
+         ordem_type, endereco, observacao_online, id_empresa, data_abertura, hora_abertura_dt, origem)
+       VALUES (?, 1, 'Aberta', 'ONLINE', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ONLINE')`,
       [
         numero,
         parseFloat(total) || 0,
         cliente.nome,
         telefone,
+        cpf,
+        tipoPagamento,
+        troco,
         cliente.tipoEntrega,
         cliente.endereco || '',
         observacaoOnline,

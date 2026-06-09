@@ -10,6 +10,9 @@
   totalComanda?: number;    // Adicionando a propriedade totalComanda
   nome: string;          // Nome da comanda
   telefone?: string;
+  cpf?: string;
+  tipo_pagamento?: string;
+  troco?: number;
   endereco: string;      // Endedreço de entrega
   observacao_online?: string;
   origem?: 'INTERNO' | 'ONLINE';

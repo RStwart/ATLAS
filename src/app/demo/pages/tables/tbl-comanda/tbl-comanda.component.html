@@ -25,6 +25,7 @@
 
               <div *ngIf="isComandaOnline(comanda)" class="comanda-card__online-summary">
                 <span><i class="feather icon-phone me-1"></i>{{ comanda.telefone || 'Sem telefone' }}</span>
+                <span><i class="feather icon-credit-card me-1"></i>{{ comanda.tipo_pagamento || 'Sem pagamento' }}</span>
                 <span><i class="feather icon-clock me-1"></i>{{ getResumoHorario(comanda) }}</span>
               </div>
 
@@ -376,8 +377,16 @@
               <strong>{{ comandaSelecionada?.telefone || '-' }}</strong>
             </div>
             <div class="online-details-item">
+              <span class="online-details-item__label">CPF</span>
+              <strong>{{ comandaSelecionada?.cpf || '-' }}</strong>
+            </div>
+            <div class="online-details-item">
               <span class="online-details-item__label">Endereço</span>
               <strong>{{ comandaSelecionada?.endereco || '-' }}</strong>
+            </div>
+            <div class="online-details-item">
+              <span class="online-details-item__label">Tipo de entrega</span>
+              <strong>{{ comandaSelecionada?.ordem_type || '-' }}</strong>
             </div>
             <div class="online-details-item">
               <span class="online-details-item__label">Número do pedido</span>
@@ -386,6 +395,14 @@
             <div class="online-details-item">
               <span class="online-details-item__label">Horário</span>
               <strong>{{ getResumoHorario(comandaSelecionada) }}</strong>
+            </div>
+            <div class="online-details-item">
+              <span class="online-details-item__label">Pagamento</span>
+              <strong>{{ comandaSelecionada?.tipo_pagamento || '-' }}</strong>
+            </div>
+            <div class="online-details-item">
+              <span class="online-details-item__label">Troco</span>
+              <strong>{{ getTrocoDescricao(comandaSelecionada) }}</strong>
             </div>
             <div class="online-details-item online-details-item--full">
               <span class="online-details-item__label">Observação</span>

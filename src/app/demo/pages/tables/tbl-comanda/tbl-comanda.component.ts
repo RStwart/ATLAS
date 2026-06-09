@@ -695,15 +695,51 @@ export class TblComandasComponent implements OnInit {
     return String(comanda?.origem || '').toUpperCase() === 'ONLINE';
   }
 
+  private parseDataFlex(valor: any): Date | null {
+    if (!valor) return null;
+    if (valor instanceof Date) return Number.isNaN(valor.getTime()) ? null : valor;
+
+    const texto = String(valor).trim();
+    if (!texto) return null;
+
+    const normalizado = texto.includes(' ') ? texto.replace(' ', 'T') : texto;
+    const data = new Date(normalizado);
+    return Number.isNaN(data.getTime()) ? null : data;
+  }
+
   getResumoHorario(comanda: Comanda | null | undefined): string {
-    if (!comanda?.data_abertura && !comanda?.hora_abertura_dt) return '-';
+    if (!comanda) return '-';
 
-    const data = comanda.data_abertura
-      ? new Date(`${comanda.data_abertura}T00:00:00`).toLocaleDateString('pt-BR')
-      : '';
-    const hora = comanda.hora_abertura_dt ? String(comanda.hora_abertura_dt).slice(0, 5) : '';
+    if (comanda.data_abertura || comanda.hora_abertura_dt) {
+      const dtAbertura = this.parseDataFlex(comanda.data_abertura);
+      const data = dtAbertura
+        ? dtAbertura.toLocaleDateString('pt-BR')
+        : '';
+      const hora = comanda.hora_abertura_dt ? String(comanda.hora_abertura_dt).slice(0, 5) : '';
 
-    return [data, hora].filter(Boolean).join(' às ');
+      return [data, hora].filter(Boolean).join(' às ');
+    }
+
+    const dataPedido = comanda.pedidos?.[0]?.data;
+    if (!dataPedido) return '-';
+
+    const data = this.parseDataFlex(dataPedido);
+    if (!data) return '-';
+
+    return data.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  getTrocoDescricao(comanda: Comanda | null | undefined): string {
+    if (!comanda) return '-';
+    if (comanda.tipo_pagamento !== 'Dinheiro') return 'Nao se aplica';
+    if (comanda.troco === null || comanda.troco === undefined) return 'Nao informado';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(comanda.troco));
   }
   
 
