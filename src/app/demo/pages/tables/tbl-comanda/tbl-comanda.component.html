@@ -436,10 +436,27 @@
             </div>
 
             <div *ngIf="pedido.itens?.length > 0">
-              <div *ngFor="let item of pedido.itens" class="pedido-item-row">
-                <span><i class="feather icon-circle" style="font-size:0.5rem; margin-right:8px; vertical-align:middle;"></i>{{ item.nome }}</span>
-                <span class="pedido-item-row__qty">{{ item.quantidade }}x · <strong style="color:#343a40;">{{ item.preco | currency: 'BRL' }}</strong></span>
+              <div *ngFor="let item of pedido.itens" style="margin-bottom:10px;">
+                <div class="pedido-item-row">
+                  <span><i class="feather icon-circle" style="font-size:0.5rem; margin-right:8px; vertical-align:middle;"></i>{{ item.nome }}</span>
+                  <span class="pedido-item-row__qty">{{ item.quantidade }}x · <strong style="color:#343a40;">{{ item.preco | currency: 'BRL' }}</strong></span>
+                </div>
+                <div style="margin:-6px 0 0 18px;">
+                  <div *ngIf="item.acrescimos?.length > 0" style="font-size:0.78rem; color:#188754; line-height:1.35;">
+                    <strong>Acréscimos:</strong>
+                    <span *ngFor="let ac of item.acrescimos; let last = last">
+                      + {{ ac.nome }} ({{ ac.quantidade }}x · {{ ac.preco_acrescimo | currency:'BRL' }})<span *ngIf="!last">, </span>
+                    </span>
+                  </div>
+                  <div *ngIf="item.observacao" style="font-size:0.78rem; color:#5c6770; line-height:1.35;">
+                    <strong>Obs. item:</strong> {{ item.observacao }}
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <div *ngIf="pedido.observacao" style="margin-top:4px; font-size:0.8rem; color:#495057;">
+              <strong>Obs. do pedido:</strong> {{ pedido.observacao }}
             </div>
 
             <div *ngIf="!pedido.itens || pedido.itens.length === 0" style="font-size:0.82rem; color:#adb5bd; padding-top:8px;">

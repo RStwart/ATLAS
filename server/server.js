@@ -1163,36 +1163,123 @@ app.get('/api/dashboard/stats', autenticarTenant, async (req, res) => {
 });
 
 
-app.get('/api/comandas/:id/historico-pedidos', autenticarTenant, (req, res) => {
+app.get('/api/comandas/:id/historico-pedidos', autenticarTenant, async (req, res) => {
   const comandaId = req.params.id;
 
-  const query = `SELECT * FROM pedido WHERE id_comanda = ? AND id_empresa = ? ORDER BY data_pedido DESC`;
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT
+         p.id_pedido,
+         p.id_item,
+         p.nome_item,
+         p.preco,
+         p.quantidade,
+         p.observacao,
+         p.data_pedido,
+         p.status,
+         p.impresso,
+         DATE_FORMAT(p.data_pedido, '%Y-%m-%d %H:%i:%s') AS grupo_data
+       FROM pedido p
+       WHERE p.id_comanda = ?
+         AND p.id_empresa = ?
+       ORDER BY p.data_pedido DESC, p.id_pedido DESC`,
+      [comandaId, req.id_empresa]
+    );
 
-  db.query(query, [comandaId, req.id_empresa], (err, results) => {
-    if (err) {
-      console.error('Erro ao buscar histórico de pedidos:', err);
-      return res.status(500).json({ error: 'Erro ao buscar histórico de pedidos' });
+    if (!rows.length) {
+      return res.json([]);
     }
 
-    // Agrupar itens por pedido (se necessário) e formatar para o frontend
-    const pedidosFormatados = results.map(pedido => {
-      return {
-        id_pedido: pedido.id_pedido,
-        data: pedido.data_pedido,
-        status: pedido.impresso ? 'Impresso' : 'Pendente',
-        total: pedido.preco * pedido.quantidade,
-        observacao: pedido.observacao,
-        itens: [{
-          id: pedido.id_item,
-          nome: pedido.nome_item,
-          quantidade: pedido.quantidade,
-          preco: pedido.preco
-        }]
-      };
-    });
+    const [modsRows] = await db.promise().query(
+      `SELECT
+         pm.id_pedido,
+         pm.tipo,
+         pm.id_insumo,
+         pm.nome_insumo,
+         pm.quantidade,
+         pm.preco_acrescimo
+       FROM pedido_modificacao pm
+       JOIN pedido p
+         ON p.id_pedido = pm.id_pedido
+        AND p.id_empresa = pm.id_empresa
+       WHERE p.id_comanda = ?
+         AND p.id_empresa = ?
+       ORDER BY pm.id ASC`,
+      [comandaId, req.id_empresa]
+    );
 
-    res.json(pedidosFormatados);
-  });
+    const modsPorPedido = new Map();
+    for (const mod of modsRows) {
+      const idPedido = Number(mod.id_pedido);
+      if (!modsPorPedido.has(idPedido)) {
+        modsPorPedido.set(idPedido, { extras: [], removidos: [] });
+      }
+      const bucket = modsPorPedido.get(idPedido);
+      if (String(mod.tipo).toUpperCase() === 'EXTRA') {
+        bucket.extras.push({
+          id_insumo: Number(mod.id_insumo) || null,
+          nome: mod.nome_insumo,
+          quantidade: Number(mod.quantidade) || 0,
+          preco_acrescimo: Number(mod.preco_acrescimo) || 0
+        });
+      } else {
+        bucket.removidos.push({
+          id_insumo: Number(mod.id_insumo) || null,
+          nome: mod.nome_insumo,
+          quantidade: Number(mod.quantidade) || 0
+        });
+      }
+    }
+
+    const grupos = new Map();
+
+    for (const row of rows) {
+      const key = row.grupo_data;
+      if (!grupos.has(key)) {
+        grupos.set(key, {
+          id_pedido: row.id_pedido,
+          data: row.data_pedido,
+          status: row.impresso ? 'Impresso' : (row.status || 'Pendente'),
+          observacao: row.observacao || null,
+          itens: [],
+          total: 0
+        });
+      }
+
+      const grupo = grupos.get(key);
+      if (!grupo.observacao && row.observacao) {
+        grupo.observacao = row.observacao;
+      }
+
+      const modsItem = modsPorPedido.get(Number(row.id_pedido)) || { extras: [], removidos: [] };
+      const precoBase = Number(row.preco) || 0;
+      const quantidade = Number(row.quantidade) || 0;
+      const valorExtrasUnit = modsItem.extras.reduce(
+        (s, ex) => s + ((Number(ex.preco_acrescimo) || 0) * (Number(ex.quantidade) || 0)),
+        0
+      );
+      const precoUnitarioFinal = precoBase + valorExtrasUnit;
+      const totalItem = precoUnitarioFinal * quantidade;
+
+      grupo.itens.push({
+        id: row.id_item,
+        nome: row.nome_item,
+        quantidade,
+        preco_base: precoBase,
+        preco: precoUnitarioFinal,
+        total: totalItem,
+        observacao: row.observacao || null,
+        acrescimos: modsItem.extras,
+        removidos: modsItem.removidos
+      });
+      grupo.total += totalItem;
+    }
+
+    res.json(Array.from(grupos.values()));
+  } catch (err) {
+    console.error('Erro ao buscar histórico de pedidos:', err);
+    return res.status(500).json({ error: 'Erro ao buscar histórico de pedidos' });
+  }
 });
 
 
