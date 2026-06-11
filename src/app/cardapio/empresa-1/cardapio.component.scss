@@ -1344,6 +1344,129 @@ $nav-h:       52px;
 }
 
 // ── Modal de pedido confirmado ────────────────────────────────
+// ── Modal PIX ─────────────────────────────────────────────────
+.pix-backdrop {
+  z-index: 1100;
+}
+
+.pix-modal {
+  z-index: 1101;
+  max-width: 420px;
+
+  .pix-header {
+    text-align: center;
+    margin-bottom: 1rem;
+
+    .pix-icon { font-size: 2.5rem; display: block; margin-bottom: .4rem; }
+    h3 { font-size: 1.4rem; font-weight: 700; color: $primary; margin-bottom: .25rem; }
+    .pix-subtitulo { color: $text-muted; font-size: .9rem; }
+  }
+
+  .pix-timer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    background: #f0faf0;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    padding: .5rem 1rem;
+    margin-bottom: 1.2rem;
+
+    .timer-label { font-size: .85rem; color: $text-muted; }
+    .timer-value { font-size: 1.4rem; font-weight: 700; color: $primary; font-variant-numeric: tabular-nums; }
+
+    &.urgente {
+      background: #fff5f5;
+      border-color: #f5c6cb;
+      .timer-value { color: #e74c3c; }
+    }
+  }
+
+  .pix-qrcode-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+
+    .pix-qrcode-img {
+      width: 200px;
+      height: 200px;
+      border: 3px solid #dee2e6;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+  }
+
+  .pix-copy-wrap {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: 1rem;
+
+    .pix-copy-input {
+      flex: 1;
+      font-size: .75rem;
+      padding: .45rem .6rem;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      background: #f8f9fa;
+      color: $text-muted;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-copiar {
+      white-space: nowrap;
+      padding: .45rem .75rem;
+      background: $primary;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: .8rem;
+      cursor: pointer;
+      &:hover { background: $primary-dk; }
+    }
+  }
+
+  .pix-instrucao {
+    font-size: .82rem;
+    color: $text-muted;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+    strong { color: $text; }
+  }
+
+  .pix-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    color: $text-muted;
+    font-size: .85rem;
+    margin-bottom: 1rem;
+  }
+
+  .pix-btn-cancelar {
+    width: 100%;
+    margin-top: .25rem;
+  }
+
+  .pix-resultado {
+    text-align: center;
+    padding: 1rem 0;
+
+    .pix-result-icon { font-size: 3rem; display: block; margin-bottom: .75rem; }
+    h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: .5rem; }
+    p { color: $text-muted; font-size: .95rem; margin-bottom: 1.5rem; }
+
+    &.aprovado h3 { color: #2ecc71; }
+    &.expirado h3 { color: #e67e22; }
+    &.erro h3 { color: #e74c3c; }
+  }
+}
+
+// ── Modal pedido confirmado ────────────────────────────────────
 .pedido-confirmado-modal {
   text-align: center;
   padding: 2.5rem 2rem;

@@ -476,3 +476,79 @@
   <button class="btn-confirmar" (click)="pedidoConfirmado = false">OK</button>
 </div>
 
+<!-- ===== MODAL PIX ===== -->
+<div class="modal-backdrop pix-backdrop" *ngIf="modalPixAberto"></div>
+<div class="modal-content pix-modal" *ngIf="modalPixAberto">
+
+  <!-- Estado: aguardando pagamento -->
+  <ng-container *ngIf="pixStatus === 'aguardando'">
+    <div class="pix-header">
+      <span class="pix-icon">💚</span>
+      <h3>Pague via PIX</h3>
+      <p class="pix-subtitulo">Escaneie o QR Code ou copie o código</p>
+    </div>
+
+    <div class="pix-timer" [class.urgente]="pixSegundosRestantes <= 60">
+      <span class="timer-label">Expira em</span>
+      <span class="timer-value">{{ pixMinutos }}:{{ pixSegundos }}</span>
+    </div>
+
+    <div class="pix-qrcode-wrap">
+      <img
+        *ngIf="pixQrCodeBase64"
+        [src]="'data:image/png;base64,' + pixQrCodeBase64"
+        alt="QR Code PIX"
+        class="pix-qrcode-img"
+      />
+    </div>
+
+    <div class="pix-copy-wrap">
+      <input class="pix-copy-input" [value]="pixQrCodeTexto" readonly />
+      <button class="btn-copiar" (click)="copiarPixCodigo()">📋 Copiar código</button>
+    </div>
+
+    <p class="pix-instrucao">
+      Abra o app do seu banco, escaneie o QR Code ou cole o código acima e confirme o pagamento.
+      <strong>Não feche esta tela!</strong> O pedido será registrado automaticamente após o pagamento.
+    </p>
+
+    <div class="pix-loading">
+      <div class="mini-spinner"></div>
+      <span>Aguardando confirmação do pagamento...</span>
+    </div>
+
+    <button class="btn-cancelar pix-btn-cancelar" (click)="fecharModalPix()">Cancelar pagamento</button>
+  </ng-container>
+
+  <!-- Estado: pagamento aprovado -->
+  <ng-container *ngIf="pixStatus === 'aprovado'">
+    <div class="pix-resultado aprovado">
+      <div class="pix-result-icon">✅</div>
+      <h3>Pagamento confirmado!</h3>
+      <p>Seu pagamento PIX foi aprovado. Registrando seu pedido...</p>
+      <div class="mini-spinner"></div>
+    </div>
+  </ng-container>
+
+  <!-- Estado: expirado ou cancelado -->
+  <ng-container *ngIf="pixStatus === 'expirado'">
+    <div class="pix-resultado expirado">
+      <div class="pix-result-icon">⏰</div>
+      <h3>Tempo esgotado</h3>
+      <p>O QR Code PIX expirou. Por favor, tente novamente.</p>
+      <button class="btn-confirmar" (click)="fecharModalPix()">Tentar novamente</button>
+    </div>
+  </ng-container>
+
+  <!-- Estado: erro -->
+  <ng-container *ngIf="pixStatus === 'erro'">
+    <div class="pix-resultado erro">
+      <div class="pix-result-icon">❌</div>
+      <h3>Erro no pagamento</h3>
+      <p>{{ pixErro || 'Ocorreu um erro. Tente novamente.' }}</p>
+      <button class="btn-confirmar" (click)="fecharModalPix()">Fechar</button>
+    </div>
+  </ng-container>
+
+</div>
+

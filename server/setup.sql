@@ -25,14 +25,19 @@ USE atlas_db;
 -- 1. EMPRESA
 -- -------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS empresa (
-  id_empresa  INT           NOT NULL AUTO_INCREMENT,
-  nome        VARCHAR(150)  NOT NULL,
-  slug        VARCHAR(100)  NOT NULL UNIQUE,
-  plano       VARCHAR(20)   NOT NULL DEFAULT 'BASICO',
-  ativo       TINYINT(1)    NOT NULL DEFAULT 1,
-  criado_em   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  id_empresa        INT           NOT NULL AUTO_INCREMENT,
+  nome              VARCHAR(150)  NOT NULL,
+  slug              VARCHAR(100)  NOT NULL UNIQUE,
+  plano             VARCHAR(20)   NOT NULL DEFAULT 'BASICO',
+  ativo             TINYINT(1)    NOT NULL DEFAULT 1,
+  criado_em         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  mp_access_token   VARCHAR(255)  NULL COMMENT 'Access Token do Mercado Pago desta empresa',
   PRIMARY KEY (id_empresa)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Migração: adicionar mp_access_token caso a tabela já exista
+-- Execute manualmente se o banco já foi criado:
+-- ALTER TABLE empresa ADD COLUMN mp_access_token VARCHAR(255) NULL COMMENT 'Access Token do Mercado Pago desta empresa';
 
 -- -------------------------------------------------------------
 -- 2. USUARIOS

@@ -1,6 +1,7 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { ProdutoService } from 'src/app/services/produto.service';
 import { ToastrService } from 'ngx-toastr';
+import { HttpClient } from '@angular/common/http';
 
 interface Categoria {
   id_categoria: number;
@@ -43,7 +44,7 @@ interface ItemCarrinho {
   templateUrl: './cardapio.component.html',
   styleUrls: ['./cardapio.component.scss']
 })
-export class CardapioComponent implements OnInit {
+export class CardapioComponent implements OnInit, OnDestroy {
   // ── Empresa vinculada a este cardápio (fixo por instância) ──
   // Para criar o cardápio de outra empresa, duplique esta pasta
   // e altere apenas este valor.
@@ -85,9 +86,24 @@ export class CardapioComponent implements OnInit {
   pedidoConfirmado = false;
   numeroPedidoConfirmado: number | null = null;
 
+  // ── Modal PIX ──
+  readonly API_BASE = 'http://localhost:5000/api';
+  readonly PIX_TIMEOUT_SECONDS = 300; // 5 minutos
+  modalPixAberto = false;
+  pixQrCodeBase64 = '';
+  pixQrCodeTexto = '';
+  pixPaymentId: number | null = null;
+  pixSegundosRestantes = this.PIX_TIMEOUT_SECONDS;
+  pixStatus: 'aguardando' | 'aprovado' | 'expirado' | 'erro' = 'aguardando';
+  pixErro = '';
+  private pixTimerInterval: any = null;
+  private pixPollingInterval: any = null;
+  private pixPayloadPendente: any = null;
+
   constructor(
     private produtoService: ProdutoService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -327,8 +343,18 @@ export class CardapioComponent implements OnInit {
       total: this.calcularTotalCarrinho()
     };
 
-    this.enviandoPedido = true;
+    // PIX: gera QR Code antes de registrar o pedido
+    if (this.dadosCliente.pagamento === 'Pix') {
+      this.pixPayloadPendente = payload;
+      this.iniciarPagamentoPix();
+      return;
+    }
 
+    this.enviandoPedido = true;
+    this.registrarPedido(payload);
+  }
+
+  private registrarPedido(payload: any): void {
     this.produtoService.postCardapioPedido(this.ID_EMPRESA, payload).subscribe({
       next: (resp: any) => {
         this.enviandoPedido = false;
@@ -343,6 +369,118 @@ export class CardapioComponent implements OnInit {
         this.toastr.error('Não foi possível registrar seu pedido. Tente novamente.', 'Erro ao enviar pedido');
       }
     });
+  }
+
+  // ── Fluxo PIX ──────────────────────────────────────────────
+
+  iniciarPagamentoPix(): void {
+    this.enviandoPedido = true;
+    this.pixErro = '';
+    const total = this.calcularTotalCarrinho();
+    const body = {
+      nome: this.dadosCliente.nome,
+      email: `cliente_${Date.now()}@pedidoonline.com`,
+      valor: total
+    };
+
+    this.http.post<any>(`${this.API_BASE}/cardapio/${this.ID_EMPRESA}/pix`, body).subscribe({
+      next: (resp) => {
+        this.enviandoPedido = false;
+        this.pixQrCodeBase64 = resp.qr_code_base64;
+        this.pixQrCodeTexto = resp.qr_code;
+        this.pixPaymentId = resp.payment_id;
+        this.pixStatus = 'aguardando';
+        this.pixSegundosRestantes = this.PIX_TIMEOUT_SECONDS;
+        this.modalPixAberto = true;
+        this.fecharModal();
+        this.iniciarTimerPix();
+        this.iniciarPollingPix();
+      },
+      error: (err) => {
+        this.enviandoPedido = false;
+        const msg = err?.error?.error || 'Erro ao gerar QR Code PIX. Tente novamente.';
+        this.toastr.error(msg, 'Erro no PIX');
+      }
+    });
+  }
+
+  private iniciarTimerPix(): void {
+    this.pararTimerPix();
+    this.pixTimerInterval = setInterval(() => {
+      this.pixSegundosRestantes--;
+      if (this.pixSegundosRestantes <= 0) {
+        this.pararTimerPix();
+        this.pararPollingPix();
+        if (this.pixStatus === 'aguardando') {
+          this.pixStatus = 'expirado';
+        }
+      }
+    }, 1000);
+  }
+
+  private pararTimerPix(): void {
+    if (this.pixTimerInterval) {
+      clearInterval(this.pixTimerInterval);
+      this.pixTimerInterval = null;
+    }
+  }
+
+  private iniciarPollingPix(): void {
+    this.pararPollingPix();
+    this.pixPollingInterval = setInterval(() => {
+      if (!this.pixPaymentId) return;
+      this.http.get<any>(`${this.API_BASE}/cardapio/${this.ID_EMPRESA}/pix-status/${this.pixPaymentId}`).subscribe({
+        next: (resp) => {
+          if (resp.status === 'approved') {
+            this.pararTimerPix();
+            this.pararPollingPix();
+            this.pixStatus = 'aprovado';
+            this.enviandoPedido = true;
+            this.registrarPedido(this.pixPayloadPendente);
+            setTimeout(() => { this.fecharModalPix(); }, 2500);
+          } else if (resp.status === 'cancelled' || resp.status === 'rejected') {
+            this.pararTimerPix();
+            this.pararPollingPix();
+            this.pixStatus = 'expirado';
+          }
+        },
+        error: () => {}
+      });
+    }, 5000);
+  }
+
+  private pararPollingPix(): void {
+    if (this.pixPollingInterval) {
+      clearInterval(this.pixPollingInterval);
+      this.pixPollingInterval = null;
+    }
+  }
+
+  fecharModalPix(): void {
+    this.pararTimerPix();
+    this.pararPollingPix();
+    this.modalPixAberto = false;
+    this.pixQrCodeBase64 = '';
+    this.pixQrCodeTexto = '';
+    this.pixPaymentId = null;
+    this.pixPayloadPendente = null;
+    this.pixStatus = 'aguardando';
+    this.pixErro = '';
+  }
+
+  copiarPixCodigo(): void {
+    if (!this.pixQrCodeTexto) return;
+    navigator.clipboard.writeText(this.pixQrCodeTexto).then(() => {
+      this.toastr.success('Código PIX copiado!', '', { timeOut: 2000 });
+    });
+  }
+
+  get pixMinutos(): string {
+    return String(Math.floor(this.pixSegundosRestantes / 60)).padStart(2, '0');
+  }
+
+  get pixSegundos(): string {
+    return String(this.pixSegundosRestantes % 60).padStart(2, '0');
   }
 
   scrollToCategory(nome: string): void {
@@ -383,5 +521,10 @@ export class CardapioComponent implements OnInit {
   onEscape(): void {
     if (this.modalAberto) this.fecharModalProduto();
     if (this.mostrarModal) this.fecharModal();
+  }
+
+  ngOnDestroy(): void {
+    this.pararTimerPix();
+    this.pararPollingPix();
   }
 }

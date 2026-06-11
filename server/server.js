@@ -62,35 +62,131 @@ function autenticarTenant(req, res, next) {
 
 const { MercadoPagoConfig, Payment } = require('mercadopago');
 
-const client = new MercadoPagoConfig({ accessToken: 'TEST-7519162944104129-051502-e27bff2be32db41658d2acb82f8e10c7-2438595311' });
+// Token de teste padrão (usado como fallback enquanto a empresa não configurar o próprio)
+const MP_TOKEN_FALLBACK = process.env.MP_ACCESS_TOKEN_DEFAULT || 'TEST-7519162944104129-051502-e27bff2be32db41658d2acb82f8e10c7-2438595311';
 
-const payment = new Payment(client); // <- Sem `new` no método abaixo
+// ── Helper: retorna um cliente MP autenticado com o token da empresa (ou fallback) ──
+async function getMpPaymentClient(idEmpresa) {
+  let token = MP_TOKEN_FALLBACK;
+  try {
+    const [[empresa]] = await db.promise().query(
+      'SELECT mp_access_token FROM empresa WHERE id_empresa = ?',
+      [idEmpresa]
+    );
+    if (empresa && empresa.mp_access_token && empresa.mp_access_token.trim() !== '') {
+      token = empresa.mp_access_token.trim();
+    } else {
+      console.warn(`[PIX] Empresa ${idEmpresa} sem mp_access_token — usando token fallback.`);
+    }
+  } catch (dbErr) {
+    // Coluna ainda não existe no banco: usa fallback silenciosamente
+    console.warn(`[PIX] Erro ao buscar token da empresa (coluna pode não existir ainda): ${dbErr.message}`);
+  }
 
+  if (!token) {
+    throw new Error('Nenhum Access Token do Mercado Pago disponível. Configure mp_access_token na tabela empresa.');
+  }
+  const cfg = new MercadoPagoConfig({ accessToken: token });
+  return new Payment(cfg);
+}
+
+// ── Extrai mensagem legível de erros do SDK do Mercado Pago ──
+function extrairErroMP(error) {
+  try {
+    // O SDK pode encapsular a resposta HTTP em error.cause ou error.message
+    if (error?.cause) {
+      const causes = Array.isArray(error.cause) ? error.cause : [error.cause];
+      const msgs = causes.map(c => c?.description || c?.code || JSON.stringify(c)).join('; ');
+      if (msgs) return msgs;
+    }
+    if (error?.message && error.message !== 'invalid json response body') {
+      return error.message;
+    }
+    return 'Erro de comunicação com o Mercado Pago. Verifique o Access Token.';
+  } catch {
+    return 'Erro desconhecido no Mercado Pago.';
+  }
+}
+
+// ── Rota legada (mantida por compatibilidade) ──
 app.post('/api/pix', async (req, res) => {
   try {
     const { nome, sobrenome, email, valor } = req.body;
-
-    const result = await payment.create({
+    const cfg = new MercadoPagoConfig({ accessToken: MP_TOKEN_FALLBACK });
+    const paymentClient = new Payment(cfg);
+    const result = await paymentClient.create({
       transaction_amount: Number(valor),
       description: 'Pagamento de pedido via PIX',
       payment_method_id: 'pix',
-      payer: {
-        email: email,
-        first_name: nome,
-        last_name: sobrenome
-      }
+      payer: { email, first_name: nome, last_name: sobrenome }
     });
-
     return res.json({
       id: result.id,
       status: result.status,
       qr_code_base64: result.point_of_interaction.transaction_data.qr_code_base64,
       qr_code: result.point_of_interaction.transaction_data.qr_code,
     });
-
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao gerar PIX.' });
+    console.error('[PIX legado]', error);
+    res.status(500).json({ error: extrairErroMP(error) });
+  }
+});
+
+// ── POST /api/cardapio/:idEmpresa/pix — gera QR Code PIX para o cardápio online ──
+app.post('/api/cardapio/:idEmpresa/pix', async (req, res) => {
+  const idEmpresa = parseInt(req.params.idEmpresa);
+  const { nome, email, valor } = req.body;
+
+  if (!idEmpresa || !email || !valor) {
+    return res.status(400).json({ error: 'Campos obrigatórios: email, valor.' });
+  }
+
+  try {
+    const paymentClient = await getMpPaymentClient(idEmpresa);
+    const result = await paymentClient.create({
+      transaction_amount: Number(valor),
+      description: 'Pedido via Cardápio Online',
+      payment_method_id: 'pix',
+      payer: {
+        email: email,
+        first_name: nome || 'Cliente'
+      }
+    });
+
+    if (!result?.point_of_interaction?.transaction_data?.qr_code_base64) {
+      console.error('[PIX cardápio] Resposta inesperada do MP:', JSON.stringify(result));
+      return res.status(500).json({ error: 'Mercado Pago não retornou o QR Code. Verifique o Access Token.' });
+    }
+
+    return res.json({
+      payment_id: result.id,
+      status: result.status,
+      qr_code_base64: result.point_of_interaction.transaction_data.qr_code_base64,
+      qr_code: result.point_of_interaction.transaction_data.qr_code,
+    });
+  } catch (error) {
+    const msg = extrairErroMP(error);
+    console.error('[PIX cardápio]', msg, error);
+    return res.status(500).json({ error: msg });
+  }
+});
+
+// ── GET /api/cardapio/:idEmpresa/pix-status/:paymentId — verifica status do pagamento ──
+app.get('/api/cardapio/:idEmpresa/pix-status/:paymentId', async (req, res) => {
+  const idEmpresa = parseInt(req.params.idEmpresa);
+  const paymentId = parseInt(req.params.paymentId);
+
+  if (!idEmpresa || !paymentId) {
+    return res.status(400).json({ error: 'Parâmetros inválidos.' });
+  }
+
+  try {
+    const paymentClient = await getMpPaymentClient(idEmpresa);
+    const result = await paymentClient.get({ id: paymentId });
+    return res.json({ status: result.status });
+  } catch (error) {
+    console.error('[PIX status]', error.message);
+    return res.status(500).json({ error: 'Erro ao verificar status do PIX.' });
   }
 });
 
