@@ -19,7 +19,7 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 
 app.use(cors({
-  origin: 'http://localhost:4200',
+  origin: ['http://localhost:4200', 'http://localhost', 'http://143.95.215.6', 'http://atlasnw.com.br'],
   credentials: true,
   allowedHeaders: ['Authorization', 'Content-Type', 'Accept']
 }));
