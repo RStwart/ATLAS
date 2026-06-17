@@ -48,21 +48,20 @@ export class ProdutoService {
   }
 
   getImagemUrl(imagemPath?: string | null): string {
-    if (!imagemPath) return '';
+    if (!imagemPath) return 'assets/default-image.jpg';
     if (/^https?:\/\//i.test(imagemPath)) return imagemPath;
-
-    let normalizedPath = imagemPath.trim();
-    if (!normalizedPath) return '';
-
-    if (!normalizedPath.startsWith('/uploads/') && !normalizedPath.startsWith('uploads/')) {
-      normalizedPath = `/uploads/${normalizedPath.replace(/^\/+/, '')}`;
-    } else if (!normalizedPath.startsWith('/')) {
-      normalizedPath = `/${normalizedPath}`;
-    }
-
-    return `${this.getApiBaseUrl()}${normalizedPath}`;
+    
+    let path = imagemPath.trim();
+    if (!path) return 'assets/default-image.jpg';
+    
+    // Garante que comece com /uploads/
+    if (!path.startsWith('/')) path = '/' + path;
+    if (!path.startsWith('/uploads/')) path = '/uploads/' + path.replace(/^\/+/, '');
+    
+    // ✅ RETORNA APENAS O CAMINHO RELATIVO
+    return path;
   }
-
+  
   // Método para obter todos os produtos
   getProdutos(): Observable<any> {
     return this.http.get(`${this.apiUrl}/produtos`);
