@@ -22,7 +22,7 @@ fs.mkdirSync(UPLOADS_ROOT, { recursive: true });
 app.use(express.json());
 
 app.use(cors({
-  origin: ['http://localhost:4200', 'http://localhost', 'http://143.95.215.6', 'http://atlasnw.com.br','https://atlasnw.com.br'],
+  origin: ['http://localhost:4200', 'http://localhost', 'http://143.95.215.6', 'http://atlasnw.com.br','https://atlasnw.com.br', 'https://www.atlasnw.com.br', 'http://www.atlasnw.com.br'],
   credentials: true,
   allowedHeaders: ['Authorization', 'Content-Type', 'Accept']
 }));
@@ -268,10 +268,21 @@ const upload = multer({
 });
 
 // Middleware para servir arquivos estáticos da pasta de uploads
-app.use('/uploads', express.static(UPLOADS_ROOT, {
+
+// Substitua a linha do express.static por:
+app.use('/uploads', (req, res, next) => {
+  console.log('📸 Acessando:', req.url);
+  next();
+}, express.static(UPLOADS_ROOT, {
   etag: true,
-  maxAge: '7d'
+  maxAge: '7d',
+  setHeaders: (res, path) => {
+    res.set('Access-Control-Allow-Origin', '*');
+  }
 }));
+
+console.log('📁 Servindo arquivos estáticos de:', UPLOADS_ROOT);
+console.log('🔗 URL base: /uploads');
 
 
 // Rota de login
