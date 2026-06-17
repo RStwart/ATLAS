@@ -7,9 +7,20 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root',
 })
 export class ProdutoService {
-  private apiUrl = environment.apiUrl; // API  NO ENVIROMENTS
+  private apiUrl = this.normalizeApiUrl(environment.apiUrl); // API NO ENVIRONMENTS
 
   constructor(private http: HttpClient) {}
+
+  private normalizeApiUrl(url: string): string {
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:' && url.startsWith('http://')) {
+      return url.replace(/^http:\/\//i, 'https://');
+    }
+    return url;
+  }
+
+  getApiUrl(): string {
+    return this.apiUrl;
+  }
 
   // Métodos públicos do cardápio (sem autenticação)
   getCardapioPublicoCategorias(idEmpresa: number): Observable<any> {
@@ -39,7 +50,16 @@ export class ProdutoService {
   getImagemUrl(imagemPath?: string | null): string {
     if (!imagemPath) return '';
     if (/^https?:\/\//i.test(imagemPath)) return imagemPath;
-    const normalizedPath = imagemPath.startsWith('/') ? imagemPath : `/${imagemPath}`;
+
+    let normalizedPath = imagemPath.trim();
+    if (!normalizedPath) return '';
+
+    if (!normalizedPath.startsWith('/uploads/') && !normalizedPath.startsWith('uploads/')) {
+      normalizedPath = `/uploads/${normalizedPath.replace(/^\/+/, '')}`;
+    } else if (!normalizedPath.startsWith('/')) {
+      normalizedPath = `/${normalizedPath}`;
+    }
+
     return `${this.getApiBaseUrl()}${normalizedPath}`;
   }
 

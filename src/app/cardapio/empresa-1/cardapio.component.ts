@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { ProdutoService } from 'src/app/services/produto.service';
 import { ToastrService } from 'ngx-toastr';
 import { HttpClient } from '@angular/common/http';
-import { environment } from 'src/environments/environment';
 
 interface Categoria {
   id_categoria: number;
@@ -88,7 +87,6 @@ export class CardapioComponent implements OnInit, OnDestroy {
   numeroPedidoConfirmado: number | null = null;
 
   // ── Modal PIX ──
-  readonly API_BASE = environment.apiUrl;
   readonly PIX_TIMEOUT_SECONDS = 300; // 5 minutos
   modalPixAberto = false;
   pixQrCodeBase64 = '';
@@ -384,7 +382,7 @@ export class CardapioComponent implements OnInit, OnDestroy {
       valor: total
     };
 
-    this.http.post<any>(`${this.API_BASE}/cardapio/${this.ID_EMPRESA}/pix`, body).subscribe({
+    this.http.post<any>(`${this.produtoService.getApiUrl()}/cardapio/${this.ID_EMPRESA}/pix`, body).subscribe({
       next: (resp) => {
         this.enviandoPedido = false;
         this.pixQrCodeBase64 = resp.qr_code_base64;
@@ -430,7 +428,7 @@ export class CardapioComponent implements OnInit, OnDestroy {
     this.pararPollingPix();
     this.pixPollingInterval = setInterval(() => {
       if (!this.pixPaymentId) return;
-      this.http.get<any>(`${this.API_BASE}/cardapio/${this.ID_EMPRESA}/pix-status/${this.pixPaymentId}`).subscribe({
+      this.http.get<any>(`${this.produtoService.getApiUrl()}/cardapio/${this.ID_EMPRESA}/pix-status/${this.pixPaymentId}`).subscribe({
         next: (resp) => {
           if (resp.status === 'approved') {
             this.pararTimerPix();

@@ -5,10 +5,6 @@ import { Produto } from 'src/app/interfaces/produto.interface';
 import { ProdutoInsumo } from 'src/app/interfaces/insumo.interface';
 import { ToastrService } from 'ngx-toastr';
 
-type ProdutoForm = Omit<Produto, 'imagem'> & {
-  imagem: File | null;
-};
-
 @Component({
   selector: 'app-tbl-produtos',
   templateUrl: './tbl-produtos.component.html',
@@ -18,7 +14,7 @@ export class TblProdutosComponent implements OnInit {
   produtos: Produto[] = [];
   erro: string | null = null;
 
-  novoProduto: ProdutoForm = {
+  novoProduto: Produto = {
     id_produto: 0,
     nome: '',
     descricao: '',
@@ -28,6 +24,7 @@ export class TblProdutosComponent implements OnInit {
     imagemUrl: '',  // Propriedade para URL da imagem
     categoria:'',
   };
+  novoProdutoImagem: File | null = null;
 
   mostrarFormulario = false;
 
@@ -89,6 +86,7 @@ export class TblProdutosComponent implements OnInit {
       imagem: null,
       imagemUrl: '',  // Resetando a URL da imagem
     };
+    this.novoProdutoImagem = null;
   }
 
   carregarProdutos(): void {
@@ -143,8 +141,8 @@ export class TblProdutosComponent implements OnInit {
       formData.append('categoria', this.novoProduto.categoria);
     }
 
-    if (this.novoProduto.imagem) {
-      formData.append('imagem', this.novoProduto.imagem, this.novoProduto.imagem.name);
+    if (this.novoProdutoImagem) {
+      formData.append('imagem', this.novoProdutoImagem, this.novoProdutoImagem.name);
     }
 
     this.ProdutoService.addProduto(formData).subscribe(
@@ -215,7 +213,7 @@ export class TblProdutosComponent implements OnInit {
   onFileSelected(event: any): void {
     const file: File = event.target.files[0];
     if (file) {
-      this.novoProduto.imagem = file;
+      this.novoProdutoImagem = file;
     }
   }
 
