@@ -7,8 +7,6 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root',
 })
 export class ProdutoService {
-  
-
   private apiUrl = environment.apiUrl; // API  NO ENVIROMENTS
 
   constructor(private http: HttpClient) {}
@@ -32,6 +30,17 @@ export class ProdutoService {
 
   postCardapioPedido(idEmpresa: number, payload: { cliente: any; itens: any[]; total: number }): Observable<any> {
     return this.http.post(`${this.apiUrl}/cardapio/${idEmpresa}/pedido`, payload);
+  }
+
+  getApiBaseUrl(): string {
+    return this.apiUrl.replace(/\/api\/?$/, '');
+  }
+
+  getImagemUrl(imagemPath?: string | null): string {
+    if (!imagemPath) return '';
+    if (/^https?:\/\//i.test(imagemPath)) return imagemPath;
+    const normalizedPath = imagemPath.startsWith('/') ? imagemPath : `/${imagemPath}`;
+    return `${this.getApiBaseUrl()}${normalizedPath}`;
   }
 
   // Método para obter todos os produtos

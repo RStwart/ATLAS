@@ -90,13 +90,10 @@ export class TblProdutosComponent implements OnInit {
   carregarProdutos(): void {
     this.ProdutoService.getProdutos().subscribe(
       (response: Produto[]) => {
-        this.produtos = response;
-        this.produtos.forEach(produto => {
-          if (produto.imagem) {
-            // Supondo que a imagem seja retornada pela API
-            produto.imagemUrl = `http://localhost:5000${produto.imagem}`;  // Ajuste conforme a URL de imagem
-          }
-        });
+        this.produtos = response.map((produto) => ({
+          ...produto,
+          imagemUrl: this.ProdutoService.getImagemUrl(typeof produto.imagem === 'string' ? produto.imagem : '')
+        }));
         this.atualizarPaginacao();
         this.toastr.success('Produtos carregados com sucesso!', 'Sucesso');
       },
@@ -147,9 +144,18 @@ export class TblProdutosComponent implements OnInit {
 
     this.ProdutoService.addProduto(formData).subscribe(
       (response) => {
-        // Supondo que a resposta do backend tenha a URL da imagem
-        response.imagemUrl = `http://localhost:5000/uploads/${response.imagem}`;  // Ajuste conforme a URL de imagem
-        this.produtos.push(response);
+        const produtoCriado = response?.produto;
+
+        if (produtoCriado) {
+          this.produtos.push({
+            ...produtoCriado,
+            imagemUrl: this.ProdutoService.getImagemUrl(produtoCriado.imagem)
+          });
+          this.atualizarPaginacao();
+        } else {
+          this.carregarProdutos();
+        }
+
         this.toastr.success('Produto adicionado com sucesso!', 'Sucesso');
         this.toggleFormulario();
       },

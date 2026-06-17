@@ -13,6 +13,9 @@ const { exec } = require('child_process');
 
 const app = express();
 const port = process.env.PORT || 5000;
+const UPLOADS_ROOT = path.resolve(__dirname, 'uploads');
+
+fs.mkdirSync(UPLOADS_ROOT, { recursive: true });
 
 
 // Middleware para habilitar CORS e JSON
@@ -191,22 +194,84 @@ app.get('/api/cardapio/:idEmpresa/pix-status/:paymentId', async (req, res) => {
 });
 
 
+function sanitizeFilename(name) {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9-_]/g, '-')
+    .replace(/-+/g, '-')
+    .toLowerCase();
+}
+
+function getPublicUploadPath(filePath) {
+  const relative = path.relative(UPLOADS_ROOT, filePath);
+  const normalized = relative.split(path.sep).join('/');
+  return `/uploads/${normalized}`;
+}
+
+function getAbsoluteUploadPath(publicPath) {
+  if (!publicPath || typeof publicPath !== 'string' || !publicPath.startsWith('/uploads/')) {
+    return null;
+  }
+
+  const relative = publicPath.replace(/^\/uploads\//, '');
+  const absolute = path.resolve(UPLOADS_ROOT, relative);
+
+  if (!absolute.startsWith(UPLOADS_ROOT)) {
+    return null;
+  }
+
+  return absolute;
+}
+
+function removeUploadedFile(publicPath) {
+  const absolutePath = getAbsoluteUploadPath(publicPath);
+  if (!absolutePath) return;
+
+  fs.unlink(absolutePath, (err) => {
+    if (err && err.code !== 'ENOENT') {
+      console.warn('Não foi possível remover arquivo antigo:', absolutePath, err.message);
+    }
+  });
+}
+
 // Configuração do multer para o upload de imagens
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, './uploads/'); // Define o diretório de destino para armazenar as imagens
+    const idEmpresa = Number(req.id_empresa) || 0;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const uploadDir = path.join(UPLOADS_ROOT, `empresa-${idEmpresa}`, 'produtos', `${year}-${month}`);
+
+    fs.mkdir(uploadDir, { recursive: true }, (err) => cb(err, uploadDir));
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname); // Pega a extensão do arquivo
-    const filename = Date.now() + ext; // Cria um nome único para a imagem
-    cb(null, filename); // Define o nome final do arquivo
+    const ext = path.extname(file.originalname).toLowerCase();
+    const base = path.basename(file.originalname, ext);
+    const safeBase = sanitizeFilename(base).slice(0, 50) || 'imagem';
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+    const filename = `${safeBase}-${unique}${ext}`;
+    cb(null, filename);
   }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype || !file.mimetype.startsWith('image/')) {
+      return cb(new Error('Apenas arquivos de imagem são permitidos.'));
+    }
+    cb(null, true);
+  }
+});
 
-// Middleware para servir arquivos estáticos da pasta 'uploads'
-app.use('/uploads', express.static('uploads'));
+// Middleware para servir arquivos estáticos da pasta de uploads
+app.use('/uploads', express.static(UPLOADS_ROOT, {
+  etag: true,
+  maxAge: '7d'
+}));
 
 
 // Rota de login
@@ -686,18 +751,32 @@ app.get('/api/produtos/categoria/:id', autenticarTenant, (req, res) => {
 // Rota POST para adicionar produtos com upload de imagem
 app.post('/api/produtos', autenticarTenant, upload.single('imagem'), (req, res) => {
   const { nome, descricao, preco, quantidade_estoque, categoria } = req.body;
-  const imagemUrl = req.file ? `/uploads/${req.file.filename}` : null;
+  const imagemUrl = req.file ? getPublicUploadPath(req.file.path) : null;
 
   const query = 'INSERT INTO produto (nome, descricao, preco, quantidade_estoque, imagem, categoria, id_empresa) VALUES (?, ?, ?, ?, ?, ?, ?)';
   const values = [nome, descricao, preco, quantidade_estoque, imagemUrl, categoria || null, req.id_empresa];
 
   db.query(query, values, (err, result) => {
     if (err) {
+      if (imagemUrl) {
+        removeUploadedFile(imagemUrl);
+      }
       console.error('Erro ao adicionar produto:', err);
       res.status(500).json({ error: 'Erro ao adicionar produto' });
     } else {
       console.log('Produto adicionado com sucesso:', result);
-      res.status(201).json({ message: 'Produto adicionado com sucesso', id: result.insertId });
+      res.status(201).json({
+        message: 'Produto adicionado com sucesso',
+        produto: {
+          id_produto: result.insertId,
+          nome,
+          descricao,
+          preco,
+          quantidade_estoque,
+          imagem: imagemUrl,
+          categoria: categoria || null
+        }
+      });
     }
   });
 });
@@ -705,19 +784,40 @@ app.post('/api/produtos', autenticarTenant, upload.single('imagem'), (req, res) 
 // Rota DELETE para deletar um produto
 app.delete('/api/produtos/:id', autenticarTenant, (req, res) => {
   const id = req.params.id;
+  const querySelect = 'SELECT imagem FROM produto WHERE id_produto = ? AND id_empresa = ?';
 
-  const query = 'DELETE FROM produto WHERE id_produto = ? AND id_empresa = ?';
-  db.query(query, [id, req.id_empresa], (err, results) => {
-    if (err) {
-      console.error('Erro ao deletar produto:', err);
-      res.status(500).json({ error: 'Erro ao deletar produto' });
-    } else if (results.affectedRows === 0) {
-      console.log('Produto não encontrado:', id);
-      res.status(404).json({ message: 'Produto não encontrado' });
-    } else {
-      console.log('Produto deletado com sucesso:', id);
-      res.status(200).json({ message: 'Produto deletado com sucesso' });
+  db.query(querySelect, [id, req.id_empresa], (errSelect, rows) => {
+    if (errSelect) {
+      console.error('Erro ao buscar produto para deletar:', errSelect);
+      return res.status(500).json({ error: 'Erro ao deletar produto' });
     }
+
+    if (!rows || rows.length === 0) {
+      console.log('Produto não encontrado:', id);
+      return res.status(404).json({ message: 'Produto não encontrado' });
+    }
+
+    const imagemAtual = rows[0].imagem;
+    const queryDelete = 'DELETE FROM produto WHERE id_produto = ? AND id_empresa = ?';
+
+    db.query(queryDelete, [id, req.id_empresa], (errDelete, results) => {
+      if (errDelete) {
+        console.error('Erro ao deletar produto:', errDelete);
+        return res.status(500).json({ error: 'Erro ao deletar produto' });
+      }
+
+      if (results.affectedRows === 0) {
+        console.log('Produto não encontrado:', id);
+        return res.status(404).json({ message: 'Produto não encontrado' });
+      }
+
+      if (imagemAtual) {
+        removeUploadedFile(imagemAtual);
+      }
+
+      console.log('Produto deletado com sucesso:', id);
+      return res.status(200).json({ message: 'Produto deletado com sucesso' });
+    });
   });
 });
 
@@ -725,25 +825,59 @@ app.delete('/api/produtos/:id', autenticarTenant, (req, res) => {
 app.put('/api/produtos/:id', autenticarTenant, upload.single('imagem'), (req, res) => {
   const { id } = req.params;
   const { nome, descricao, preco, quantidade_estoque, categoria } = req.body;
-  const imagemUrl = req.file ? `/uploads/${req.file.filename}` : null;
+  const imagemUrl = req.file ? getPublicUploadPath(req.file.path) : null;
 
-  const query = `
-    UPDATE produto
-    SET nome = ?, descricao = ?, preco = ?, quantidade_estoque = ?, imagem = COALESCE(?, imagem), categoria = ?
-    WHERE id_produto = ? AND id_empresa = ?
-  `;
+  const querySelect = 'SELECT imagem FROM produto WHERE id_produto = ? AND id_empresa = ?';
 
-  db.query(query, [nome, descricao, preco, quantidade_estoque, imagemUrl, categoria || null, id, req.id_empresa], (err, result) => {
-    if (err) {
-      console.error('Erro ao atualizar produto:', err);
-      res.status(500).json({ error: 'Erro ao atualizar produto' });
-    } else if (result.affectedRows === 0) {
-      console.log('Produto não encontrado para atualização:', id);
-      res.status(404).json({ error: 'Produto não encontrado' });
-    } else {
-      console.log('Produto atualizado com sucesso:', id);
-      res.json({ message: 'Produto atualizado com sucesso' });
+  db.query(querySelect, [id, req.id_empresa], (errSelect, rows) => {
+    if (errSelect) {
+      if (imagemUrl) {
+        removeUploadedFile(imagemUrl);
+      }
+      console.error('Erro ao buscar produto para atualização:', errSelect);
+      return res.status(500).json({ error: 'Erro ao atualizar produto' });
     }
+
+    if (!rows || rows.length === 0) {
+      if (imagemUrl) {
+        removeUploadedFile(imagemUrl);
+      }
+      console.log('Produto não encontrado para atualização:', id);
+      return res.status(404).json({ error: 'Produto não encontrado' });
+    }
+
+    const imagemAtual = rows[0].imagem;
+
+    const query = `
+      UPDATE produto
+      SET nome = ?, descricao = ?, preco = ?, quantidade_estoque = ?, imagem = COALESCE(?, imagem), categoria = ?
+      WHERE id_produto = ? AND id_empresa = ?
+    `;
+
+    db.query(query, [nome, descricao, preco, quantidade_estoque, imagemUrl, categoria || null, id, req.id_empresa], (err, result) => {
+      if (err) {
+        if (imagemUrl) {
+          removeUploadedFile(imagemUrl);
+        }
+        console.error('Erro ao atualizar produto:', err);
+        return res.status(500).json({ error: 'Erro ao atualizar produto' });
+      }
+
+      if (result.affectedRows === 0) {
+        if (imagemUrl) {
+          removeUploadedFile(imagemUrl);
+        }
+        console.log('Produto não encontrado para atualização:', id);
+        return res.status(404).json({ error: 'Produto não encontrado' });
+      }
+
+      if (imagemUrl && imagemAtual && imagemAtual !== imagemUrl) {
+        removeUploadedFile(imagemAtual);
+      }
+
+      console.log('Produto atualizado com sucesso:', id);
+      return res.json({ message: 'Produto atualizado com sucesso' });
+    });
   });
 });
 

@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { ProdutoService } from 'src/app/services/produto.service';
 import { ToastrService } from 'ngx-toastr';
 import { HttpClient } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
 
 interface Categoria {
   id_categoria: number;
@@ -87,7 +88,7 @@ export class CardapioComponent implements OnInit, OnDestroy {
   numeroPedidoConfirmado: number | null = null;
 
   // ── Modal PIX ──
-  readonly API_BASE = 'http://localhost:5000/api';
+  readonly API_BASE = environment.apiUrl;
   readonly PIX_TIMEOUT_SECONDS = 300; // 5 minutos
   modalPixAberto = false;
   pixQrCodeBase64 = '';
@@ -125,7 +126,7 @@ export class CardapioComponent implements OnInit, OnDestroy {
       (prods: any[]) => {
         this.produtos = prods.map(p => ({
           ...p,
-          imagemUrl: p.imagem ? `http://localhost:5000${p.imagem}` : ''
+          imagemUrl: this.produtoService.getImagemUrl(p.imagem)
         }));
         this.carregando = false;
       },

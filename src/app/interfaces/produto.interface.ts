@@ -4,7 +4,7 @@ export interface Produto {
   descricao: string;           // Descrição do produto
   preco: number;               // Preço do produto
   quantidade_estoque: number;  // Quantidade em estoque
-  imagem: File | null;         // Adiciona a propriedade imagem
+  imagem: File | string | null; // Arquivo no form e caminho string no retorno da API
   imagemUrl?: string;          // Adicionando a propriedade imagemUrl
   categoria?: string;
 }
