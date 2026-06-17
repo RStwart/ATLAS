@@ -8,6 +8,7 @@ import { environment } from 'src/environments/environment';
 })
 export class ProdutoService {
   private apiUrl = this.normalizeApiUrl(environment.apiUrl); // API NO ENVIRONMENTS
+  private uploadBaseUrl = this.resolveUploadBaseUrl();
 
   constructor(private http: HttpClient) {}
 
@@ -47,6 +48,15 @@ export class ProdutoService {
     return this.apiUrl.replace(/\/api\/?$/, '');
   }
 
+  private resolveUploadBaseUrl(): string {
+    const fromEnvironment = (environment as any).uploadUrl as string | undefined;
+    if (fromEnvironment && fromEnvironment.trim()) {
+      return this.normalizeApiUrl(fromEnvironment.trim().replace(/\/+$/, ''));
+    }
+
+    return `${this.getApiBaseUrl()}/uploads`.replace(/\/+$/, '');
+  }
+
   getImagemUrl(imagemPath?: string | null): string {
     if (!imagemPath) return 'assets/default-image.jpg';
     if (/^https?:\/\//i.test(imagemPath)) return imagemPath;
@@ -54,12 +64,13 @@ export class ProdutoService {
     let path = imagemPath.trim();
     if (!path) return 'assets/default-image.jpg';
     
-    // Garante que comece com /uploads/
+    // Garante que o caminho público comece com /uploads/
     if (!path.startsWith('/')) path = '/' + path;
     if (!path.startsWith('/uploads/')) path = '/uploads/' + path.replace(/^\/+/, '');
-    
-    // ✅ RETORNA APENAS O CAMINHO RELATIVO
-    return path;
+
+    const baseEndsWithUploads = /\/uploads$/i.test(this.uploadBaseUrl);
+    const pathWithoutUploads = path.replace(/^\/uploads(?=\/)/i, '');
+    return `${this.uploadBaseUrl}${baseEndsWithUploads ? pathWithoutUploads : path}`;
   }
   
   // Método para obter todos os produtos
