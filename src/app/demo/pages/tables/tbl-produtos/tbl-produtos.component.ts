@@ -5,6 +5,10 @@ import { Produto } from 'src/app/interfaces/produto.interface';
 import { ProdutoInsumo } from 'src/app/interfaces/insumo.interface';
 import { ToastrService } from 'ngx-toastr';
 
+type ProdutoForm = Omit<Produto, 'imagem'> & {
+  imagem: File | null;
+};
+
 @Component({
   selector: 'app-tbl-produtos',
   templateUrl: './tbl-produtos.component.html',
@@ -14,7 +18,7 @@ export class TblProdutosComponent implements OnInit {
   produtos: Produto[] = [];
   erro: string | null = null;
 
-  novoProduto: Produto = {
+  novoProduto: ProdutoForm = {
     id_produto: 0,
     nome: '',
     descricao: '',
@@ -92,7 +96,8 @@ export class TblProdutosComponent implements OnInit {
       (response: Produto[]) => {
         this.produtos = response.map((produto) => ({
           ...produto,
-          imagemUrl: this.ProdutoService.getImagemUrl(typeof produto.imagem === 'string' ? produto.imagem : '')
+          imagemPath: (produto as any).imagem || '',
+          imagemUrl: this.ProdutoService.getImagemUrl((produto as any).imagem || '')
         }));
         this.atualizarPaginacao();
         this.toastr.success('Produtos carregados com sucesso!', 'Sucesso');
