@@ -18,15 +18,25 @@ const UPLOADS_ROOT = path.resolve(__dirname, 'uploads');
 fs.mkdirSync(UPLOADS_ROOT, { recursive: true });
 
 
+app.use(cors({
+  origin: [
+    'http://localhost:4200',
+    'http://localhost',
+    'http://143.95.215.6',
+    'http://atlasnw.com.br',
+    'https://atlasnw.com.br',
+    'https://www.atlasnw.com.br',
+    'http://www.atlasnw.com.br'
+  ],
+  credentials: true,
+  allowedHeaders: ['Authorization', 'Content-Type', 'Accept'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'] // ← ADICIONADO
+}));
+
 // Middleware para habilitar CORS e JSON
 app.use(express.json());
 
-app.use(cors({
-  origin: ['http://localhost:4200', 'http://localhost', 'http://143.95.215.6', 'http://atlasnw.com.br','https://atlasnw.com.br', 'https://www.atlasnw.com.br', 'http://www.atlasnw.com.br'],
-  credentials: true,
-  allowedHeaders: ['Authorization', 'Content-Type', 'Accept']
-}));
-
+app.options('*', cors());
 
 // Configuração de conexão com o MySQL usando pool
 const db = mysql.createPool({
