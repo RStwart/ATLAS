@@ -1,5 +1,12 @@
 ﻿import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { TblProdutosComponent } from './tbl-produtos/tbl-produtos.component';
+import { TblInsumosComponent } from './tbl-insumos/tbl-insumos.component';
+import { TblMovimentacoesComponent } from './tbl-movimentacoes/tbl-movimentacoes.component';
+import { TblFuncionariosComponent } from './tbl-funcionarios/tbl-funcionarios.component';
+import { TblComandasComponent } from './tbl-comanda/tbl-comanda.component';
+import { TblPedidosComponent } from './tbl-pedidos/tbl-pedidos.component';
+import { TblCaixasComponent } from './tbl-caixas/tbl-caixas.component';
 
 const routes: Routes = [
   {
@@ -7,31 +14,31 @@ const routes: Routes = [
     children: [
       {
         path: 'produtos',
-        loadComponent: () => import('./tbl-produtos/tbl-produtos.component').then(m => m.TblProdutosComponent)
+        component: TblProdutosComponent
       },
       {
         path: 'insumos',
-        loadComponent: () => import('./tbl-insumos/tbl-insumos.component').then(m => m.TblInsumosComponent)
+        component: TblInsumosComponent
       },
       {
         path: 'movimentacoes',
-        loadComponent: () => import('./tbl-movimentacoes/tbl-movimentacoes.component').then(m => m.TblMovimentacoesComponent)
+        component: TblMovimentacoesComponent
       },
       {
         path: 'funcionarios',
-        loadComponent: () => import('./tbl-funcionarios/tbl-funcionarios.component').then(m => m.TblFuncionariosComponent)
+        component: TblFuncionariosComponent
       },
       {
         path: 'comanda',
-        loadComponent: () => import('./tbl-comanda/tbl-comanda.component').then(m => m.TblComandasComponent)
+        component: TblComandasComponent
       },
       {
         path: 'pedidos',
-        loadComponent: () => import('./tbl-pedidos/tbl-pedidos.component').then(m => m.TblPedidosComponent)
+        component: TblPedidosComponent
       },
       {
         path: 'caixas',
-        loadComponent: () => import('./tbl-caixas/tbl-caixas.component').then(m => m.TblCaixasComponent)
+        component: TblCaixasComponent
       }
     ]
   }
