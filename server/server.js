@@ -278,18 +278,24 @@ const upload = multer({
 });
 
 // Middleware para servir arquivos estáticos da pasta de uploads
-
-// Substitua a linha do express.static por:
-app.use('/uploads', (req, res, next) => {
-  console.log('📸 Acessando:', req.url);
-  next();
-}, express.static(UPLOADS_ROOT, {
+const uploadStaticMiddleware = express.static(UPLOADS_ROOT, {
   etag: true,
   maxAge: '7d',
   setHeaders: (res, path) => {
     res.set('Access-Control-Allow-Origin', '*');
   }
-}));
+});
+
+app.use('/uploads', (req, res, next) => {
+  console.log('📸 Acessando:', req.url);
+  next();
+}, uploadStaticMiddleware);
+
+// Também expõe uploads sob /api/uploads para funcionar quando apenas /api é roteado ao backend.
+app.use('/api/uploads', (req, res, next) => {
+  console.log('📸 Acessando (api):', req.url);
+  next();
+}, uploadStaticMiddleware);
 
 console.log('📁 Servindo arquivos estáticos de:', UPLOADS_ROOT);
 console.log('🔗 URL base: /uploads');
