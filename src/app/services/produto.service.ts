@@ -57,9 +57,31 @@ export class ProdutoService {
     return `${this.getApiBaseUrl()}/uploads`.replace(/\/+$/, '');
   }
 
+  private rewriteLegacyUploadUrl(rawUrl: string): string {
+    try {
+      const parsed = new URL(rawUrl);
+      const isLocalHost = ['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname);
+      if (!isLocalHost) {
+        return this.normalizeApiUrl(rawUrl);
+      }
+
+      const idx = parsed.pathname.toLowerCase().indexOf('/uploads/');
+      if (idx < 0) {
+        return this.normalizeApiUrl(rawUrl);
+      }
+
+      const suffix = parsed.pathname.slice(idx + '/uploads'.length);
+      return `${this.uploadBaseUrl}${suffix}`;
+    } catch {
+      return this.normalizeApiUrl(rawUrl);
+    }
+  }
+
   getImagemUrl(imagemPath?: string | null): string {
     if (!imagemPath) return 'assets/default-image.jpg';
-    if (/^https?:\/\//i.test(imagemPath)) return imagemPath;
+    if (/^https?:\/\//i.test(imagemPath)) {
+      return this.rewriteLegacyUploadUrl(imagemPath.trim());
+    }
     
     let path = imagemPath.trim();
     if (!path) return 'assets/default-image.jpg';

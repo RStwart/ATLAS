@@ -49,7 +49,7 @@
             <!-- Imagem do produto -->
             <div class="product-card__img-wrap">
               <ng-container *ngIf="produto.imagemUrl; else semImagem">
-                <img [src]="produto.imagemUrl" alt="{{ produto.nome }}" class="product-card__img" />
+                <img [src]="produto.imagemUrl" alt="{{ produto.nome }}" class="product-card__img" onerror="this.src='assets/images/no-image.png'" />
               </ng-container>
               <ng-template #semImagem>
                 <div class="product-card__no-img">
