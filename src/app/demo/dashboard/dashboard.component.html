@@ -439,8 +439,9 @@
       <!-- Body -->
       <div class="modal-body-custom">
         <label class="field-label">Fundo de Caixa (R$)</label>
-        <input id="totalAbertura" type="number" class="form-control field-input field-input--large"
-          [(ngModel)]="totalAbertura" name="totalAbertura" placeholder="0,00" />
+        <input #totalAberturaInput id="totalAbertura" type="text" class="form-control field-input field-input--large"
+          (input)="onInputAbertura($event)"
+          name="totalAbertura" placeholder="R$ 0,00" />
         <p class="field-hint"><i class="feather icon-info me-1"></i>Informe o valor em dinheiro disponível no caixa.</p>
       </div>
 

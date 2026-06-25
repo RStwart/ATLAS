@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { VendasService } from '../../services/vendas.service';
 import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { Venda } from '../../interfaces/vendas.interface';
@@ -13,6 +13,8 @@ import { ToastrService } from 'ngx-toastr';
   styleUrls: ['./dashboard.component.scss']
 })
 export default class DashboardComponent implements OnInit {
+
+  @ViewChild('totalAberturaInput', { read: ElementRef }) totalAberturaInput: ElementRef | undefined;
 
   vendas: Venda[] = []; // Array para armazenar as vendas
   vendasAgrupadas: any[] = []; // Vendas agrupadas para exibição (sem duplicatas de divisão)
@@ -406,7 +408,45 @@ export default class DashboardComponent implements OnInit {
   get totalConfere(): boolean {
     return Number(this.totalDividido.toFixed(2)) === Number(this.vendaSelecionada?.total || 0);
   }
-  
+
+  // Formatação de moeda para o campo de abertura
+  formatarMoedaBRL(valor: any): string {
+    if (!valor && valor !== 0) {
+      return '';
+    }
+    
+    const numerico = String(valor).replace(/\D/g, '');
+    const numero = parseInt(numerico || '0', 10) / 100;
+    
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(numero);
+  }
+
+  onInputAbertura(event: any): void {
+    const input = event.target;
+    const valor = input.value.replace(/\D/g, '');
+    
+    // Atualiza o valor numérico (mantém o valor real para envio ao servidor)
+    this.totalAbertura = valor ? parseInt(valor, 10) / 100 : 0;
+    
+    // Formata o display do input
+    const valorFormatado = this.formatarMoedaBRL(this.totalAbertura);
+    
+    // Salva a posição do cursor
+    const posicaoCursor = input.selectionStart;
+    
+    // Atualiza o valor exibido no input
+    input.value = valorFormatado;
+    
+    // Restaura aproximadamente a posição do cursor (ajusta para o novo tamanho da string)
+    if (posicaoCursor !== null) {
+      setTimeout(() => {
+        input.setSelectionRange(posicaoCursor, posicaoCursor);
+      }, 0);
+    }
+  }
   
   
 
